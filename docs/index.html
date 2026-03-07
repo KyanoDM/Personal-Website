@@ -77,7 +77,8 @@
                         <h2 class="section-title">Over Mij</h2>
                         <div class="title-underline"></div>
                         <p class="about-text">
-                            Ik ben Kyano, <span id="age"></span> jaar oud en studeer programmeren aan Howest Brugge. Ik woon zelf in Maldegem.
+                            Ik ben Kyano, <span id="age"></span> jaar oud en studeer programmeren aan Howest Brugge. Ik
+                            woon zelf in Maldegem.
                         </p>
                         <p class="about-text">
                             Ik maak vooral cloud-gebaseerde webapplicaties en heb een grote passie voor AI. Denk aan
@@ -258,7 +259,8 @@
                                 <span class="tool-tag" data-bs-toggle="tooltip" data-bs-placement="top"
                                     title="Notion is een note-taking app die je zo geadvanceerd of simpel kan maken als je wil. Ik gebruik dit dagelijks.">Notion</span>
                                 <span class="tool-tag" data-bs-toggle="tooltip" data-bs-placement="top"
-                                    title="Blazor & Blazor hybrid is een frontend voor web & mobiele applicaties.">Blazor (Hybrid)</span>
+                                    title="Blazor & Blazor hybrid is een frontend voor web & mobiele applicaties.">Blazor
+                                    (Hybrid)</span>
                             </div>
                         </div>
                     </div>
@@ -405,6 +407,26 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Project 7 - Burrow -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="project-card" id="burrowCard" style="cursor: pointer;">
+                        <div class="project-image-wrapper">
+                            <img src="img/BurrowLogo.png" class="project-image" alt="Burrow Mobile App">
+                            <div class="project-overlay">
+                                <div class="btn btn-light">
+                                    <i class="fas fa-play me-2"></i>Bekijk Video
+                                </div>
+                            </div>
+                        </div>
+                        <div class="project-content">
+                            <h3 class="project-title">Burrow</h3>
+                            <p class="project-description">
+                               Burrow, een mobiele app voor communities. Dit is een prototype en is gemaakt in 3 weken. 
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -468,6 +490,51 @@
                         src="https://embed.figma.com/design/BAwcjob9NBTENDREIMvsUi/Gym-Progress-App?node-id=0-1&embed-host=share"
                         allowfullscreen></iframe>
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Sluiten</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Burrow Modal -->
+    <div class="modal fade" id="burrowModal" tabindex="-1" aria-labelledby="burrowModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="burrowModalLabel">Burrow - Mobile App</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="ratio ratio-16x9">
+                        <iframe src="https://youtube.com/embed/-dAt_jSQ-GQ" title="Burrow Demo"
+                            allowfullscreen></iframe>
+                    </div>
+                    <section class="project-description">
+                        <h2>Burrow — Buurtcommunity App</h2>
+                    
+                        <p>
+                            Burrow is een buurtcommunity-app die bewoners van woonwijken en appartementsgebouwen digitaal met elkaar
+                            verbindt. Het platform is gebouwd rond drie pijlers: sociale cohesie, duurzaamheid en efficiëntie. Veel buren
+                            kennen elkaar nauwelijks, communiceren via versnipperde WhatsApp-groepen en verspillen spullen die anderen goed
+                            kunnen gebruiken. Burrow lost dit op met één gecentraliseerd platform.
+                        </p>
+                    
+                        <p>
+                            Technisch bestaat de applicatie uit een Blazor Hybrid frontend gebouwd op .NET MAUI, gekoppeld aan een .NET Web
+                            API via een REST API. De gedeelde business logic en entiteiten leven in een apart Core-project. Realtime
+                            communicatie verloopt via Firestore, authenticatie via Firebase Authentication gecombineerd met JWT-tokens.
+                        </p>
+                    
+                        <p>
+                            De kernfunctionaliteiten omvatten: communities met gelaagd lidmaatschap en moderatierollen, een buurtfeed met
+                            posts en likes, privéchat en community-chatrooms, een evenementenmodule met datumprikker en benodigdhedenlijst,
+                            een lokale marketplace voor verkoop en weggeven, een interactieve kaart met privacybeheer, en push-notificaties
+                            via Firebase Cloud Messaging.
+                        </p>
+                    </section>
+                </div>
+                
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Sluiten</button>
                 </div>

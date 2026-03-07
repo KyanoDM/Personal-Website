@@ -30,6 +30,15 @@ function initialize() {
         });
     }
 
+    // Burrow card modal functionality
+    const burrowCard = document.querySelector("#burrowCard");
+    if (burrowCard) {
+        burrowCard.addEventListener('click', function () {
+            const burrowModal = new bootstrap.Modal(document.getElementById('burrowModal'));
+            burrowModal.show();
+        });
+    }
+
     // Smooth scroll for navigation links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
