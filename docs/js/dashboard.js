@@ -140,13 +140,26 @@
             var isToday = dateStr === todayStr;
             html += '<th class="' + (isToday ? 'today' : '') + '">' + DAY_NAMES[i] + '<br>' + days[i].getDate() + '</th>';
         }
-        html += '</tr></thead><tbody>';
+        html += '<th></th></tr></thead><tbody>';
 
         habits.forEach(function (habit, hIdx) {
+            var weekCount = 0;
+            for (var d = 0; d < 7; d++) {
+                var ds = formatDate(days[d]);
+                if (habitData[ds] && habitData[ds][habit.name]) weekCount++;
+            }
+
+            var targetLabel = '';
+            if (habit.type === 'weekly') {
+                var target = habit.target || 3;
+                var met = weekCount >= target;
+                targetLabel = '<span class="week-progress ' + (met ? 'met' : '') + '">' + weekCount + '/' + target + '</span>';
+            }
+
             html += '<tr><td><div class="habit-name-cell">' +
                 '<button class="habit-delete" data-idx="' + hIdx + '"><i class="fas fa-xmark"></i></button>' +
                 habit.name +
-                (habit.type === 'weekly' ? ' <span class="habit-type-label">week</span>' : '') +
+                (habit.type === 'weekly' ? ' <span class="habit-type-label">' + (habit.target || 3) + 'x/week</span>' : '') +
                 '</div></td>';
 
             for (var d = 0; d < 7; d++) {
@@ -156,6 +169,8 @@
                 html += '<td><div class="' + cls + '" data-habit="' + habit.name + '" data-date="' + dateStr + '">' +
                     '<i class="fas fa-check"></i></div></td>';
             }
+
+            html += '<td>' + targetLabel + '</td>';
             html += '</tr>';
         });
 
@@ -292,13 +307,24 @@
         modal.show();
     });
 
+    // Show/hide target input based on type
+    document.getElementById('habitTypeInput').addEventListener('change', function () {
+        document.getElementById('targetRow').style.display = this.value === 'weekly' ? 'block' : 'none';
+    });
+
     document.getElementById('confirmAddHabit').addEventListener('click', function () {
         var name = document.getElementById('habitNameInput').value.trim();
         var type = document.getElementById('habitTypeInput').value;
         if (!name) return;
-        habits.push({ name: name, type: type });
+        var habit = { name: name, type: type };
+        if (type === 'weekly') {
+            habit.target = parseInt(document.getElementById('habitTargetInput').value) || 3;
+        }
+        habits.push(habit);
         saveHabitConfig();
         bootstrap.Modal.getInstance(document.getElementById('addHabitModal')).hide();
+        document.getElementById('targetRow').style.display = 'none';
+        document.getElementById('habitTypeInput').value = 'daily';
         renderHabits();
     });
 

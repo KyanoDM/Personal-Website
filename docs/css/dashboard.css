@@ -153,6 +153,10 @@
     border-collapse: separate;
     border-spacing: 0;
     min-width: 480px;
+    background: transparent;
+    color: var(--text);
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--text);
 }
 
 .habit-grid th,
@@ -254,8 +258,27 @@ tr:hover .habit-delete { opacity: 0.6; }
     padding: 2px 6px;
     border-radius: 4px;
     font-weight: 600;
-    text-transform: uppercase;
     letter-spacing: 0.3px;
+}
+
+.week-progress {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    background: var(--bg-input);
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+.week-progress.met {
+    color: var(--green);
+    background: var(--green-glow);
+}
+
+.text-dim {
+    color: var(--text-dim);
+    font-size: 0.8rem;
 }
 
 .habit-actions {
