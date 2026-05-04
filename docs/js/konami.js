@@ -16,7 +16,18 @@
     const auth = firebase.auth();
     const provider = new firebase.auth.GoogleAuthProvider();
 
-    // Check if already authenticated
+    // Handle redirect result after Google sign-in
+    auth.getRedirectResult().then(function (result) {
+        if (result.user) {
+            if (result.user.email === ALLOWED_EMAIL) {
+                window.location.href = 'dashboard.html';
+            } else {
+                auth.signOut();
+            }
+        }
+    }).catch(function () {});
+
+    // Check if already authenticated (returning visitor)
     auth.onAuthStateChanged(function (user) {
         if (user && user.email === ALLOWED_EMAIL) {
             window.location.href = 'dashboard.html';
