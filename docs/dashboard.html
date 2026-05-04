@@ -18,7 +18,10 @@
 
     <div id="dashboard" class="dashboard-container" style="display: none;">
         <header class="dashboard-header">
-            <h1>Dashboard</h1>
+            <div class="header-left">
+                <h1>Dashboard</h1>
+                <nav id="toolkitBar" class="toolkit-bar"></nav>
+            </div>
             <button id="signOut" class="btn btn-outline-light btn-sm">
                 <i class="fas fa-sign-out-alt me-1"></i>Uitloggen
             </button>
@@ -43,10 +46,8 @@
                     <button id="addHabit" class="btn-ghost"><i class="fas fa-plus me-1"></i>Habit toevoegen</button>
                 </div>
 
-                <!-- Streaks -->
                 <div class="streaks-row" id="streaksRow"></div>
 
-                <!-- Heatmap -->
                 <div class="heatmap-wrapper">
                     <h3>Laatste 3 maanden</h3>
                     <div class="heatmap" id="heatmap"></div>
@@ -87,55 +88,27 @@
                     <button id="refreshYT" class="btn-icon" title="Vernieuwen"><i class="fas fa-rotate-right"></i></button>
                 </div>
 
-                <!-- Channel Stats -->
                 <div class="yt-stats-bar" id="ytStats">
                     <span class="text-dim" style="font-size:0.8rem">Laden...</span>
                 </div>
 
-                <!-- Latest Videos -->
                 <div class="yt-subsection">
                     <h3 class="yt-sub-title">Laatste video's</h3>
                     <div id="ytVideos"></div>
                 </div>
 
-                <!-- Toolkit Links -->
-                <div class="yt-subsection">
-                    <h3 class="yt-sub-title">Toolkit</h3>
-                    <div class="yt-links-grid">
-                        <a href="https://yt1s.io" target="_blank" class="yt-link-card"><i class="fab fa-youtube"></i><span>YT Downloader</span></a>
-                        <a href="https://snapinsta.app" target="_blank" class="yt-link-card"><i class="fab fa-instagram"></i><span>Insta Downloader</span></a>
-                        <a href="https://elevenlabs.io" target="_blank" class="yt-link-card"><i class="fas fa-microphone"></i><span>ElevenLabs</span></a>
-                        <a href="https://studio.youtube.com" target="_blank" class="yt-link-card"><i class="fas fa-chart-bar"></i><span>YT Studio</span></a>
-                    </div>
-                </div>
-
-                <!-- Kanban Ideas -->
                 <div class="yt-subsection">
                     <div class="yt-sub-head">
                         <h3 class="yt-sub-title">Channel Ideas</h3>
-                        <button id="addIdea" class="btn-ghost" style="font-size:0.78rem;padding:0.3rem 0.8rem"><i class="fas fa-plus me-1"></i>Idee</button>
+                        <button id="addIdea" class="btn-ghost btn-ghost-sm"><i class="fas fa-plus me-1"></i>Idee</button>
                     </div>
-                    <div class="kanban-board">
-                        <div class="kanban-col">
-                            <div class="kanban-col-header kanban-idee">Idee</div>
-                            <div class="kanban-cards" id="kanban-idee"></div>
-                        </div>
-                        <div class="kanban-col">
-                            <div class="kanban-col-header kanban-opname">Opname</div>
-                            <div class="kanban-cards" id="kanban-opname"></div>
-                        </div>
-                        <div class="kanban-col">
-                            <div class="kanban-col-header kanban-gepubliceerd">Gepubliceerd</div>
-                            <div class="kanban-cards" id="kanban-gepubliceerd"></div>
-                        </div>
-                    </div>
+                    <div class="kanban-list" id="kanbanList"></div>
                 </div>
 
-                <!-- Video Sources -->
                 <div class="yt-subsection">
                     <div class="yt-sub-head">
                         <h3 class="yt-sub-title">Video Sources</h3>
-                        <button id="addSource" class="btn-ghost" style="font-size:0.78rem;padding:0.3rem 0.8rem"><i class="fas fa-plus me-1"></i>Toevoegen</button>
+                        <button id="addSource" class="btn-ghost btn-ghost-sm"><i class="fas fa-plus me-1"></i>Toevoegen</button>
                     </div>
                     <div id="sourcesList"></div>
                 </div>
@@ -195,6 +168,24 @@
                     <input type="text" id="sourceTextInput" class="form-control dash-input mb-3" placeholder="URL, account, idee...">
                     <div class="d-flex gap-2">
                         <button id="confirmAddSource" class="btn-accent flex-grow-1">Toevoegen</button>
+                        <button class="btn-ghost" data-bs-dismiss="modal">Annuleer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Toolkit Link Modal -->
+    <div class="modal fade" id="addToolkitModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content dash-modal">
+                <div class="modal-body p-4">
+                    <h5 class="mb-3">Nieuwe link</h5>
+                    <input type="text" id="toolkitNameInput" class="form-control dash-input mb-3" placeholder="Naam">
+                    <input type="text" id="toolkitUrlInput" class="form-control dash-input mb-3" placeholder="https://...">
+                    <input type="text" id="toolkitIconInput" class="form-control dash-input mb-3" placeholder="Icon class (bijv. fa-youtube)">
+                    <div class="d-flex gap-2">
+                        <button id="confirmAddToolkit" class="btn-accent flex-grow-1">Toevoegen</button>
                         <button class="btn-ghost" data-bs-dismiss="modal">Annuleer</button>
                     </div>
                 </div>

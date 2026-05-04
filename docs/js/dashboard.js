@@ -70,6 +70,7 @@
         document.getElementById('loading').style.display = 'none';
         if (user && user.email === ALLOWED_EMAIL) {
             document.getElementById('dashboard').style.display = 'block';
+            loadToolkit();
             loadHabits();
             loadWeight();
             loadYouTubeStats();
@@ -334,11 +335,26 @@
     // ─── WEIGHT ─────────────────────────────────────
 
     function loadWeight() {
-        db.collection('weight').orderBy('date', 'asc').get().then(function (snapshot) {
+        db.collection('weight').get().then(function (snapshot) {
             var entries = [];
             snapshot.forEach(function (doc) {
-                entries.push(doc.data());
+                var data = doc.data() || {};
+                // Date: prefer field, fall back to doc id; coerce Timestamp/Date to YYYY-MM-DD
+                var rawDate = data.date != null ? data.date : doc.id;
+                var dateStr = null;
+                if (typeof rawDate === 'string') {
+                    dateStr = rawDate.slice(0, 10);
+                } else if (rawDate && typeof rawDate.toDate === 'function') {
+                    dateStr = formatDate(rawDate.toDate());
+                } else if (rawDate instanceof Date) {
+                    dateStr = formatDate(rawDate);
+                }
+                // Kg: coerce to number, drop garbage
+                var kg = Number(data.kg);
+                if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr) || !isFinite(kg)) return;
+                entries.push({ date: dateStr, kg: kg });
             });
+            entries.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
             renderWeight(entries);
         });
     }
@@ -350,9 +366,18 @@
             return;
         }
 
-        // Calculate EMA trend
-        var trend = [];
-        var trendValue = entries[0].kg;
+        // Default view: last 6 months
+        var sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        sixMonthsAgo.setHours(0, 0, 0, 0);
+        var cutoff = formatDate(sixMonthsAgo);
+        entries = entries.filter(function (e) { return e.date >= cutoff; });
+
+        if (entries.length === 0) {
+            document.getElementById('weightStats').innerHTML = '';
+            renderWeightChart([], []);
+            return;
+        }
 
         var dateMap = {};
         entries.forEach(function (e) { dateMap[e.date] = e.kg; });
@@ -361,15 +386,16 @@
         var endDate = parseDate(entries[entries.length - 1].date);
         var d = new Date(startDate);
 
-        // Interpolate missing days
+        // Build daily series from first to last entry
         var allDays = [];
         while (d <= endDate) {
             var ds = formatDate(d);
-            allDays.push({ date: ds, kg: dateMap[ds] || null });
+            var kg = (dateMap.hasOwnProperty(ds) && isFinite(dateMap[ds])) ? dateMap[ds] : null;
+            allDays.push({ date: ds, kg: kg });
             d.setDate(d.getDate() + 1);
         }
 
-        // Fill gaps with linear interpolation
+        // Linear interpolation for missing days
         for (var i = 0; i < allDays.length; i++) {
             if (allDays[i].kg === null) {
                 var prev = null, next = null;
@@ -384,14 +410,24 @@
             }
         }
 
-        // EMA
-        trendValue = allDays[0].kg;
+        // EMA — seed from first real value
+        var trend = [];
+        var trendValue = null;
         allDays.forEach(function (day) {
-            if (day.kg !== null) {
+            if (day.kg === null || !isFinite(day.kg)) return;
+            if (trendValue === null) {
+                trendValue = day.kg;
+            } else {
                 trendValue = trendValue * (1 - EMA_ALPHA) + day.kg * EMA_ALPHA;
             }
             trend.push({ date: day.date, kg: Math.round(trendValue * 100) / 100 });
         });
+
+        if (trend.length === 0) {
+            document.getElementById('weightStats').innerHTML = '';
+            renderWeightChart([], []);
+            return;
+        }
 
         // Stats
         var latest = entries[entries.length - 1];
@@ -403,7 +439,7 @@
 
         document.getElementById('weightStats').innerHTML =
             '<div class="weight-stat"><span class="stat-label">Vandaag</span><span class="stat-value">' + latest.kg + ' kg</span></div>' +
-            '<div class="weight-stat"><span class="stat-label">Trend</span><span class="stat-value">' + latestTrend.kg + ' kg</span></div>' +
+            '<div class="weight-stat"><span class="stat-label">Trend</span><span class="stat-value">' + latestTrend.kg.toFixed(1) + ' kg</span></div>' +
             '<div class="weight-stat"><span class="stat-label">7d verschil</span><span class="stat-value ' + diffClass + '">' + diffSign + diff.toFixed(2) + ' kg</span></div>';
 
         // Chart data
@@ -581,20 +617,26 @@
     }
 
     function renderKanban() {
-        ['idee', 'opname', 'gepubliceerd'].forEach(function (status) {
-            var col = document.getElementById('kanban-' + status);
-            col.innerHTML = '';
-            kanbanIdeas.filter(function (i) { return i.status === status; }).forEach(function (idea) {
-                var card = document.createElement('div');
-                card.className = 'kanban-card';
-                var prevBtn = status !== 'idee' ? '<button class="kanban-btn" data-id="' + idea.id + '" data-dir="prev"><i class="fas fa-arrow-left"></i></button>' : '';
-                var nextBtn = status !== 'gepubliceerd' ? '<button class="kanban-btn" data-id="' + idea.id + '" data-dir="next"><i class="fas fa-arrow-right"></i></button>' : '';
-                card.innerHTML = '<div class="kanban-card-title">' + idea.title + '</div>' +
-                    '<div class="kanban-card-actions">' + prevBtn + nextBtn +
-                    '<button class="kanban-btn delete" data-id="' + idea.id + '" data-action="delete"><i class="fas fa-trash"></i></button>' +
-                    '</div>';
-                col.appendChild(card);
-            });
+        var list = document.getElementById('kanbanList');
+        list.innerHTML = '';
+        var statusOrder = { idee: 0, opname: 1, gepubliceerd: 2 };
+        var statusLabel = { idee: 'Idee', opname: 'Opname', gepubliceerd: 'Gepubliceerd' };
+        var sorted = kanbanIdeas.slice().sort(function (a, b) {
+            return (statusOrder[a.status] || 0) - (statusOrder[b.status] || 0);
+        });
+
+        sorted.forEach(function (idea) {
+            var card = document.createElement('div');
+            card.className = 'kanban-card';
+            var prevBtn = idea.status !== 'idee' ? '<button class="kanban-btn" data-id="' + idea.id + '" data-dir="prev" title="Vorige status"><i class="fas fa-arrow-left"></i></button>' : '';
+            var nextBtn = idea.status !== 'gepubliceerd' ? '<button class="kanban-btn" data-id="' + idea.id + '" data-dir="next" title="Volgende status"><i class="fas fa-arrow-right"></i></button>' : '';
+            card.innerHTML =
+                '<span class="kanban-status kanban-' + idea.status + '">' + statusLabel[idea.status] + '</span>' +
+                '<div class="kanban-card-title">' + idea.title + '</div>' +
+                '<div class="kanban-card-actions">' + prevBtn + nextBtn +
+                '<button class="kanban-btn delete" data-id="' + idea.id + '" data-action="delete" title="Verwijder"><i class="fas fa-trash"></i></button>' +
+                '</div>';
+            list.appendChild(card);
         });
 
         document.querySelectorAll('.kanban-btn').forEach(function (btn) {
@@ -654,6 +696,91 @@
         if (!text) return;
         db.collection('ytSources').add({ text: text, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
             .then(function () { bootstrap.Modal.getInstance(document.getElementById('addSourceModal')).hide(); });
+    });
+
+    // ─── TOOLKIT ────────────────────────────────────
+
+    var toolkitLinks = [];
+    var DEFAULT_TOOLKIT = [
+        { name: 'YT Downloader', url: 'https://yt1s.io', icon: 'fab fa-youtube' },
+        { name: 'Insta Downloader', url: 'https://snapinsta.app', icon: 'fab fa-instagram' },
+        { name: 'ElevenLabs', url: 'https://elevenlabs.io', icon: 'fas fa-microphone' },
+        { name: 'YT Studio', url: 'https://studio.youtube.com', icon: 'fas fa-chart-bar' }
+    ];
+
+    function loadToolkit() {
+        db.collection('config').doc('toolkit').get().then(function (doc) {
+            if (doc.exists && doc.data().list) {
+                toolkitLinks = doc.data().list;
+            } else {
+                toolkitLinks = DEFAULT_TOOLKIT.slice();
+                saveToolkit();
+            }
+            renderToolkit();
+        });
+    }
+
+    function saveToolkit() {
+        db.collection('config').doc('toolkit').set({ list: toolkitLinks });
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    function normalizeIcon(icon) {
+        if (!icon) return 'fas fa-link';
+        icon = icon.trim();
+        if (icon.indexOf('fa-') === 0) return 'fas ' + icon;
+        if (icon.indexOf('fa ') === 0 || icon.indexOf('fas ') === 0 ||
+            icon.indexOf('fab ') === 0 || icon.indexOf('far ') === 0) return icon;
+        return 'fas fa-' + icon;
+    }
+
+    function renderToolkit() {
+        var bar = document.getElementById('toolkitBar');
+        var html = '';
+        toolkitLinks.forEach(function (link, idx) {
+            var icon = normalizeIcon(link.icon);
+            html += '<a href="' + escapeHtml(link.url) + '" target="_blank" rel="noopener" class="toolkit-link">' +
+                '<i class="' + escapeHtml(icon) + '"></i><span>' + escapeHtml(link.name) + '</span>' +
+                '<button class="toolkit-delete" data-idx="' + idx + '" title="Verwijder"><i class="fas fa-xmark"></i></button>' +
+                '</a>';
+        });
+        html += '<button id="addToolkit" class="toolkit-add" title="Link toevoegen"><i class="fas fa-plus"></i></button>';
+        bar.innerHTML = html;
+
+        document.querySelectorAll('.toolkit-delete').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var idx = parseInt(this.dataset.idx);
+                toolkitLinks.splice(idx, 1);
+                saveToolkit();
+                renderToolkit();
+            });
+        });
+
+        document.getElementById('addToolkit').addEventListener('click', function () {
+            document.getElementById('toolkitNameInput').value = '';
+            document.getElementById('toolkitUrlInput').value = '';
+            document.getElementById('toolkitIconInput').value = '';
+            new bootstrap.Modal(document.getElementById('addToolkitModal')).show();
+        });
+    }
+
+    document.getElementById('confirmAddToolkit').addEventListener('click', function () {
+        var name = document.getElementById('toolkitNameInput').value.trim();
+        var url = document.getElementById('toolkitUrlInput').value.trim();
+        var icon = document.getElementById('toolkitIconInput').value.trim();
+        if (!name || !url) return;
+        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+        toolkitLinks.push({ name: name, url: url, icon: icon || 'fas fa-link' });
+        saveToolkit();
+        bootstrap.Modal.getInstance(document.getElementById('addToolkitModal')).hide();
+        renderToolkit();
     });
 
 })();
