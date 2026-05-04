@@ -505,6 +505,227 @@ tr:hover .habit-delete { opacity: 0.6; }
     color: var(--text);
 }
 
+/* YouTube Section */
+.yt-stats-bar {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.yt-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.yt-subsection {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+}
+
+.yt-sub-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.yt-sub-title {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 0.75rem;
+}
+
+.yt-sub-head .yt-sub-title {
+    margin-bottom: 0;
+}
+
+/* Video rows */
+.yt-video-row {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.6rem 0.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text);
+    transition: background 0.15s;
+}
+
+.yt-video-row:hover {
+    background: var(--bg-input);
+    color: var(--text);
+}
+
+.yt-thumb {
+    width: 100px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+    background: var(--bg-input);
+}
+
+.yt-video-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.yt-video-title {
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.3rem;
+}
+
+.yt-video-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+}
+
+/* Toolkit links */
+.yt-links-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.yt-link-card {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    color: var(--text);
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.yt-link-card:hover {
+    border-color: rgba(255,255,255,0.15);
+    color: var(--text);
+    transform: translateY(-1px);
+}
+
+.yt-link-card i {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+}
+
+/* Kanban */
+.kanban-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.875rem;
+}
+
+.kanban-col {
+    background: var(--bg-input);
+    border-radius: 10px;
+    padding: 0.75rem;
+    min-height: 120px;
+}
+
+.kanban-col-header {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border);
+}
+
+.kanban-idee { color: #a78bfa; border-color: #a78bfa; }
+.kanban-opname { color: #fbbf24; border-color: #fbbf24; }
+.kanban-gepubliceerd { color: var(--green); border-color: var(--green); }
+
+.kanban-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.kanban-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+}
+
+.kanban-card-title {
+    font-size: 0.82rem;
+    margin-bottom: 0.4rem;
+    line-height: 1.35;
+}
+
+.kanban-card-actions {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.kanban-btn {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    transition: all 0.15s;
+}
+
+.kanban-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.kanban-btn.delete:hover { background: #ef4444; border-color: #ef4444; color: #fff; }
+
+/* Sources */
+.source-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.55rem 0.75rem;
+    background: var(--bg-input);
+    border-radius: 8px;
+    margin-bottom: 0.4rem;
+    font-size: 0.85rem;
+}
+
+.source-text {
+    word-break: break-all;
+}
+
+.source-delete {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s;
+}
+
+.source-item:hover .source-delete { opacity: 1; }
+.source-delete:hover { color: #ef4444; }
+
 /* Responsive */
 @media (max-width: 640px) {
     .dashboard-container {

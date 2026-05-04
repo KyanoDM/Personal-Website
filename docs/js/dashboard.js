@@ -72,6 +72,9 @@
             document.getElementById('dashboard').style.display = 'block';
             loadHabits();
             loadWeight();
+            loadYouTubeStats();
+            loadKanban();
+            loadSources();
         } else {
             if (user) auth.signOut();
             window.location.href = 'index.html';
@@ -477,74 +480,6 @@
         });
     }
 
-    // Import weight
-    document.getElementById('importWeight').addEventListener('click', function () {
-        document.getElementById('importData').value = '';
-        document.getElementById('importStatus').style.display = 'none';
-        var modal = new bootstrap.Modal(document.getElementById('importWeightModal'));
-        modal.show();
-    });
-
-    document.getElementById('confirmImport').addEventListener('click', function () {
-        var raw = document.getElementById('importData').value.trim();
-        if (!raw) return;
-
-        var lines = raw.split('\n');
-        var entries = [];
-
-        lines.forEach(function (line) {
-            line = line.trim();
-            if (!line) return;
-            var parts = line.split('\t');
-            if (parts.length < 2) parts = line.split(/\s{2,}/);
-            if (parts.length < 2) return;
-
-            var dateStr = parts[0].trim();
-            var weightStr = parts[1].trim().replace(',', '.');
-
-            var kg = parseFloat(weightStr);
-            if (isNaN(kg) || kg < 20 || kg > 400) return;
-
-            // Parse date: M/D/YYYY or D/M/YYYY
-            var dp = dateStr.split('/');
-            if (dp.length !== 3) return;
-            var month = parseInt(dp[0]);
-            var day = parseInt(dp[1]);
-            var year = parseInt(dp[2]);
-
-            var d = new Date(year, month - 1, day);
-            if (isNaN(d.getTime())) return;
-
-            entries.push({ date: formatDate(d), kg: kg });
-        });
-
-        if (entries.length === 0) {
-            document.getElementById('importStatus').style.display = 'block';
-            document.getElementById('importStatus').innerHTML = '<span style="color:#ef4444;">Geen geldige data gevonden.</span>';
-            return;
-        }
-
-        var status = document.getElementById('importStatus');
-        status.style.display = 'block';
-        status.innerHTML = '<span style="color:var(--accent);">Importeren... 0/' + entries.length + '</span>';
-
-        var batch = db.batch();
-        entries.forEach(function (e) {
-            var ref = db.collection('weight').doc(e.date);
-            batch.set(ref, { date: e.date, kg: e.kg });
-        });
-
-        batch.commit().then(function () {
-            status.innerHTML = '<span style="color:var(--green);">' + entries.length + ' records geïmporteerd!</span>';
-            setTimeout(function () {
-                bootstrap.Modal.getInstance(document.getElementById('importWeightModal')).hide();
-                loadWeight();
-            }, 1000);
-        }).catch(function (err) {
-            status.innerHTML = '<span style="color:#ef4444;">Fout: ' + err.message + '</span>';
-        });
-    });
-
     // Save weight
     document.getElementById('saveWeight').addEventListener('click', function () {
         var val = parseFloat(document.getElementById('weightInput').value);
@@ -559,4 +494,166 @@
             loadWeight();
         });
     });
+    // ─── YOUTUBE ────────────────────────────────────
+
+    var YT_API_KEY = 'AIzaSyAvjkk-sg2Nq0q5jd70b_wqx0DL9T8WJW8';
+    var YT_CHANNEL_ID = 'UCotGYMK9Q_pUd-n3Smw_Xiw';
+    var YT_BASE = 'https://www.googleapis.com/youtube/v3/';
+
+    function fmtNum(n) {
+        n = parseInt(n || 0);
+        if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+        if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+        return n.toString();
+    }
+
+    function loadYouTubeStats() {
+        fetch(YT_BASE + 'channels?part=statistics,contentDetails&id=' + YT_CHANNEL_ID + '&key=' + YT_API_KEY)
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.items || !data.items.length) return;
+                var ch = data.items[0];
+                var s = ch.statistics;
+                document.getElementById('ytStats').innerHTML =
+                    '<div class="yt-stat"><span class="stat-label">Abonnees</span><span class="stat-value">' + fmtNum(s.subscriberCount) + '</span></div>' +
+                    '<div class="yt-stat"><span class="stat-label">Totaal views</span><span class="stat-value">' + fmtNum(s.viewCount) + '</span></div>' +
+                    '<div class="yt-stat"><span class="stat-label">Video\'s</span><span class="stat-value">' + s.videoCount + '</span></div>';
+                loadLatestVideos(ch.contentDetails.relatedPlaylists.uploads);
+            })
+            .catch(function () {
+                document.getElementById('ytStats').innerHTML = '<span style="color:#ef4444;font-size:0.8rem">Kon stats niet laden.</span>';
+            });
+    }
+
+    function loadLatestVideos(uploadsId) {
+        fetch(YT_BASE + 'playlistItems?part=snippet&maxResults=5&playlistId=' + uploadsId + '&key=' + YT_API_KEY)
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.items) return;
+                var ids = data.items.map(function (i) { return i.snippet.resourceId.videoId; });
+                var items = data.items;
+                fetch(YT_BASE + 'videos?part=statistics&id=' + ids.join(',') + '&key=' + YT_API_KEY)
+                    .then(function (r) { return r.json(); })
+                    .then(function (sd) {
+                        var sm = {};
+                        if (sd.items) sd.items.forEach(function (v) { sm[v.id] = v.statistics; });
+                        var html = '';
+                        items.forEach(function (item) {
+                            var sn = item.snippet;
+                            var vid = sn.resourceId.videoId;
+                            var st = sm[vid] || {};
+                            var thumb = sn.thumbnails.medium ? sn.thumbnails.medium.url : '';
+                            html += '<a href="https://youtube.com/watch?v=' + vid + '" target="_blank" class="yt-video-row">' +
+                                '<img src="' + thumb + '" class="yt-thumb" alt="">' +
+                                '<div class="yt-video-info">' +
+                                    '<div class="yt-video-title">' + sn.title + '</div>' +
+                                    '<div class="yt-video-stats">' +
+                                        '<span><i class="fas fa-eye me-1"></i>' + fmtNum(st.viewCount) + '</span>' +
+                                        '<span><i class="fas fa-thumbs-up me-1"></i>' + fmtNum(st.likeCount) + '</span>' +
+                                        '<span><i class="fas fa-comment me-1"></i>' + fmtNum(st.commentCount) + '</span>' +
+                                    '</div>' +
+                                '</div>' +
+                            '</a>';
+                        });
+                        document.getElementById('ytVideos').innerHTML = html;
+                    });
+            });
+    }
+
+    document.getElementById('refreshYT').addEventListener('click', function () {
+        document.getElementById('ytStats').innerHTML = '<span class="text-dim" style="font-size:0.8rem">Laden...</span>';
+        document.getElementById('ytVideos').innerHTML = '';
+        loadYouTubeStats();
+    });
+
+    // ─── KANBAN ─────────────────────────────────────
+
+    var kanbanIdeas = [];
+
+    function loadKanban() {
+        db.collection('ytIdeas').orderBy('createdAt', 'asc').onSnapshot(function (snapshot) {
+            kanbanIdeas = [];
+            snapshot.forEach(function (doc) {
+                kanbanIdeas.push(Object.assign({ id: doc.id }, doc.data()));
+            });
+            renderKanban();
+        });
+    }
+
+    function renderKanban() {
+        ['idee', 'opname', 'gepubliceerd'].forEach(function (status) {
+            var col = document.getElementById('kanban-' + status);
+            col.innerHTML = '';
+            kanbanIdeas.filter(function (i) { return i.status === status; }).forEach(function (idea) {
+                var card = document.createElement('div');
+                card.className = 'kanban-card';
+                var prevBtn = status !== 'idee' ? '<button class="kanban-btn" data-id="' + idea.id + '" data-dir="prev"><i class="fas fa-arrow-left"></i></button>' : '';
+                var nextBtn = status !== 'gepubliceerd' ? '<button class="kanban-btn" data-id="' + idea.id + '" data-dir="next"><i class="fas fa-arrow-right"></i></button>' : '';
+                card.innerHTML = '<div class="kanban-card-title">' + idea.title + '</div>' +
+                    '<div class="kanban-card-actions">' + prevBtn + nextBtn +
+                    '<button class="kanban-btn delete" data-id="' + idea.id + '" data-action="delete"><i class="fas fa-trash"></i></button>' +
+                    '</div>';
+                col.appendChild(card);
+            });
+        });
+
+        document.querySelectorAll('.kanban-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var id = this.dataset.id;
+                var dir = this.dataset.dir;
+                var action = this.dataset.action;
+                if (action === 'delete') {
+                    db.collection('ytIdeas').doc(id).delete();
+                } else {
+                    var order = ['idee', 'opname', 'gepubliceerd'];
+                    var idea = kanbanIdeas.find(function (i) { return i.id === id; });
+                    var idx = order.indexOf(idea.status);
+                    var newStatus = dir === 'next' ? order[idx + 1] : order[idx - 1];
+                    if (newStatus) db.collection('ytIdeas').doc(id).update({ status: newStatus });
+                }
+            });
+        });
+    }
+
+    document.getElementById('addIdea').addEventListener('click', function () {
+        document.getElementById('ideaTitleInput').value = '';
+        new bootstrap.Modal(document.getElementById('addIdeaModal')).show();
+    });
+
+    document.getElementById('confirmAddIdea').addEventListener('click', function () {
+        var title = document.getElementById('ideaTitleInput').value.trim();
+        if (!title) return;
+        db.collection('ytIdeas').add({ title: title, status: 'idee', createdAt: firebase.firestore.FieldValue.serverTimestamp() })
+            .then(function () { bootstrap.Modal.getInstance(document.getElementById('addIdeaModal')).hide(); });
+    });
+
+    // ─── SOURCES ────────────────────────────────────
+
+    function loadSources() {
+        db.collection('ytSources').orderBy('createdAt', 'desc').onSnapshot(function (snapshot) {
+            var sources = [];
+            snapshot.forEach(function (doc) { sources.push(Object.assign({ id: doc.id }, doc.data())); });
+            var html = sources.map(function (s) {
+                return '<div class="source-item"><span class="source-text">' + s.text + '</span>' +
+                    '<button class="source-delete" data-id="' + s.id + '"><i class="fas fa-xmark"></i></button></div>';
+            }).join('');
+            document.getElementById('sourcesList').innerHTML = html;
+            document.querySelectorAll('.source-delete').forEach(function (btn) {
+                btn.addEventListener('click', function () { db.collection('ytSources').doc(this.dataset.id).delete(); });
+            });
+        });
+    }
+
+    document.getElementById('addSource').addEventListener('click', function () {
+        document.getElementById('sourceTextInput').value = '';
+        new bootstrap.Modal(document.getElementById('addSourceModal')).show();
+    });
+
+    document.getElementById('confirmAddSource').addEventListener('click', function () {
+        var text = document.getElementById('sourceTextInput').value.trim();
+        if (!text) return;
+        db.collection('ytSources').add({ text: text, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
+            .then(function () { bootstrap.Modal.getInstance(document.getElementById('addSourceModal')).hide(); });
+    });
+
 })();
