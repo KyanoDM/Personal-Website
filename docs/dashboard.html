@@ -110,6 +110,24 @@
         </div>
     </div>
 
+    <!-- Import Weight Modal -->
+    <div class="modal fade" id="importWeightModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content dash-modal">
+                <div class="modal-body p-4">
+                    <h5 class="mb-2">Gewicht importeren</h5>
+                    <p class="text-dim mb-3">Plak je data uit Google Sheets (datum + gewicht, tab-gescheiden). De trend wordt automatisch berekend.</p>
+                    <textarea id="importData" class="form-control dash-input mb-3" rows="8" placeholder="6/3/2025&#9;66,8&#10;6/5/2025&#9;67,7&#10;..."></textarea>
+                    <div id="importStatus" class="mb-3" style="display:none;"></div>
+                    <div class="d-flex gap-2">
+                        <button id="confirmImport" class="btn-accent flex-grow-1">Importeer</button>
+                        <button class="btn-ghost" data-bs-dismiss="modal">Annuleer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>

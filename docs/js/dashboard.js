@@ -477,6 +477,74 @@
         });
     }
 
+    // Import weight
+    document.getElementById('importWeight').addEventListener('click', function () {
+        document.getElementById('importData').value = '';
+        document.getElementById('importStatus').style.display = 'none';
+        var modal = new bootstrap.Modal(document.getElementById('importWeightModal'));
+        modal.show();
+    });
+
+    document.getElementById('confirmImport').addEventListener('click', function () {
+        var raw = document.getElementById('importData').value.trim();
+        if (!raw) return;
+
+        var lines = raw.split('\n');
+        var entries = [];
+
+        lines.forEach(function (line) {
+            line = line.trim();
+            if (!line) return;
+            var parts = line.split('\t');
+            if (parts.length < 2) parts = line.split(/\s{2,}/);
+            if (parts.length < 2) return;
+
+            var dateStr = parts[0].trim();
+            var weightStr = parts[1].trim().replace(',', '.');
+
+            var kg = parseFloat(weightStr);
+            if (isNaN(kg) || kg < 20 || kg > 400) return;
+
+            // Parse date: M/D/YYYY or D/M/YYYY
+            var dp = dateStr.split('/');
+            if (dp.length !== 3) return;
+            var month = parseInt(dp[0]);
+            var day = parseInt(dp[1]);
+            var year = parseInt(dp[2]);
+
+            var d = new Date(year, month - 1, day);
+            if (isNaN(d.getTime())) return;
+
+            entries.push({ date: formatDate(d), kg: kg });
+        });
+
+        if (entries.length === 0) {
+            document.getElementById('importStatus').style.display = 'block';
+            document.getElementById('importStatus').innerHTML = '<span style="color:#ef4444;">Geen geldige data gevonden.</span>';
+            return;
+        }
+
+        var status = document.getElementById('importStatus');
+        status.style.display = 'block';
+        status.innerHTML = '<span style="color:var(--accent);">Importeren... 0/' + entries.length + '</span>';
+
+        var batch = db.batch();
+        entries.forEach(function (e) {
+            var ref = db.collection('weight').doc(e.date);
+            batch.set(ref, { date: e.date, kg: e.kg });
+        });
+
+        batch.commit().then(function () {
+            status.innerHTML = '<span style="color:var(--green);">' + entries.length + ' records geïmporteerd!</span>';
+            setTimeout(function () {
+                bootstrap.Modal.getInstance(document.getElementById('importWeightModal')).hide();
+                loadWeight();
+            }, 1000);
+        }).catch(function (err) {
+            status.innerHTML = '<span style="color:#ef4444;">Fout: ' + err.message + '</span>';
+        });
+    });
+
     // Save weight
     document.getElementById('saveWeight').addEventListener('click', function () {
         var val = parseFloat(document.getElementById('weightInput').value);
