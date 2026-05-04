@@ -16,17 +16,6 @@
     const auth = firebase.auth();
     const provider = new firebase.auth.GoogleAuthProvider();
 
-    // Handle redirect result after Google sign-in
-    auth.getRedirectResult().then(function (result) {
-        if (result.user) {
-            if (result.user.email === ALLOWED_EMAIL) {
-                window.location.href = 'dashboard.html';
-            } else {
-                auth.signOut();
-            }
-        }
-    }).catch(function () {});
-
     // Check if already authenticated (returning visitor)
     auth.onAuthStateChanged(function (user) {
         if (user && user.email === ALLOWED_EMAIL) {
@@ -52,8 +41,15 @@
         modal.show();
     }
 
-    // Google sign-in via redirect (popups get blocked)
     document.getElementById('googleSignIn').addEventListener('click', function () {
-        auth.signInWithRedirect(provider);
+        auth.signInWithPopup(provider).then(function (result) {
+            if (result.user.email === ALLOWED_EMAIL) {
+                window.location.href = 'dashboard.html';
+            } else {
+                auth.signOut();
+            }
+        }).catch(function (error) {
+            document.querySelector('.konami-hint').textContent = error.message;
+        });
     });
 })();
