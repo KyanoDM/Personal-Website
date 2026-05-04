@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/Style.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="img/logo.png" type="image/png">
@@ -26,45 +25,91 @@
         </header>
 
         <main class="dashboard-main">
-            <p class="text-muted">Welkom terug, Kyano. Dashboard wordt gebouwd...</p>
+
+            <!-- Habit Tracker -->
+            <section class="dash-section">
+                <div class="section-head">
+                    <h2><i class="fas fa-check-circle me-2"></i>Habits</h2>
+                    <div class="week-nav">
+                        <button id="prevWeek" class="btn-icon"><i class="fas fa-chevron-left"></i></button>
+                        <span id="weekLabel"></span>
+                        <button id="nextWeek" class="btn-icon"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+
+                <div class="habit-grid" id="habitGrid"></div>
+
+                <div class="habit-actions">
+                    <button id="addHabit" class="btn-ghost"><i class="fas fa-plus me-1"></i>Habit toevoegen</button>
+                </div>
+
+                <!-- Streaks -->
+                <div class="streaks-row" id="streaksRow"></div>
+
+                <!-- Heatmap -->
+                <div class="heatmap-wrapper">
+                    <h3>Laatste 3 maanden</h3>
+                    <div class="heatmap" id="heatmap"></div>
+                    <div class="heatmap-legend">
+                        <span>Minder</span>
+                        <div class="heatmap-cell" style="background: var(--heat-0)"></div>
+                        <div class="heatmap-cell" style="background: var(--heat-1)"></div>
+                        <div class="heatmap-cell" style="background: var(--heat-2)"></div>
+                        <div class="heatmap-cell" style="background: var(--heat-3)"></div>
+                        <div class="heatmap-cell" style="background: var(--heat-4)"></div>
+                        <span>Meer</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Weight Tracker -->
+            <section class="dash-section">
+                <div class="section-head">
+                    <h2><i class="fas fa-weight-scale me-2"></i>Gewicht</h2>
+                </div>
+
+                <div class="weight-input-row">
+                    <input type="number" id="weightInput" class="weight-input" placeholder="kg" step="0.1" min="30" max="300">
+                    <button id="saveWeight" class="btn-accent">Opslaan</button>
+                </div>
+
+                <div class="weight-stats" id="weightStats"></div>
+
+                <div class="chart-container">
+                    <canvas id="weightChart"></canvas>
+                </div>
+            </section>
+
         </main>
     </div>
 
+    <!-- Add Habit Modal -->
+    <div class="modal fade" id="addHabitModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content dash-modal">
+                <div class="modal-body p-4">
+                    <h5 class="mb-3">Nieuwe habit</h5>
+                    <input type="text" id="habitNameInput" class="form-control dash-input mb-3" placeholder="Naam">
+                    <select id="habitTypeInput" class="form-select dash-input mb-3">
+                        <option value="daily">Dagelijks</option>
+                        <option value="weekly">Wekelijks</option>
+                    </select>
+                    <div class="d-flex gap-2">
+                        <button id="confirmAddHabit" class="btn-accent flex-grow-1">Toevoegen</button>
+                        <button class="btn-ghost" data-bs-dismiss="modal">Annuleer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <script>
-        const ALLOWED_EMAIL = 'kyanodemaertelaere@gmail.com';
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCmnq4ONXSRo_hcXOd8Zs5obiXdj5mOr-I",
-            authDomain: "kyanodm-be.firebaseapp.com",
-            projectId: "kyanodm-be",
-            storageBucket: "kyanodm-be.firebasestorage.app",
-            messagingSenderId: "360359979043",
-            appId: "1:360359979043:web:d211bf1f5c90f0e51ea996"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-
-        auth.onAuthStateChanged(function (user) {
-            document.getElementById('loading').style.display = 'none';
-            if (user && user.email === ALLOWED_EMAIL) {
-                document.getElementById('dashboard').style.display = 'block';
-            } else {
-                if (user) auth.signOut();
-                window.location.href = 'index.html';
-            }
-        });
-
-        document.getElementById('signOut').addEventListener('click', function () {
-            auth.signOut().then(function () {
-                window.location.href = 'index.html';
-            });
-        });
-    </script>
+    <script src="js/dashboard.js"></script>
 </body>
 
 </html>
