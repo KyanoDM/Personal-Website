@@ -19,6 +19,8 @@
     var habits = [];
     var habitData = {};
     var weightChart = null;
+    var weightEntriesAll = [];
+    var weightRange = '6m';
 
     // 2AM boundary: returns the "habit date" for a given moment
     function getHabitDate(date) {
@@ -65,13 +67,45 @@
 
     var DAY_NAMES = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
 
+    function escapeHtml(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    function extractUrl(text) {
+        if (!text) return null;
+        var m = String(text).match(/https?:\/\/[^\s]+/i);
+        return m ? m[0].replace(/[),.;]+$/, '') : null;
+    }
+
+    function extractYoutubeId(url) {
+        var m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        return m ? m[1] : null;
+    }
+
+    function getDomain(url) {
+        try { return new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return ''; }
+    }
+
+    function buildEmbed(url) {
+        var ytId = extractYoutubeId(url);
+        if (ytId) {
+            return '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener" class="embed-thumb-link" title="' + escapeHtml(url) + '">' +
+                '<img src="https://i.ytimg.com/vi/' + ytId + '/mqdefault.jpg" class="embed-thumb" alt=""></a>';
+        }
+        var dom = getDomain(url);
+        return '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener" class="embed-link" title="' + escapeHtml(url) + '">' +
+            '<img src="https://www.google.com/s2/favicons?domain=' + encodeURIComponent(dom) + '&sz=32" alt="">' +
+            '<span>' + escapeHtml(dom || url) + '</span></a>';
+    }
+
     // Auth
     auth.onAuthStateChanged(function (user) {
         document.getElementById('loading').style.display = 'none';
         if (user && user.email === ALLOWED_EMAIL) {
             document.getElementById('dashboard').style.display = 'block';
-            loadToolkit();
-            loadHabits();
+            loadConfig();
             loadWeight();
             loadYouTubeStats();
             loadKanban();
@@ -88,12 +122,18 @@
         });
     });
 
-    // ─── HABITS ─────────────────────────────────────
+    // ─── CONFIG (batch read: habits + toolkit) ────
 
-    function loadHabits() {
-        db.collection('config').doc('habits').get().then(function (doc) {
-            if (doc.exists) {
-                habits = doc.data().list || [];
+    function loadConfig() {
+        Promise.all([
+            db.collection('config').doc('habits').get(),
+            db.collection('config').doc('toolkit').get()
+        ]).then(function (docs) {
+            var habitsDoc = docs[0];
+            var toolkitDoc = docs[1];
+
+            if (habitsDoc.exists) {
+                habits = habitsDoc.data().list || [];
             } else {
                 habits = [
                     { name: 'Gym', type: 'daily' },
@@ -102,29 +142,56 @@
                 ];
                 saveHabitConfig();
             }
+
+            if (toolkitDoc.exists && toolkitDoc.data().list) {
+                toolkitLinks = toolkitDoc.data().list;
+            } else {
+                toolkitLinks = DEFAULT_TOOLKIT.slice();
+                saveToolkit();
+            }
+            renderToolkit();
             loadWeekData();
         });
     }
+
+    // ─── HABITS ─────────────────────────────────────
 
     function saveHabitConfig() {
         db.collection('config').doc('habits').set({ list: habits });
     }
 
+    var allHabitData = {};
+
     function loadWeekData() {
+        var end = new Date();
+        var start = new Date();
+        start.setDate(start.getDate() - 90);
+        // Extend range to cover navigated week if it's outside 90 days
         var days = getWeekDays(currentWeekOffset);
-        var startDate = formatDate(days[0]);
-        var endDate = formatDate(days[6]);
+        var weekStart = days[0];
+        var weekEnd = days[6];
+        if (weekStart < start) start = weekStart;
+        if (weekEnd > end) end = weekEnd;
+
+        var startStr = formatDate(start);
+        var endStr = formatDate(end);
 
         db.collection('habitData')
-            .where(firebase.firestore.FieldPath.documentId(), '>=', startDate)
-            .where(firebase.firestore.FieldPath.documentId(), '<=', endDate)
+            .where(firebase.firestore.FieldPath.documentId(), '>=', startStr)
+            .where(firebase.firestore.FieldPath.documentId(), '<=', endStr)
             .get().then(function (snapshot) {
-                habitData = {};
+                allHabitData = {};
                 snapshot.forEach(function (doc) {
-                    habitData[doc.id] = doc.data();
+                    allHabitData[doc.id] = doc.data();
                 });
+                // Extract this week's subset for habit grid
+                habitData = {};
+                for (var i = 0; i < 7; i++) {
+                    var ds = formatDate(days[i]);
+                    if (allHabitData[ds]) habitData[ds] = allHabitData[ds];
+                }
                 renderHabits();
-                loadHeatmapData();
+                renderHeatmap(allHabitData, start, end);
             });
     }
 
@@ -244,27 +311,6 @@
         document.getElementById('streaksRow').innerHTML = html;
     }
 
-    // Heatmap
-    function loadHeatmapData() {
-        var end = new Date();
-        var start = new Date();
-        start.setDate(start.getDate() - 90);
-
-        var startStr = formatDate(start);
-        var endStr = formatDate(end);
-
-        db.collection('habitData')
-            .where(firebase.firestore.FieldPath.documentId(), '>=', startStr)
-            .where(firebase.firestore.FieldPath.documentId(), '<=', endStr)
-            .get().then(function (snapshot) {
-                var allData = {};
-                snapshot.forEach(function (doc) {
-                    allData[doc.id] = doc.data();
-                });
-                renderHeatmap(allData, start, end);
-            });
-    }
-
     function renderHeatmap(allData, start, end) {
         var dailyHabits = habits.filter(function (h) { return h.type === 'daily'; });
         if (dailyHabits.length === 0) {
@@ -355,6 +401,7 @@
                 entries.push({ date: dateStr, kg: kg });
             });
             entries.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+            weightEntriesAll = entries;
             renderWeight(entries);
         });
     }
@@ -366,12 +413,13 @@
             return;
         }
 
-        // Default view: last 6 months
-        var sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-        sixMonthsAgo.setHours(0, 0, 0, 0);
-        var cutoff = formatDate(sixMonthsAgo);
-        entries = entries.filter(function (e) { return e.date >= cutoff; });
+        if (weightRange === '6m') {
+            var sixMonthsAgo = new Date();
+            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+            sixMonthsAgo.setHours(0, 0, 0, 0);
+            var cutoff = formatDate(sixMonthsAgo);
+            entries = entries.filter(function (e) { return e.date >= cutoff; });
+        }
 
         if (entries.length === 0) {
             document.getElementById('weightStats').innerHTML = '';
@@ -516,6 +564,19 @@
         });
     }
 
+    // Range toggle (6m / All)
+    document.getElementById('weightRange').addEventListener('click', function (e) {
+        var btn = e.target.closest('.range-btn');
+        if (!btn) return;
+        var range = btn.dataset.range;
+        if (range === weightRange) return;
+        weightRange = range;
+        document.querySelectorAll('#weightRange .range-btn').forEach(function (b) {
+            b.classList.toggle('active', b.dataset.range === range);
+        });
+        renderWeight(weightEntriesAll);
+    });
+
     // Save weight
     document.getElementById('saveWeight').addEventListener('click', function () {
         var val = parseFloat(document.getElementById('weightInput').value);
@@ -527,7 +588,15 @@
             kg: val
         }).then(function () {
             document.getElementById('weightInput').value = '';
-            loadWeight();
+            // Update locally instead of full re-fetch
+            var existing = weightEntriesAll.findIndex(function (e) { return e.date === todayStr; });
+            if (existing >= 0) {
+                weightEntriesAll[existing].kg = val;
+            } else {
+                weightEntriesAll.push({ date: todayStr, kg: val });
+                weightEntriesAll.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+            }
+            renderWeight(weightEntriesAll);
         });
     });
     // ─── YOUTUBE ────────────────────────────────────
@@ -620,19 +689,29 @@
         var list = document.getElementById('kanbanList');
         list.innerHTML = '';
         var statusOrder = { idee: 0, opname: 1, gepubliceerd: 2 };
-        var statusLabel = { idee: 'Idee', opname: 'Opname', gepubliceerd: 'Gepubliceerd' };
         var sorted = kanbanIdeas.slice().sort(function (a, b) {
             return (statusOrder[a.status] || 0) - (statusOrder[b.status] || 0);
         });
 
         sorted.forEach(function (idea) {
             var card = document.createElement('div');
-            card.className = 'kanban-card';
+            card.className = 'kanban-card' + (idea.status === 'gepubliceerd' ? ' is-published' : '');
             var prevBtn = idea.status !== 'idee' ? '<button class="kanban-btn" data-id="' + idea.id + '" data-dir="prev" title="Vorige status"><i class="fas fa-arrow-left"></i></button>' : '';
             var nextBtn = idea.status !== 'gepubliceerd' ? '<button class="kanban-btn" data-id="' + idea.id + '" data-dir="next" title="Volgende status"><i class="fas fa-arrow-right"></i></button>' : '';
+
+            var url = extractUrl(idea.title);
+            var displayTitle = idea.title;
+            if (url) {
+                displayTitle = idea.title.replace(url, '').trim();
+                if (!displayTitle) displayTitle = getDomain(url) || url;
+            }
+            var embedHtml = url ? buildEmbed(url) : '';
+
             card.innerHTML =
-                '<span class="kanban-status kanban-' + idea.status + '">' + statusLabel[idea.status] + '</span>' +
-                '<div class="kanban-card-title">' + idea.title + '</div>' +
+                '<div class="kanban-card-body">' +
+                    embedHtml +
+                    '<div class="kanban-card-title">' + escapeHtml(displayTitle) + '</div>' +
+                '</div>' +
                 '<div class="kanban-card-actions">' + prevBtn + nextBtn +
                 '<button class="kanban-btn delete" data-id="' + idea.id + '" data-action="delete" title="Verwijder"><i class="fas fa-trash"></i></button>' +
                 '</div>';
@@ -676,8 +755,20 @@
             var sources = [];
             snapshot.forEach(function (doc) { sources.push(Object.assign({ id: doc.id }, doc.data())); });
             var html = sources.map(function (s) {
-                return '<div class="source-item"><span class="source-text">' + s.text + '</span>' +
-                    '<button class="source-delete" data-id="' + s.id + '"><i class="fas fa-xmark"></i></button></div>';
+                var url = extractUrl(s.text);
+                var displayText = s.text;
+                if (url) {
+                    displayText = s.text.replace(url, '').trim();
+                    if (!displayText) displayText = getDomain(url) || url;
+                }
+                var embedHtml = url ? buildEmbed(url) : '';
+                return '<div class="source-item">' +
+                    '<div class="source-body">' +
+                        embedHtml +
+                        '<span class="source-text">' + escapeHtml(displayText) + '</span>' +
+                    '</div>' +
+                    '<button class="source-delete" data-id="' + s.id + '"><i class="fas fa-xmark"></i></button>' +
+                    '</div>';
             }).join('');
             document.getElementById('sourcesList').innerHTML = html;
             document.querySelectorAll('.source-delete').forEach(function (btn) {
@@ -708,26 +799,8 @@
         { name: 'YT Studio', url: 'https://studio.youtube.com', icon: 'fas fa-chart-bar' }
     ];
 
-    function loadToolkit() {
-        db.collection('config').doc('toolkit').get().then(function (doc) {
-            if (doc.exists && doc.data().list) {
-                toolkitLinks = doc.data().list;
-            } else {
-                toolkitLinks = DEFAULT_TOOLKIT.slice();
-                saveToolkit();
-            }
-            renderToolkit();
-        });
-    }
-
     function saveToolkit() {
         db.collection('config').doc('toolkit').set({ list: toolkitLinks });
-    }
-
-    function escapeHtml(s) {
-        return String(s).replace(/[&<>"']/g, function (c) {
-            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-        });
     }
 
     function normalizeIcon(icon) {

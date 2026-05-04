@@ -3,9 +3,10 @@
     --bg-card: #13151e;
     --bg-input: #1c1f2e;
     --bg-hover: #252839;
-    --border: rgba(255, 255, 255, 0.06);
-    --text: #e4e4e7;
-    --text-dim: #6b7084;
+    --border: rgba(255, 255, 255, 0.08);
+    --text: #ececef;
+    --text-dim: #a1a8bc;
+    --text-muted: #7d8499;
     --accent: #6366f1;
     --accent-hover: #4f46e5;
     --accent-glow: rgba(99, 102, 241, 0.15);
@@ -165,14 +166,19 @@ html, body { height: 100%; }
     border-style: solid;
 }
 
-/* Main grid: no-scroll, fills viewport */
+/* Main grid: 2 columns. Left: Habits (top) + Weight (bottom). Right: YouTube. */
 .dashboard-main {
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
     gap: 1rem;
 }
+
+.dashboard-main > section:nth-child(1) { grid-column: 1; grid-row: 1; }
+.dashboard-main > section:nth-child(2) { grid-column: 1; grid-row: 2; }
+.dashboard-main > section:nth-child(3) { grid-column: 2; grid-row: 1 / span 2; }
 
 /* Sections */
 .dash-section {
@@ -249,6 +255,35 @@ html, body { height: 100%; }
     border-color: var(--accent);
     color: #fff;
 }
+
+/* Range toggle (6m / All) */
+.range-toggle {
+    display: inline-flex;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2px;
+    gap: 2px;
+}
+
+.range-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.range-btn.active {
+    background: var(--accent);
+    color: #fff;
+}
+
+.range-btn:hover:not(.active) { color: var(--text); }
 
 /* Habit Grid */
 .habit-grid {
@@ -619,6 +654,14 @@ tr:hover .habit-delete { opacity: 0.6; }
     color: var(--text);
 }
 
+.dash-input::placeholder,
+.weight-input::placeholder,
+input::placeholder,
+.form-control::placeholder {
+    color: #8b91a8 !important;
+    opacity: 1 !important;
+}
+
 /* YouTube Section */
 .yt-stats-bar {
     display: flex;
@@ -731,48 +774,41 @@ tr:hover .habit-delete { opacity: 0.6; }
     background: var(--bg-input);
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 0.5rem 0.65rem;
+    padding: 0.55rem 0.7rem;
     display: flex;
     align-items: center;
     gap: 0.6rem;
 }
 
-.kanban-status {
-    font-size: 0.6rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 0.2rem 0.45rem;
-    border-radius: 5px;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.kanban-status.kanban-idee {
-    color: #a78bfa;
-    background: rgba(167, 139, 250, 0.12);
-}
-.kanban-status.kanban-opname {
-    color: #fbbf24;
-    background: rgba(251, 191, 36, 0.12);
-}
-.kanban-status.kanban-gepubliceerd {
-    color: var(--green);
-    background: var(--green-glow);
+.kanban-card-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
 }
 
 .kanban-card-title {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     line-height: 1.3;
     flex: 1;
     min-width: 0;
     word-break: break-word;
+    color: var(--text);
 }
 
 .kanban-card-actions {
     display: flex;
     gap: 0.3rem;
     flex-shrink: 0;
+}
+
+.kanban-card.is-published {
+    opacity: 0.7;
+}
+.kanban-card.is-published .kanban-card-title {
+    text-decoration: line-through;
+    color: var(--text-dim);
 }
 
 .kanban-btn {
@@ -797,16 +833,75 @@ tr:hover .habit-delete { opacity: 0.6; }
 .source-item {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 0.6rem;
     padding: 0.45rem 0.65rem;
     background: var(--bg-input);
     border-radius: 7px;
     margin-bottom: 0.35rem;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
+}
+
+.source-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
 }
 
 .source-text {
     word-break: break-all;
+    color: var(--text);
+}
+
+/* Embeds for ideas and sources */
+.embed-thumb {
+    width: 64px;
+    height: 36px;
+    object-fit: cover;
+    border-radius: 5px;
+    flex-shrink: 0;
+    background: var(--bg-card);
+    display: block;
+}
+
+.embed-thumb-link {
+    flex-shrink: 0;
+    line-height: 0;
+    display: block;
+}
+
+.embed-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.2rem 0.55rem;
+    text-decoration: none;
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    flex-shrink: 0;
+    max-width: 200px;
+    overflow: hidden;
+}
+
+.embed-link:hover {
+    color: var(--text);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.embed-link img {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.embed-link span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .source-delete {
@@ -825,7 +920,7 @@ tr:hover .habit-delete { opacity: 0.6; }
 .source-delete:hover { color: #ef4444; }
 
 /* Responsive: drop the no-scroll constraint on smaller screens */
-@media (max-width: 1100px) {
+@media (max-width: 980px) {
     .dashboard-body {
         height: auto;
         overflow: auto;
@@ -836,6 +931,13 @@ tr:hover .habit-delete { opacity: 0.6; }
     }
     .dashboard-main {
         grid-template-columns: 1fr;
+        grid-template-rows: auto;
+    }
+    .dashboard-main > section:nth-child(1),
+    .dashboard-main > section:nth-child(2),
+    .dashboard-main > section:nth-child(3) {
+        grid-column: 1;
+        grid-row: auto;
     }
     .dash-section {
         overflow: visible;
