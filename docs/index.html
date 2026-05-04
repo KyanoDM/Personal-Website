@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kyano De Maertelaere - Portfolio</title>
     <link rel="stylesheet" href="css/bootstrap.css">
     <link rel="stylesheet" href="css/Style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -32,6 +31,9 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#projects">Projecten</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#internship">Stage</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#contact">Contact</a>
@@ -177,10 +179,10 @@
                         <div class="skill-bar-item">
                             <div class="skill-bar-header">
                                 <span class="skill-name">Python</span>
-                                <span class="skill-level">Basis</span>
+                                <span class="skill-level">Gevorderd</span>
                             </div>
                             <div class="skill-bar-bg">
-                                <div class="skill-bar-fill" style="width: 30%;"></div>
+                                <div class="skill-bar-fill" style="width: 75%;"></div>
                             </div>
                         </div>
                         <div class="skill-bar-item">
@@ -431,6 +433,71 @@
         </div>
     </section>
 
+    <!-- Internship Section -->
+    <section id="internship" class="internship-section">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-title">Stage bij Cittel</h2>
+                <div class="title-underline mx-auto"></div>
+                <p class="section-subtitle">Maart – Juni 2026 · Howest Toegepaste Informatica</p>
+            </div>
+
+            <div class="row align-items-center">
+                <div class="col-lg-8 mx-auto">
+                    <div class="internship-intro">
+                        <p>
+                            Stage bij <a href="https://www.cittel.be" target="_blank" rel="noopener">Cittel</a>, een IT-bedrijf
+                            in hersteldienst, NAS-oplossingen en business-IT. Wat begon als "een webshop bouwen" groeide uit
+                            tot een volledig digitaal ecosysteem.
+                        </p>
+                    </div>
+
+                    <div class="internship-highlights">
+                        <div class="highlight-item">
+                            <i class="fas fa-globe"></i>
+                            <div>
+                                <strong>Bedrijfswebsite</strong>
+                                <span>Volledig herbouwd, PageSpeed 100/100</span>
+                            </div>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-shopping-cart"></i>
+                            <div>
+                                <strong>Webshop</strong>
+                                <span>WooCommerce + automatische productsync via Connect+ API</span>
+                            </div>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-robot"></i>
+                            <div>
+                                <strong>AI-chatbot</strong>
+                                <span>Gemini-gebaseerd productadvies met proxy-beveiliging</span>
+                            </div>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-link"></i>
+                            <div>
+                                <strong>Odoo ERP</strong>
+                                <span>Facturen en documenten aangepast via Python + XML-RPC</span>
+                            </div>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-shield-halved"></i>
+                            <div>
+                                <strong>Security-audit</strong>
+                                <span>Pentest met Burp Suite, rate limiting, prompt-beveiliging</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tech-stack mt-4">
+                        <span>HTML/CSS/JS</span><span>WooCommerce</span><span>Gemini API</span><span>Python</span><span>Odoo</span><span>Burp Suite</span><span>Next.js</span><span>Supabase</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Contact Section -->
     <section id="contact" class="contact-section">
         <div class="container">
@@ -542,8 +609,30 @@
         </div>
     </div>
 
+    <!-- Konami Login Modal -->
+    <div class="modal fade" id="konamiModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content konami-modal-content">
+                <div class="modal-body text-center p-4">
+                    <div class="konami-icon mb-3">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h5 class="mb-3">Geheime toegang</h5>
+                    <button id="googleSignIn" class="btn btn-google w-100">
+                        <i class="fab fa-google me-2"></i>Inloggen met Google
+                    </button>
+                    <p class="konami-hint mt-3 mb-0"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="js/script.js"></script>
+    <script src="js/konami.js"></script>
 </body>
 
 </html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/Style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="img/logo.png" type="image/png">
+</head>
+
+<body class="dashboard-body">
+    <div id="loading" class="dashboard-loading">
+        <div class="spinner-border text-light" role="status"></div>
+    </div>
+
+    <div id="dashboard" class="dashboard-container" style="display: none;">
+        <header class="dashboard-header">
+            <h1>Dashboard</h1>
+            <button id="signOut" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-sign-out-alt me-1"></i>Uitloggen
+            </button>
+        </header>
+
+        <main class="dashboard-main">
+            <p class="text-muted">Welkom terug, Kyano. Dashboard wordt gebouwd...</p>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script>
+        const ALLOWED_EMAIL = 'kyanodemaertelaere@gmail.com';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCmnq4ONXSRo_hcXOd8Zs5obiXdj5mOr-I",
+            authDomain: "kyanodm-be.firebaseapp.com",
+            projectId: "kyanodm-be",
+            storageBucket: "kyanodm-be.firebasestorage.app",
+            messagingSenderId: "360359979043",
+            appId: "1:360359979043:web:d211bf1f5c90f0e51ea996"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        auth.onAuthStateChanged(function (user) {
+            document.getElementById('loading').style.display = 'none';
+            if (user && user.email === ALLOWED_EMAIL) {
+                document.getElementById('dashboard').style.display = 'block';
+            } else {
+                if (user) auth.signOut();
+                window.location.href = 'index.html';
+            }
+        });
+
+        document.getElementById('signOut').addEventListener('click', function () {
+            auth.signOut().then(function () {
+                window.location.href = 'index.html';
+            });
+        });
+    </script>
+</body>
+
+</html>
