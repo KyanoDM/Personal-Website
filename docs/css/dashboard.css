@@ -148,15 +148,26 @@
 
 .habit-grid::-webkit-scrollbar { display: none; }
 
+.habit-grid table,
+.habit-grid table *,
+.habit-grid table tr,
+.habit-grid table td,
+.habit-grid table th,
+.habit-grid table thead,
+.habit-grid table tbody {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: var(--text);
+    --bs-table-bg: transparent;
+    --bs-table-striped-bg: transparent;
+    --bs-table-hover-bg: transparent;
+}
+
 .habit-grid table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     min-width: 480px;
-    background: transparent;
-    color: var(--text);
-    --bs-table-bg: transparent;
-    --bs-table-color: var(--text);
 }
 
 .habit-grid th,
