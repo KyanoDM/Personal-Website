@@ -155,6 +155,7 @@
             loadChannels();
             loadKanban();
             loadSources();
+            loadNotepad();
         } else {
             if (user) auth.signOut();
             window.location.href = 'index.html';
@@ -942,6 +943,32 @@
         if (!text) return;
         db.collection('ytSources').add({ text: text, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
             .then(function () { bootstrap.Modal.getInstance(document.getElementById('addSourceModal')).hide(); });
+    });
+
+    // ─── NOTEPAD ────────────────────────────────────
+
+    var notepadTimer = null;
+
+    function loadNotepad() {
+        db.collection('config').doc('notepad').get().then(function (doc) {
+            if (doc.exists && doc.data().text != null) {
+                document.getElementById('notepadArea').value = doc.data().text;
+            }
+        });
+    }
+
+    function saveNotepad() {
+        var text = document.getElementById('notepadArea').value;
+        document.getElementById('notepadStatus').textContent = 'Opslaan...';
+        db.collection('config').doc('notepad').set({ text: text }).then(function () {
+            document.getElementById('notepadStatus').textContent = 'Opgeslagen';
+            setTimeout(function () { document.getElementById('notepadStatus').textContent = ''; }, 1500);
+        });
+    }
+
+    document.getElementById('notepadArea').addEventListener('input', function () {
+        clearTimeout(notepadTimer);
+        notepadTimer = setTimeout(saveNotepad, 800);
     });
 
     // ─── VIDEO DOWNLOAD ─────────────────────────────
