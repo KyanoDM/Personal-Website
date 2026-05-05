@@ -120,27 +120,28 @@
                     </div>
                 </div>
 
-                <details class="yt-collapsible">
-                    <summary class="yt-collapsible-summary">
-                        <span><i class="fas fa-chevron-right yt-collapsible-chevron"></i>Meer</span>
-                    </summary>
-
-                    <div class="yt-subsection">
-                        <div class="yt-sub-head">
-                            <h3 class="yt-sub-title">Channel Ideas</h3>
-                            <button id="addIdea" class="btn-ghost btn-ghost-sm"><i class="fas fa-plus me-1"></i>Idee</button>
+                <div class="yt-collapsible">
+                    <button type="button" class="yt-collapsible-toggle" id="ytMoreToggle">
+                        <i class="fas fa-chevron-right yt-collapsible-chevron"></i>Meer
+                    </button>
+                    <div class="yt-collapsible-content" id="ytMoreContent" style="display:none">
+                        <div class="yt-subsection">
+                            <div class="yt-sub-head">
+                                <h3 class="yt-sub-title">Channel Ideas</h3>
+                                <button id="addIdea" class="btn-ghost btn-ghost-sm"><i class="fas fa-plus me-1"></i>Idee</button>
+                            </div>
+                            <div class="kanban-list" id="kanbanList"></div>
                         </div>
-                        <div class="kanban-list" id="kanbanList"></div>
-                    </div>
 
-                    <div class="yt-subsection">
-                        <div class="yt-sub-head">
-                            <h3 class="yt-sub-title">Video Sources</h3>
-                            <button id="addSource" class="btn-ghost btn-ghost-sm"><i class="fas fa-plus me-1"></i>Toevoegen</button>
+                        <div class="yt-subsection">
+                            <div class="yt-sub-head">
+                                <h3 class="yt-sub-title">Video Sources</h3>
+                                <button id="addSource" class="btn-ghost btn-ghost-sm"><i class="fas fa-plus me-1"></i>Toevoegen</button>
+                            </div>
+                            <div id="sourcesList"></div>
                         </div>
-                        <div id="sourcesList"></div>
                     </div>
-                </details>
+                </div>
             </section>
 
             <!-- Notepad -->

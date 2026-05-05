@@ -89,6 +89,13 @@ html, body { height: 100%; }
     border-color: rgba(255, 255, 255, 0.15);
 }
 
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
 /* Toolkit Bar (top) */
 .toolkit-bar {
     display: flex;
@@ -731,8 +738,9 @@ input::placeholder,
     border-top: 1px solid var(--border);
 }
 
-.yt-collapsible-summary {
-    list-style: none;
+.yt-collapsible-toggle {
+    background: none;
+    border: none;
     cursor: pointer;
     padding: 0.7rem 0 0.2rem;
     font-size: 0.7rem;
@@ -743,11 +751,7 @@ input::placeholder,
     user-select: none;
 }
 
-.yt-collapsible-summary::-webkit-details-marker {
-    display: none;
-}
-
-.yt-collapsible-summary:hover {
+.yt-collapsible-toggle:hover {
     color: var(--text);
 }
 
@@ -757,11 +761,11 @@ input::placeholder,
     font-size: 0.65rem;
 }
 
-.yt-collapsible[open] > .yt-collapsible-summary .yt-collapsible-chevron {
+.yt-collapsible.open .yt-collapsible-chevron {
     transform: rotate(90deg);
 }
 
-.yt-collapsible > .yt-subsection:first-of-type {
+.yt-collapsible-content > .yt-subsection:first-child {
     border-top: none;
     padding-top: 0.5rem;
 }

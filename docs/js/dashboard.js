@@ -1116,6 +1116,15 @@
         renderToolkit();
     });
 
+    // ─── YT MORE TOGGLE ─────────────────────────────
+
+    document.getElementById('ytMoreToggle').addEventListener('click', function () {
+        var wrapper = this.closest('.yt-collapsible');
+        var content = document.getElementById('ytMoreContent');
+        var isOpen = wrapper.classList.toggle('open');
+        content.style.display = isOpen ? '' : 'none';
+    });
+
     // ─── SETTINGS SIDEBAR ───────────────────────────
 
     function openSettings() {
