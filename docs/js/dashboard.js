@@ -949,7 +949,17 @@
     document.getElementById('downloadVideoBtn').addEventListener('click', function () {
         var url = document.getElementById('videoDownloadUrl').value.trim();
         if (!url) return;
-        window.open('https://cobalt.tools/#url=' + encodeURIComponent(url), '_blank');
+        // YouTube: replace domain with ssyoutube for direct download
+        if (/youtu\.?be/.test(url)) {
+            var dlUrl = url.replace(/youtube\.com/, 'ssyoutube.com').replace(/youtu\.be/, 'ssyoutube.com/watch?v=');
+            window.open(dlUrl, '_blank');
+        } else if (/instagram\.com/.test(url)) {
+            window.open('https://snapinsta.app/?' + encodeURIComponent(url), '_blank');
+        } else if (/tiktok\.com/.test(url)) {
+            window.open('https://snaptik.app/?url=' + encodeURIComponent(url), '_blank');
+        } else {
+            window.open('https://yt1s.io/?url=' + encodeURIComponent(url), '_blank');
+        }
     });
 
     document.getElementById('videoDownloadUrl').addEventListener('keydown', function (e) {
