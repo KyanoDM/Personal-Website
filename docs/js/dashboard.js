@@ -100,7 +100,12 @@
             '<span>' + escapeHtml(dom || url) + '</span></a>';
     }
 
-    function fetchVideoTitle(url, element) {
+    function extractYoutubeChannel(url) {
+        var m = url.match(/youtube\.com\/(?:@[\w.-]+|channel\/[\w-]+|c\/[\w-]+|user\/[\w-]+)/);
+        return m ? m[0] : null;
+    }
+
+    function fetchYouTubeTitle(url, element) {
         var ytId = extractYoutubeId(url);
         if (ytId) {
             fetch('https://noembed.com/embed?url=' + encodeURIComponent(url))
@@ -109,7 +114,35 @@
                     if (data.title) element.textContent = data.title;
                 })
                 .catch(function () {});
+            return;
         }
+        var handle = url.match(/youtube\.com\/@([\w.-]+)/);
+        if (handle) {
+            fetch(YT_BASE + 'channels?part=snippet&forHandle=' + handle[1] + '&key=' + YT_API_KEY)
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.items && data.items.length) {
+                        element.textContent = data.items[0].snippet.title;
+                    }
+                })
+                .catch(function () {});
+            return;
+        }
+        var chanId = url.match(/youtube\.com\/channel\/([\w-]+)/);
+        if (chanId) {
+            fetch(YT_BASE + 'channels?part=snippet&id=' + chanId[1] + '&key=' + YT_API_KEY)
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.items && data.items.length) {
+                        element.textContent = data.items[0].snippet.title;
+                    }
+                })
+                .catch(function () {});
+        }
+    }
+
+    function isYouTubeUrl(url) {
+        return /youtube\.com|youtu\.be/.test(url);
     }
 
     // Auth
@@ -693,16 +726,24 @@
     function loadYouTubeStats() {
         var channelId = getActiveChannel().id;
         if (!channelId) return;
-        fetch(YT_BASE + 'channels?part=statistics,contentDetails&id=' + channelId + '&key=' + YT_API_KEY)
+        fetch(YT_BASE + 'channels?part=statistics,contentDetails,snippet&id=' + channelId + '&key=' + YT_API_KEY)
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (!data.items || !data.items.length) return;
                 var ch = data.items[0];
                 var s = ch.statistics;
+
+                // Channel avatar & name
+                var avatar = ch.snippet.thumbnails.default ? ch.snippet.thumbnails.default.url : '';
+                document.getElementById('channelAvatar').src = avatar;
+                var titleEl = document.getElementById('ytStudioLink');
+                titleEl.textContent = ch.snippet.title;
+                titleEl.href = 'https://studio.youtube.com/channel/' + channelId;
+
                 document.getElementById('ytStats').innerHTML =
                     '<div class="yt-stat"><span class="stat-label">Abonnees</span><span class="stat-value">' + fmtNum(s.subscriberCount) + '</span></div>' +
-                    '<div class="yt-stat"><span class="stat-label">Totaal views</span><span class="stat-value">' + fmtNum(s.viewCount) + '</span></div>' +
-                    '<div class="yt-stat"><span class="stat-label">Video\'s</span><span class="stat-value">' + s.videoCount + '</span></div>';
+                    '<div class="yt-stat"><span class="stat-label">Totaal views</span><span class="stat-value">' + fmtNum(s.viewCount) + '</span></div>';
+
                 loadLatestVideos(ch.contentDetails.relatedPlaylists.uploads);
             })
             .catch(function () {
@@ -717,17 +758,28 @@
                 if (!data.items) return;
                 var ids = data.items.map(function (i) { return i.snippet.resourceId.videoId; });
                 var items = data.items;
-                fetch(YT_BASE + 'videos?part=statistics&id=' + ids.join(',') + '&key=' + YT_API_KEY)
+                fetch(YT_BASE + 'videos?part=statistics,snippet&id=' + ids.join(',') + '&key=' + YT_API_KEY)
                     .then(function (r) { return r.json(); })
                     .then(function (sd) {
                         var sm = {};
-                        if (sd.items) sd.items.forEach(function (v) { sm[v.id] = v.statistics; });
+                        if (sd.items) sd.items.forEach(function (v) { sm[v.id] = { stats: v.statistics, published: v.snippet.publishedAt }; });
+
+                        var now = Date.now();
+                        var views48h = 0;
                         var html = '';
                         items.forEach(function (item) {
                             var sn = item.snippet;
                             var vid = sn.resourceId.videoId;
-                            var st = sm[vid] || {};
+                            var info = sm[vid] || { stats: {}, published: '' };
+                            var st = info.stats;
                             var thumb = sn.thumbnails.medium ? sn.thumbnails.medium.url : '';
+
+                            var ageMs = now - new Date(info.published).getTime();
+                            if (ageMs < 48 * 60 * 60 * 1000) {
+                                views48h += parseInt(st.viewCount || 0);
+                            }
+
+                            var timeAgo = formatTimeAgo(info.published);
                             html += '<a href="https://youtube.com/watch?v=' + vid + '" target="_blank" class="yt-video-row">' +
                                 '<img src="' + thumb + '" class="yt-thumb" alt="">' +
                                 '<div class="yt-video-info">' +
@@ -735,14 +787,33 @@
                                     '<div class="yt-video-stats">' +
                                         '<span><i class="fas fa-eye me-1"></i>' + fmtNum(st.viewCount) + '</span>' +
                                         '<span><i class="fas fa-thumbs-up me-1"></i>' + fmtNum(st.likeCount) + '</span>' +
-                                        '<span><i class="fas fa-comment me-1"></i>' + fmtNum(st.commentCount) + '</span>' +
+                                        '<span><i class="fas fa-clock me-1"></i>' + timeAgo + '</span>' +
                                     '</div>' +
                                 '</div>' +
                             '</a>';
                         });
                         document.getElementById('ytVideos').innerHTML = html;
+
+                        // Add 48h views to stats bar
+                        var statsBar = document.getElementById('ytStats');
+                        if (views48h > 0) {
+                            statsBar.innerHTML += '<div class="yt-stat"><span class="stat-label">Views 48u</span><span class="stat-value">' + fmtNum(views48h) + '</span></div>';
+                        }
                     });
             });
+    }
+
+    function formatTimeAgo(dateStr) {
+        if (!dateStr) return '';
+        var diff = Date.now() - new Date(dateStr).getTime();
+        var mins = Math.floor(diff / 60000);
+        if (mins < 60) return mins + 'm';
+        var hours = Math.floor(mins / 60);
+        if (hours < 24) return hours + 'u';
+        var days = Math.floor(hours / 24);
+        if (days < 30) return days + 'd';
+        var months = Math.floor(days / 30);
+        return months + 'mnd';
     }
 
     document.getElementById('refreshYT').addEventListener('click', function () {
@@ -776,8 +847,6 @@
         sorted.forEach(function (idea) {
             var card = document.createElement('div');
             card.className = 'kanban-card' + (idea.status === 'gepubliceerd' ? ' is-published' : '');
-            var prevBtn = idea.status !== 'idee' ? '<button class="kanban-btn" data-id="' + idea.id + '" data-dir="prev" title="Vorige status"><i class="fas fa-arrow-left"></i></button>' : '';
-            var nextBtn = idea.status !== 'gepubliceerd' ? '<button class="kanban-btn" data-id="' + idea.id + '" data-dir="next" title="Volgende status"><i class="fas fa-arrow-right"></i></button>' : '';
 
             var url = extractUrl(idea.title);
             var displayTitle = idea.title;
@@ -786,7 +855,7 @@
                 displayTitle = idea.title.replace(url, '').trim();
                 if (!displayTitle) {
                     displayTitle = getDomain(url) || url;
-                    if (extractYoutubeId(url)) needsFetch = true;
+                    if (isYouTubeUrl(url)) needsFetch = true;
                 }
             }
             var embedHtml = url ? buildEmbed(url) : '';
@@ -796,30 +865,20 @@
                     embedHtml +
                     '<div class="kanban-card-title">' + escapeHtml(displayTitle) + '</div>' +
                 '</div>' +
-                '<div class="kanban-card-actions">' + prevBtn + nextBtn +
+                '<div class="kanban-card-actions">' +
                 '<button class="kanban-btn delete" data-id="' + idea.id + '" data-action="delete" title="Verwijder"><i class="fas fa-trash"></i></button>' +
                 '</div>';
             list.appendChild(card);
 
             if (needsFetch) {
-                fetchVideoTitle(url, card.querySelector('.kanban-card-title'));
+                fetchYouTubeTitle(url, card.querySelector('.kanban-card-title'));
             }
         });
 
         document.querySelectorAll('.kanban-btn').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var id = this.dataset.id;
-                var dir = this.dataset.dir;
-                var action = this.dataset.action;
-                if (action === 'delete') {
-                    db.collection('ytIdeas').doc(id).delete();
-                } else {
-                    var order = ['idee', 'opname', 'gepubliceerd'];
-                    var idea = kanbanIdeas.find(function (i) { return i.id === id; });
-                    var idx = order.indexOf(idea.status);
-                    var newStatus = dir === 'next' ? order[idx + 1] : order[idx - 1];
-                    if (newStatus) db.collection('ytIdeas').doc(id).update({ status: newStatus });
-                }
+                db.collection('ytIdeas').doc(id).delete();
             });
         });
     }
@@ -850,7 +909,7 @@
                     displayText = s.text.replace(url, '').trim();
                     if (!displayText) {
                         displayText = getDomain(url) || url;
-                        if (extractYoutubeId(url)) needsFetch = true;
+                        if (isYouTubeUrl(url)) needsFetch = true;
                     }
                 }
                 var embedHtml = url ? buildEmbed(url) : '';
@@ -865,7 +924,7 @@
             document.getElementById('sourcesList').innerHTML = html;
             document.querySelectorAll('.source-item[data-fetch]').forEach(function (el) {
                 var fetchUrl = el.dataset.fetch;
-                if (fetchUrl) fetchVideoTitle(fetchUrl, el.querySelector('.source-text'));
+                if (fetchUrl) fetchYouTubeTitle(fetchUrl, el.querySelector('.source-text'));
             });
             document.querySelectorAll('.source-delete').forEach(function (btn) {
                 btn.addEventListener('click', function () { db.collection('ytSources').doc(this.dataset.id).delete(); });

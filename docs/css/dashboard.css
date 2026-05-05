@@ -928,6 +928,27 @@ input::placeholder,
 .source-item:hover .source-delete { opacity: 1; }
 .source-delete:hover { color: #ef4444; }
 
+/* Channel Header */
+.channel-header {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+.channel-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border);
+}
+.channel-avatar[src=""] {
+    display: none;
+}
+.channel-header-info h2 {
+    margin: 0;
+    font-size: 1rem;
+}
+
 /* Channel Switcher */
 .channel-switcher {
     display: flex;
