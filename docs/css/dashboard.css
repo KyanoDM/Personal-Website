@@ -55,6 +55,7 @@ html, body { height: 100%; }
     justify-content: space-between;
     gap: 1rem;
     flex-shrink: 0;
+    margin-bottom: 0.75rem;
 }
 
 .header-left {
@@ -144,6 +145,14 @@ html, body { height: 100%; }
 }
 
 .toolkit-link:hover .toolkit-delete { display: flex; }
+
+.toolkit-link.dragging {
+    opacity: 0.4;
+}
+.toolkit-link.drag-over {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+}
 
 .toolkit-add {
     background: none;
@@ -918,6 +927,79 @@ input::placeholder,
 
 .source-item:hover .source-delete { opacity: 1; }
 .source-delete:hover { color: #ef4444; }
+
+/* Channel Switcher */
+.channel-switcher {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.channel-select {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    outline: none;
+    cursor: pointer;
+}
+.channel-select:focus {
+    border-color: var(--accent);
+}
+.channel-manage-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+}
+.channel-manage-btn:hover { color: var(--text); }
+
+/* Video Download */
+.video-download-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+.video-download-row .dash-input {
+    flex: 1;
+}
+.video-download-row .btn-accent {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Icon Picker */
+.icon-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 36px);
+    gap: 0.35rem;
+}
+.icon-picker-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.icon-picker-btn:hover {
+    border-color: rgba(255,255,255,0.2);
+    color: var(--text);
+}
+.icon-picker-btn.selected {
+    border-color: var(--accent);
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--accent);
+}
 
 /* Responsive: drop the no-scroll constraint on smaller screens */
 @media (max-width: 980px) {

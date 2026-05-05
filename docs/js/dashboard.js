@@ -100,6 +100,18 @@
             '<span>' + escapeHtml(dom || url) + '</span></a>';
     }
 
+    function fetchVideoTitle(url, element) {
+        var ytId = extractYoutubeId(url);
+        if (ytId) {
+            fetch('https://noembed.com/embed?url=' + encodeURIComponent(url))
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.title) element.textContent = data.title;
+                })
+                .catch(function () {});
+        }
+    }
+
     // Auth
     auth.onAuthStateChanged(function (user) {
         document.getElementById('loading').style.display = 'none';
@@ -107,7 +119,7 @@
             document.getElementById('dashboard').style.display = 'block';
             loadConfig();
             loadWeight();
-            loadYouTubeStats();
+            loadChannels();
             loadKanban();
             loadSources();
         } else {
@@ -602,8 +614,74 @@
     // ─── YOUTUBE ────────────────────────────────────
 
     var YT_API_KEY = 'AIzaSyAvjkk-sg2Nq0q5jd70b_wqx0DL9T8WJW8';
-    var YT_CHANNEL_ID = 'UCotGYMK9Q_pUd-n3Smw_Xiw';
     var YT_BASE = 'https://www.googleapis.com/youtube/v3/';
+    var ytChannels = [];
+    var activeChannelIdx = 0;
+
+    function getActiveChannel() {
+        return ytChannels[activeChannelIdx] || { id: '', name: 'Geen channel' };
+    }
+
+    function loadChannels() {
+        db.collection('config').doc('ytChannels').get().then(function (doc) {
+            if (doc.exists && doc.data().list && doc.data().list.length) {
+                ytChannels = doc.data().list;
+                activeChannelIdx = doc.data().active || 0;
+                if (activeChannelIdx >= ytChannels.length) activeChannelIdx = 0;
+            } else {
+                ytChannels = [{ id: 'UCotGYMK9Q_pUd-n3Smw_Xiw', name: 'Kyano' }];
+                activeChannelIdx = 0;
+                saveChannels();
+            }
+            renderChannelSelect();
+            loadYouTubeStats();
+        });
+    }
+
+    function saveChannels() {
+        db.collection('config').doc('ytChannels').set({ list: ytChannels, active: activeChannelIdx });
+    }
+
+    function renderChannelSelect() {
+        var sel = document.getElementById('channelSelect');
+        sel.innerHTML = ytChannels.map(function (ch, idx) {
+            return '<option value="' + idx + '"' + (idx === activeChannelIdx ? ' selected' : '') + '>' + escapeHtml(ch.name) + '</option>';
+        }).join('');
+        updateStudioLink();
+    }
+
+    function updateStudioLink() {
+        var ch = getActiveChannel();
+        document.getElementById('ytStudioLink').href = 'https://studio.youtube.com/channel/' + ch.id;
+    }
+
+    document.getElementById('channelSelect').addEventListener('change', function () {
+        activeChannelIdx = parseInt(this.value);
+        saveChannels();
+        updateStudioLink();
+        loadYouTubeStats();
+    });
+
+    document.getElementById('addChannel').addEventListener('click', function () {
+        var name = prompt('Channel naam:');
+        if (!name) return;
+        var id = prompt('Channel ID (begint met UC...):');
+        if (!id) return;
+        ytChannels.push({ id: id, name: name });
+        activeChannelIdx = ytChannels.length - 1;
+        saveChannels();
+        renderChannelSelect();
+        loadYouTubeStats();
+    });
+
+    document.getElementById('removeChannel').addEventListener('click', function () {
+        if (ytChannels.length <= 1) return;
+        ytChannels.splice(activeChannelIdx, 1);
+        activeChannelIdx = 0;
+        saveChannels();
+        renderChannelSelect();
+        loadYouTubeStats();
+    });
 
     function fmtNum(n) {
         n = parseInt(n || 0);
@@ -613,7 +691,9 @@
     }
 
     function loadYouTubeStats() {
-        fetch(YT_BASE + 'channels?part=statistics,contentDetails&id=' + YT_CHANNEL_ID + '&key=' + YT_API_KEY)
+        var channelId = getActiveChannel().id;
+        if (!channelId) return;
+        fetch(YT_BASE + 'channels?part=statistics,contentDetails&id=' + channelId + '&key=' + YT_API_KEY)
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (!data.items || !data.items.length) return;
@@ -701,9 +781,13 @@
 
             var url = extractUrl(idea.title);
             var displayTitle = idea.title;
+            var needsFetch = false;
             if (url) {
                 displayTitle = idea.title.replace(url, '').trim();
-                if (!displayTitle) displayTitle = getDomain(url) || url;
+                if (!displayTitle) {
+                    displayTitle = getDomain(url) || url;
+                    if (extractYoutubeId(url)) needsFetch = true;
+                }
             }
             var embedHtml = url ? buildEmbed(url) : '';
 
@@ -716,6 +800,10 @@
                 '<button class="kanban-btn delete" data-id="' + idea.id + '" data-action="delete" title="Verwijder"><i class="fas fa-trash"></i></button>' +
                 '</div>';
             list.appendChild(card);
+
+            if (needsFetch) {
+                fetchVideoTitle(url, card.querySelector('.kanban-card-title'));
+            }
         });
 
         document.querySelectorAll('.kanban-btn').forEach(function (btn) {
@@ -754,15 +842,19 @@
         db.collection('ytSources').orderBy('createdAt', 'desc').onSnapshot(function (snapshot) {
             var sources = [];
             snapshot.forEach(function (doc) { sources.push(Object.assign({ id: doc.id }, doc.data())); });
-            var html = sources.map(function (s) {
+            var html = sources.map(function (s, idx) {
                 var url = extractUrl(s.text);
                 var displayText = s.text;
+                var needsFetch = false;
                 if (url) {
                     displayText = s.text.replace(url, '').trim();
-                    if (!displayText) displayText = getDomain(url) || url;
+                    if (!displayText) {
+                        displayText = getDomain(url) || url;
+                        if (extractYoutubeId(url)) needsFetch = true;
+                    }
                 }
                 var embedHtml = url ? buildEmbed(url) : '';
-                return '<div class="source-item">' +
+                return '<div class="source-item" data-fetch="' + (needsFetch ? url : '') + '">' +
                     '<div class="source-body">' +
                         embedHtml +
                         '<span class="source-text">' + escapeHtml(displayText) + '</span>' +
@@ -771,6 +863,10 @@
                     '</div>';
             }).join('');
             document.getElementById('sourcesList').innerHTML = html;
+            document.querySelectorAll('.source-item[data-fetch]').forEach(function (el) {
+                var fetchUrl = el.dataset.fetch;
+                if (fetchUrl) fetchVideoTitle(fetchUrl, el.querySelector('.source-text'));
+            });
             document.querySelectorAll('.source-delete').forEach(function (btn) {
                 btn.addEventListener('click', function () { db.collection('ytSources').doc(this.dataset.id).delete(); });
             });
@@ -789,7 +885,46 @@
             .then(function () { bootstrap.Modal.getInstance(document.getElementById('addSourceModal')).hide(); });
     });
 
+    // ─── VIDEO DOWNLOAD ─────────────────────────────
+
+    document.getElementById('downloadVideoBtn').addEventListener('click', function () {
+        var url = document.getElementById('videoDownloadUrl').value.trim();
+        if (!url) return;
+        window.open('https://cobalt.tools/#url=' + encodeURIComponent(url), '_blank');
+    });
+
+    document.getElementById('videoDownloadUrl').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') document.getElementById('downloadVideoBtn').click();
+    });
+
     // ─── TOOLKIT ────────────────────────────────────
+
+    var ICON_OPTIONS = [
+        { icon: 'fab fa-youtube', label: 'YouTube' },
+        { icon: 'fab fa-instagram', label: 'Instagram' },
+        { icon: 'fab fa-tiktok', label: 'TikTok' },
+        { icon: 'fab fa-twitter', label: 'Twitter' },
+        { icon: 'fab fa-spotify', label: 'Spotify' },
+        { icon: 'fab fa-github', label: 'GitHub' },
+        { icon: 'fab fa-discord', label: 'Discord' },
+        { icon: 'fab fa-google', label: 'Google' },
+        { icon: 'fab fa-figma', label: 'Figma' },
+        { icon: 'fab fa-dribbble', label: 'Dribbble' },
+        { icon: 'fas fa-microphone', label: 'Micro' },
+        { icon: 'fas fa-chart-bar', label: 'Stats' },
+        { icon: 'fas fa-camera', label: 'Camera' },
+        { icon: 'fas fa-palette', label: 'Design' },
+        { icon: 'fas fa-code', label: 'Code' },
+        { icon: 'fas fa-music', label: 'Muziek' },
+        { icon: 'fas fa-pen', label: 'Pen' },
+        { icon: 'fas fa-envelope', label: 'Mail' },
+        { icon: 'fas fa-bolt', label: 'Bolt' },
+        { icon: 'fas fa-globe', label: 'Web' },
+        { icon: 'fas fa-book', label: 'Boek' },
+        { icon: 'fas fa-film', label: 'Film' },
+        { icon: 'fas fa-robot', label: 'AI' },
+        { icon: 'fas fa-link', label: 'Link' }
+    ];
 
     var toolkitLinks = [];
     var DEFAULT_TOOLKIT = [
@@ -817,13 +952,44 @@
         var html = '';
         toolkitLinks.forEach(function (link, idx) {
             var icon = normalizeIcon(link.icon);
-            html += '<a href="' + escapeHtml(link.url) + '" target="_blank" rel="noopener" class="toolkit-link">' +
+            html += '<a href="' + escapeHtml(link.url) + '" target="_blank" rel="noopener" class="toolkit-link" draggable="true" data-idx="' + idx + '">' +
                 '<i class="' + escapeHtml(icon) + '"></i><span>' + escapeHtml(link.name) + '</span>' +
                 '<button class="toolkit-delete" data-idx="' + idx + '" title="Verwijder"><i class="fas fa-xmark"></i></button>' +
                 '</a>';
         });
         html += '<button id="addToolkit" class="toolkit-add" title="Link toevoegen"><i class="fas fa-plus"></i></button>';
         bar.innerHTML = html;
+
+        // Drag and drop
+        var dragIdx = null;
+        document.querySelectorAll('.toolkit-link').forEach(function (el) {
+            el.addEventListener('dragstart', function (e) {
+                dragIdx = parseInt(this.dataset.idx);
+                this.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            el.addEventListener('dragend', function () {
+                this.classList.remove('dragging');
+                document.querySelectorAll('.toolkit-link').forEach(function (l) { l.classList.remove('drag-over'); });
+            });
+            el.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                this.classList.add('drag-over');
+            });
+            el.addEventListener('dragleave', function () {
+                this.classList.remove('drag-over');
+            });
+            el.addEventListener('drop', function (e) {
+                e.preventDefault();
+                var dropIdx = parseInt(this.dataset.idx);
+                if (dragIdx === null || dragIdx === dropIdx) return;
+                var item = toolkitLinks.splice(dragIdx, 1)[0];
+                toolkitLinks.splice(dropIdx, 0, item);
+                saveToolkit();
+                renderToolkit();
+            });
+        });
 
         document.querySelectorAll('.toolkit-delete').forEach(function (btn) {
             btn.addEventListener('click', function (e) {
@@ -840,7 +1006,25 @@
             document.getElementById('toolkitNameInput').value = '';
             document.getElementById('toolkitUrlInput').value = '';
             document.getElementById('toolkitIconInput').value = '';
+            renderIconPicker('');
             new bootstrap.Modal(document.getElementById('addToolkitModal')).show();
+        });
+    }
+
+    function renderIconPicker(selectedIcon) {
+        var grid = document.getElementById('iconPickerGrid');
+        var html = '';
+        ICON_OPTIONS.forEach(function (opt) {
+            var sel = opt.icon === selectedIcon ? ' selected' : '';
+            html += '<button type="button" class="icon-picker-btn' + sel + '" data-icon="' + opt.icon + '" title="' + opt.label + '"><i class="' + opt.icon + '"></i></button>';
+        });
+        grid.innerHTML = html;
+        grid.querySelectorAll('.icon-picker-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                grid.querySelectorAll('.icon-picker-btn').forEach(function (b) { b.classList.remove('selected'); });
+                this.classList.add('selected');
+                document.getElementById('toolkitIconInput').value = this.dataset.icon;
+            });
         });
     }
 

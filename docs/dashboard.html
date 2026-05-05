@@ -88,12 +88,25 @@
             <!-- YouTube Section -->
             <section class="dash-section">
                 <div class="section-head">
-                    <h2><i class="fab fa-youtube me-2" style="color:#ff4444"></i>YouTube</h2>
-                    <button id="refreshYT" class="btn-icon" title="Vernieuwen"><i class="fas fa-rotate-right"></i></button>
+                    <h2><a id="ytStudioLink" href="https://studio.youtube.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><i class="fab fa-youtube me-2" style="color:#ff4444"></i>YouTube</a></h2>
+                    <div class="channel-switcher">
+                        <select id="channelSelect" class="channel-select"></select>
+                        <button id="addChannel" class="channel-manage-btn" title="Channel toevoegen"><i class="fas fa-plus"></i></button>
+                        <button id="removeChannel" class="channel-manage-btn" title="Channel verwijderen"><i class="fas fa-trash"></i></button>
+                        <button id="refreshYT" class="btn-icon" title="Vernieuwen"><i class="fas fa-rotate-right"></i></button>
+                    </div>
                 </div>
 
                 <div class="yt-stats-bar" id="ytStats">
                     <span class="text-dim" style="font-size:0.8rem">Laden...</span>
+                </div>
+
+                <div class="yt-subsection">
+                    <h3 class="yt-sub-title">Video downloaden</h3>
+                    <div class="video-download-row">
+                        <input type="text" id="videoDownloadUrl" class="form-control dash-input" placeholder="Plak video link (YouTube, Instagram, TikTok...)">
+                        <button id="downloadVideoBtn" class="btn-accent"><i class="fas fa-download me-1"></i>1080p</button>
+                    </div>
                 </div>
 
                 <div class="yt-subsection">
@@ -187,7 +200,9 @@
                     <h5 class="mb-3">Nieuwe link</h5>
                     <input type="text" id="toolkitNameInput" class="form-control dash-input mb-3" placeholder="Naam">
                     <input type="text" id="toolkitUrlInput" class="form-control dash-input mb-3" placeholder="https://...">
-                    <input type="text" id="toolkitIconInput" class="form-control dash-input mb-3" placeholder="Icon class (bijv. fa-youtube)">
+                    <label class="form-label text-dim" style="font-size:0.75rem">Icoon</label>
+                    <div class="icon-picker-grid mb-3" id="iconPickerGrid"></div>
+                    <input type="hidden" id="toolkitIconInput" value="">
                     <div class="d-flex gap-2">
                         <button id="confirmAddToolkit" class="btn-accent flex-grow-1">Toevoegen</button>
                         <button class="btn-ghost" data-bs-dismiss="modal">Annuleer</button>
