@@ -22,9 +22,12 @@
                 <h1>Dashboard</h1>
                 <nav id="toolkitBar" class="toolkit-bar"></nav>
             </div>
-            <button id="signOut" class="btn btn-outline-light btn-sm">
-                <i class="fas fa-sign-out-alt me-1"></i>Uitloggen
-            </button>
+            <div class="header-right">
+                <button id="openSettings" class="btn-icon" title="Instellingen"><i class="fas fa-gear"></i></button>
+                <button id="signOut" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-sign-out-alt me-1"></i>Uitloggen
+                </button>
+            </div>
         </header>
 
         <main class="dashboard-main">
@@ -96,8 +99,6 @@
                     </div>
                     <div class="channel-switcher">
                         <select id="channelSelect" class="channel-select"></select>
-                        <button id="addChannel" class="channel-manage-btn" title="Channel toevoegen"><i class="fas fa-plus"></i></button>
-                        <button id="removeChannel" class="channel-manage-btn" title="Channel verwijderen"><i class="fas fa-trash"></i></button>
                         <button id="refreshYT" class="btn-icon" title="Vernieuwen"><i class="fas fa-rotate-right"></i></button>
                     </div>
                 </div>
@@ -147,6 +148,47 @@
 
         </main>
     </div>
+
+    <!-- Settings Sidebar -->
+    <div id="settingsOverlay" class="settings-overlay"></div>
+    <aside id="settingsSidebar" class="settings-sidebar">
+        <div class="settings-header">
+            <h2><i class="fas fa-gear me-2"></i>Instellingen</h2>
+            <button id="closeSettings" class="btn-icon"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="settings-body">
+
+            <div class="settings-group">
+                <h3>YouTube Channels</h3>
+                <div id="settingsChannelList" class="settings-channel-list"></div>
+                <div class="settings-add-channel">
+                    <input type="text" id="settingsChannelName" class="form-control dash-input" placeholder="Channel naam">
+                    <input type="text" id="settingsChannelId" class="form-control dash-input" placeholder="Channel ID (UC...)">
+                    <button id="settingsAddChannel" class="btn-accent btn-sm"><i class="fas fa-plus me-1"></i>Toevoegen</button>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h3>Gewicht</h3>
+                <label class="settings-label">Streefgewicht (kg)</label>
+                <div class="d-flex gap-2 align-items-center">
+                    <input type="number" id="settingsWeightGoal" class="form-control dash-input" placeholder="bijv. 75" step="0.1" min="30" max="300" style="width:100px">
+                    <button id="saveWeightGoal" class="btn-accent btn-sm">Opslaan</button>
+                    <button id="clearWeightGoal" class="btn-ghost btn-sm">Wissen</button>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h3>Kladblok</h3>
+                <button id="clearNotepad" class="btn-ghost btn-sm"><i class="fas fa-trash me-1"></i>Kladblok leegmaken</button>
+            </div>
+
+            <div class="settings-group settings-danger">
+                <h3>Danger Zone</h3>
+                <button id="resetHabitData" class="btn-danger btn-sm"><i class="fas fa-triangle-exclamation me-1"></i>Alle habit data wissen</button>
+            </div>
+        </div>
+    </aside>
 
     <!-- Add Habit Modal -->
     <div class="modal fade" id="addHabitModal" tabindex="-1" aria-hidden="true">
