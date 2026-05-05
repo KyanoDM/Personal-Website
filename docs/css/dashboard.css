@@ -182,20 +182,21 @@ html, body { height: 100%; }
     border-style: solid;
 }
 
-/* Main grid: 2 columns. Left: Habits (top) + Weight (bottom). Right: YouTube. */
+/* Main layout: 2 columns, each a flex column */
 .dashboard-main {
     flex: 1;
     min-height: 0;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
     gap: 1rem;
 }
 
-.dashboard-main > section:nth-child(1) { grid-column: 1; grid-row: 1; }
-.dashboard-main > section:nth-child(2) { grid-column: 1; grid-row: 2; }
-.dashboard-main > section:nth-child(3) { grid-column: 2; grid-row: 1; }
-.dashboard-main > section:nth-child(4) { grid-column: 2; grid-row: 2; }
+.dashboard-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 0;
+}
 
 /* Sections */
 .dash-section {
@@ -1102,13 +1103,6 @@ input::placeholder,
     }
     .dashboard-main {
         grid-template-columns: 1fr;
-        grid-template-rows: auto;
-    }
-    .dashboard-main > section:nth-child(1),
-    .dashboard-main > section:nth-child(2),
-    .dashboard-main > section:nth-child(3) {
-        grid-column: 1;
-        grid-row: auto;
     }
     .dash-section {
         overflow: visible;

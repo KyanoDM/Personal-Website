@@ -31,62 +31,66 @@
         </header>
 
         <main class="dashboard-main">
+            <div class="dashboard-col">
 
-            <!-- Habit Tracker -->
-            <section class="dash-section">
-                <div class="section-head">
-                    <h2><i class="fas fa-check-circle me-2"></i>Habits</h2>
-                    <div class="week-nav">
-                        <button id="prevWeek" class="btn-icon"><i class="fas fa-chevron-left"></i></button>
-                        <span id="weekLabel"></span>
-                        <button id="nextWeek" class="btn-icon"><i class="fas fa-chevron-right"></i></button>
+                <!-- Habit Tracker -->
+                <section class="dash-section">
+                    <div class="section-head">
+                        <h2><i class="fas fa-check-circle me-2"></i>Habits</h2>
+                        <div class="week-nav">
+                            <button id="prevWeek" class="btn-icon"><i class="fas fa-chevron-left"></i></button>
+                            <span id="weekLabel"></span>
+                            <button id="nextWeek" class="btn-icon"><i class="fas fa-chevron-right"></i></button>
+                        </div>
                     </div>
-                </div>
 
-                <div class="habit-grid" id="habitGrid"></div>
+                    <div class="habit-grid" id="habitGrid"></div>
 
-                <div class="habit-actions">
-                    <button id="addHabit" class="btn-ghost"><i class="fas fa-plus me-1"></i>Habit toevoegen</button>
-                </div>
-
-                <div class="streaks-row" id="streaksRow"></div>
-
-                <div class="heatmap-wrapper">
-                    <h3>Laatste 3 maanden</h3>
-                    <div class="heatmap" id="heatmap"></div>
-                    <div class="heatmap-legend">
-                        <span>Minder</span>
-                        <div class="heatmap-cell" style="background: var(--heat-0)"></div>
-                        <div class="heatmap-cell" style="background: var(--heat-1)"></div>
-                        <div class="heatmap-cell" style="background: var(--heat-2)"></div>
-                        <div class="heatmap-cell" style="background: var(--heat-3)"></div>
-                        <div class="heatmap-cell" style="background: var(--heat-4)"></div>
-                        <span>Meer</span>
+                    <div class="habit-actions">
+                        <button id="addHabit" class="btn-ghost"><i class="fas fa-plus me-1"></i>Habit toevoegen</button>
                     </div>
-                </div>
-            </section>
 
-            <!-- Weight Tracker -->
-            <section class="dash-section">
-                <div class="section-head">
-                    <h2><i class="fas fa-weight-scale me-2"></i>Gewicht</h2>
-                    <div class="range-toggle" id="weightRange">
-                        <button class="range-btn active" data-range="6m">6m</button>
-                        <button class="range-btn" data-range="all">All</button>
+                    <div class="streaks-row" id="streaksRow"></div>
+
+                    <div class="heatmap-wrapper">
+                        <h3>Laatste 3 maanden</h3>
+                        <div class="heatmap" id="heatmap"></div>
+                        <div class="heatmap-legend">
+                            <span>Minder</span>
+                            <div class="heatmap-cell" style="background: var(--heat-0)"></div>
+                            <div class="heatmap-cell" style="background: var(--heat-1)"></div>
+                            <div class="heatmap-cell" style="background: var(--heat-2)"></div>
+                            <div class="heatmap-cell" style="background: var(--heat-3)"></div>
+                            <div class="heatmap-cell" style="background: var(--heat-4)"></div>
+                            <span>Meer</span>
+                        </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="weight-input-row">
-                    <input type="number" id="weightInput" class="weight-input" placeholder="kg" step="0.1" min="30" max="300">
-                    <button id="saveWeight" class="btn-accent">Opslaan</button>
-                </div>
+                <!-- Weight Tracker -->
+                <section class="dash-section">
+                    <div class="section-head">
+                        <h2><i class="fas fa-weight-scale me-2"></i>Gewicht</h2>
+                        <div class="range-toggle" id="weightRange">
+                            <button class="range-btn active" data-range="6m">6m</button>
+                            <button class="range-btn" data-range="all">All</button>
+                        </div>
+                    </div>
 
-                <div class="weight-stats" id="weightStats"></div>
+                    <div class="weight-input-row">
+                        <input type="number" id="weightInput" class="weight-input" placeholder="kg" step="0.1" min="30" max="300">
+                        <button id="saveWeight" class="btn-accent">Opslaan</button>
+                    </div>
 
-                <div class="chart-container">
-                    <canvas id="weightChart"></canvas>
-                </div>
-            </section>
+                    <div class="weight-stats" id="weightStats"></div>
+
+                    <div class="chart-container">
+                        <canvas id="weightChart"></canvas>
+                    </div>
+                </section>
+
+            </div>
+            <div class="dashboard-col">
 
             <!-- YouTube Section -->
             <section class="dash-section">
@@ -153,6 +157,7 @@
                 <textarea id="notepadArea" class="notepad-area" placeholder="Schrijf hier notities..."></textarea>
             </section>
 
+            </div>
         </main>
     </div>
 
