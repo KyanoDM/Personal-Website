@@ -696,26 +696,6 @@
         loadYouTubeStats();
     });
 
-    document.getElementById('addChannel').addEventListener('click', function () {
-        var name = prompt('Channel naam:');
-        if (!name) return;
-        var id = prompt('Channel ID (begint met UC...):');
-        if (!id) return;
-        ytChannels.push({ id: id, name: name });
-        activeChannelIdx = ytChannels.length - 1;
-        saveChannels();
-        renderChannelSelect();
-        loadYouTubeStats();
-    });
-
-    document.getElementById('removeChannel').addEventListener('click', function () {
-        if (ytChannels.length <= 1) return;
-        ytChannels.splice(activeChannelIdx, 1);
-        activeChannelIdx = 0;
-        saveChannels();
-        renderChannelSelect();
-        loadYouTubeStats();
-    });
 
     function fmtNum(n) {
         n = parseInt(n || 0);
@@ -1134,6 +1114,114 @@
         saveToolkit();
         bootstrap.Modal.getInstance(document.getElementById('addToolkitModal')).hide();
         renderToolkit();
+    });
+
+    // ─── SETTINGS SIDEBAR ───────────────────────────
+
+    function openSettings() {
+        document.getElementById('settingsOverlay').classList.add('open');
+        document.getElementById('settingsSidebar').classList.add('open');
+        renderSettingsChannels();
+        loadWeightGoal();
+    }
+
+    function closeSettingsPanel() {
+        document.getElementById('settingsOverlay').classList.remove('open');
+        document.getElementById('settingsSidebar').classList.remove('open');
+    }
+
+    document.getElementById('openSettings').addEventListener('click', openSettings);
+    document.getElementById('closeSettings').addEventListener('click', closeSettingsPanel);
+    document.getElementById('settingsOverlay').addEventListener('click', closeSettingsPanel);
+
+    // --- Channel management in settings ---
+
+    function renderSettingsChannels() {
+        var list = document.getElementById('settingsChannelList');
+        if (!ytChannels.length) {
+            list.innerHTML = '<span class="text-dim" style="font-size:0.8rem">Geen channels</span>';
+            return;
+        }
+        list.innerHTML = ytChannels.map(function (ch, idx) {
+            return '<div class="settings-channel-item">' +
+                '<div class="channel-info"><span class="channel-name">' + escapeHtml(ch.name) + '</span>' +
+                '<span class="channel-id">' + escapeHtml(ch.id) + '</span></div>' +
+                '<button class="btn-icon settings-remove-channel" data-idx="' + idx + '" title="Verwijder"><i class="fas fa-trash"></i></button>' +
+                '</div>';
+        }).join('');
+        list.querySelectorAll('.settings-remove-channel').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var idx = parseInt(this.dataset.idx);
+                if (ytChannels.length <= 1) return;
+                ytChannels.splice(idx, 1);
+                if (activeChannelIdx >= ytChannels.length) activeChannelIdx = 0;
+                saveChannels();
+                renderChannelSelect();
+                loadYouTubeStats();
+                renderSettingsChannels();
+            });
+        });
+    }
+
+    document.getElementById('settingsAddChannel').addEventListener('click', function () {
+        var name = document.getElementById('settingsChannelName').value.trim();
+        var id = document.getElementById('settingsChannelId').value.trim();
+        if (!name || !id) return;
+        ytChannels.push({ id: id, name: name });
+        activeChannelIdx = ytChannels.length - 1;
+        saveChannels();
+        renderChannelSelect();
+        loadYouTubeStats();
+        renderSettingsChannels();
+        document.getElementById('settingsChannelName').value = '';
+        document.getElementById('settingsChannelId').value = '';
+    });
+
+    // --- Weight goal ---
+
+    function loadWeightGoal() {
+        db.collection('config').doc('weightGoal').get().then(function (doc) {
+            if (doc.exists && doc.data().kg != null) {
+                document.getElementById('settingsWeightGoal').value = doc.data().kg;
+            } else {
+                document.getElementById('settingsWeightGoal').value = '';
+            }
+        });
+    }
+
+    document.getElementById('saveWeightGoal').addEventListener('click', function () {
+        var val = parseFloat(document.getElementById('settingsWeightGoal').value);
+        if (!val || val < 30 || val > 300) return;
+        db.collection('config').doc('weightGoal').set({ kg: val });
+    });
+
+    document.getElementById('clearWeightGoal').addEventListener('click', function () {
+        db.collection('config').doc('weightGoal').delete();
+        document.getElementById('settingsWeightGoal').value = '';
+    });
+
+    // --- Clear notepad ---
+
+    document.getElementById('clearNotepad').addEventListener('click', function () {
+        if (!confirm('Weet je zeker dat je het kladblok wilt leegmaken?')) return;
+        document.getElementById('notepadArea').value = '';
+        db.collection('config').doc('notepad').set({ text: '' });
+    });
+
+    // --- Reset habit data ---
+
+    document.getElementById('resetHabitData').addEventListener('click', function () {
+        if (!confirm('ALLE habit data permanent verwijderen? Dit kan niet ongedaan worden!')) return;
+        db.collection('habitData').get().then(function (snapshot) {
+            var batch = db.batch();
+            snapshot.forEach(function (doc) { batch.delete(doc.ref); });
+            return batch.commit();
+        }).then(function () {
+            allHabitData = {};
+            habitData = {};
+            renderHabits();
+            renderHeatmap({}, new Date(), new Date());
+        });
     });
 
 })();
