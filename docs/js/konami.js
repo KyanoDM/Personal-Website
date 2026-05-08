@@ -52,4 +52,19 @@
             document.querySelector('.konami-hint').textContent = error.message;
         });
     });
+
+    document.getElementById('qrLoginBtn').addEventListener('click', function () {
+        var btn = document.getElementById('qrLoginBtn');
+        var container = document.getElementById('qrContainer');
+        btn.style.display = 'none';
+        container.style.display = 'block';
+        QrLogin.start(container);
+    });
+
+    // Reset QR bij sluiten van modal
+    document.getElementById('konamiModal').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('qrLoginBtn').style.display = 'block';
+        document.getElementById('qrContainer').style.display = 'none';
+        document.getElementById('qrContainer').innerHTML = '';
+    });
 })();

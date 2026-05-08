@@ -1,0 +1,12 @@
+name = "qr-auth"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+
+[vars]
+FIREBASE_PROJECT_ID = "kyanodm-be"
+ALLOWED_EMAIL       = "kyanodemaertelaere@gmail.com"
+ALLOWED_ORIGIN      = "https://kyanodm.github.io"
+
+# Secrets instellen via CLI (zie README):
+#   wrangler secret put SA_CLIENT_EMAIL
+#   wrangler secret put SA_PRIVATE_KEY
