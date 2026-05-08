@@ -169,7 +169,9 @@ export default {
     async fetch(request, env) {
         const origin = request.headers.get('Origin') || '';
         const allowedOrigins = [
-            env.ALLOWED_ORIGIN || 'https://kyanodm.github.io',
+            'https://kyanodm.be',
+            'https://www.kyanodm.be',
+            'https://kyanodm.github.io',
             'http://localhost:8080',
             'http://127.0.0.1:8080',
         ];
