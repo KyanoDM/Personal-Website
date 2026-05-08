@@ -38,7 +38,7 @@
 
     // Geheime URL: ?login → opent modal direct (handig op mobiel)
     if (window.location.search.includes('login')) {
-        showLogin();
+        window.addEventListener('load', showLogin);
     }
 
     function showLogin() {
