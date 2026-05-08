@@ -4,7 +4,7 @@
  */
 
 window.QrLogin = (function () {
-    var WORKER_URL = 'https://qr-auth.JOUW-SUBDOMAIN.workers.dev'; // ← aanpassen na deploy
+    var WORKER_URL = 'https://qr-auth.kyanodemaertelaere.workers.dev';
     var NONCE_TTL  = 5 * 60 * 1000; // 5 minuten
 
     var _unsubscribe = null;

@@ -4,7 +4,7 @@
  */
 
 (function () {
-    var WORKER_URL    = 'https://qr-auth.JOUW-SUBDOMAIN.workers.dev'; // ← aanpassen na deploy
+    var WORKER_URL    = 'https://qr-auth.kyanodemaertelaere.workers.dev';
     var ALLOWED_EMAIL = 'kyanodemaertelaere@gmail.com';
 
     var firebaseConfig = {
