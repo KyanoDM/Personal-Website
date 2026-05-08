@@ -1,5 +1,6 @@
 (function () {
     const ALLOWED_EMAIL = 'kyanodemaertelaere@gmail.com';
+    const TOTP_UID      = 'kyano-totp';
     const EMA_ALPHA = 0.1;
 
     const firebaseConfig = {
@@ -148,7 +149,7 @@
     // Auth
     auth.onAuthStateChanged(function (user) {
         document.getElementById('loading').style.display = 'none';
-        if (user && user.email === ALLOWED_EMAIL) {
+        if (user && (user.email === ALLOWED_EMAIL || user.uid === TOTP_UID)) {
             document.getElementById('dashboard').style.display = 'block';
             loadConfig();
             loadWeight();

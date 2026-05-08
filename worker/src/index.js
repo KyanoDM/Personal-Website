@@ -1,9 +1,10 @@
 /**
- * Cloudflare Worker — QR Login backend
+ * Cloudflare Worker — Auth backend (TOTP + QR login)
  *
  * Secrets (stel in via: wrangler secret put <NAAM>)
  *   SA_CLIENT_EMAIL  →  service account e-mail  (uit Firebase service-account JSON)
  *   SA_PRIVATE_KEY   →  private key als string   (uit Firebase service-account JSON, \n behouden)
+ *   TOTP_SECRET      →  base32 TOTP secret voor Google Authenticator
  *
  * Environment vars (in wrangler.toml)
  *   FIREBASE_PROJECT_ID  →  kyanodm-be
@@ -12,6 +13,7 @@
  */
 
 const NONCE_TTL_MS = 5 * 60 * 1000; // 5 minuten
+const TOTP_UID     = 'kyano-totp';   // vaste UID voor TOTP-logins
 
 // ─── Base64url helpers ────────────────────────────────────────────────────────
 
@@ -62,21 +64,58 @@ async function signJwt(header, payload, key) {
 
 // ─── Firebase custom token ────────────────────────────────────────────────────
 
-async function createCustomToken(uid, clientEmail, privateKeyPem) {
+async function createCustomToken(uid, clientEmail, privateKeyPem, additionalClaims) {
     const key = await importPrivateKey(privateKeyPem);
     const now = Math.floor(Date.now() / 1000);
-    return signJwt(
-        { alg: 'RS256', typ: 'JWT' },
-        {
-            iss: clientEmail,
-            sub: clientEmail,
-            aud: 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit',
-            uid,
-            iat: now,
-            exp: now + 3600,
-        },
-        key
+    const payload = {
+        iss: clientEmail,
+        sub: clientEmail,
+        aud: 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit',
+        uid,
+        iat: now,
+        exp: now + 3600,
+    };
+    if (additionalClaims) payload.claims = additionalClaims;
+    return signJwt({ alg: 'RS256', typ: 'JWT' }, payload, key);
+}
+
+// ─── TOTP verificatie ─────────────────────────────────────────────────────────
+
+function base32Decode(str) {
+    const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    str = str.toUpperCase().replace(/=+$/, '').replace(/\s/g, '');
+    const buf = new Uint8Array(Math.floor(str.length * 5 / 8));
+    let bits = 0, val = 0, out = 0;
+    for (const c of str) {
+        const idx = CHARS.indexOf(c);
+        if (idx < 0) continue;
+        val = (val << 5) | idx;
+        bits += 5;
+        if (bits >= 8) { buf[out++] = (val >>> (bits - 8)) & 0xff; bits -= 8; }
+    }
+    return buf;
+}
+
+async function generateHOTP(secretBytes, counter) {
+    const buf = new ArrayBuffer(8);
+    new DataView(buf).setUint32(4, counter >>> 0, false);
+    const key = await crypto.subtle.importKey(
+        'raw', secretBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
     );
+    const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, buf));
+    const offset = sig[19] & 0xf;
+    const code = ((sig[offset] & 0x7f) << 24 | (sig[offset+1] & 0xff) << 16 |
+                  (sig[offset+2] & 0xff) << 8  | (sig[offset+3] & 0xff)) % 1_000_000;
+    return code.toString().padStart(6, '0');
+}
+
+async function verifyTOTP(secret, token) {
+    const bytes = base32Decode(secret);
+    const step  = Math.floor(Date.now() / 1000 / 30);
+    for (const offset of [-1, 0, 1]) {
+        if (await generateHOTP(bytes, step + offset) === token) return true;
+    }
+    return false;
 }
 
 // ─── Google OAuth2 access token (voor Firestore REST) ────────────────────────
@@ -193,6 +232,23 @@ export default {
         const url = new URL(request.url);
 
         try {
+            // ── POST /totp-login ── Google Authenticator code ────────────────
+            if (url.pathname === '/totp-login' && request.method === 'POST') {
+                const { code } = await request.json();
+                if (!code || !/^\d{6}$/.test(code)) return json({ error: 'Ongeldige code' }, 400);
+
+                const valid = await verifyTOTP(env.TOTP_SECRET, code);
+                if (!valid) return json({ error: 'Verkeerde code' }, 401);
+
+                const customToken = await createCustomToken(
+                    TOTP_UID,
+                    env.SA_CLIENT_EMAIL,
+                    env.SA_PRIVATE_KEY,
+                    { email: env.ALLOWED_EMAIL }
+                );
+                return json({ customToken });
+            }
+
             // ── POST /create-nonce ── desktop start van de QR-flow ──────────
             if (url.pathname === '/create-nonce' && request.method === 'POST') {
                 const nonce = crypto.randomUUID();
