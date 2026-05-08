@@ -23,7 +23,7 @@
         }
     });
 
-    // Konami code listener
+    // Konami code listener (desktop)
     document.addEventListener('keydown', function (e) {
         if (e.key === KONAMI[position]) {
             position++;
@@ -35,6 +35,11 @@
             position = 0;
         }
     });
+
+    // Geheime URL: ?login → opent modal direct (handig op mobiel)
+    if (window.location.search.includes('login')) {
+        showLogin();
+    }
 
     function showLogin() {
         const modal = new bootstrap.Modal(document.getElementById('konamiModal'));
