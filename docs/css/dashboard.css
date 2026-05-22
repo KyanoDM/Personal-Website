@@ -1047,20 +1047,6 @@ input::placeholder,
     color: var(--text-dim);
 }
 
-/* Video Download */
-.video-download-row {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-}
-.video-download-row .dash-input {
-    flex: 1;
-}
-.video-download-row .btn-accent {
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
 /* Icon Picker */
 .icon-picker-grid {
     display: grid;
@@ -1494,8 +1480,12 @@ input::placeholder,
     display: none !important;
 }
 
-.focus-mode #todoSection {
-    display: flex !important;
+.focus-mode #gymProgressSection {
+    display: none !important;
+}
+
+.focus-mode .yt-stats-bar {
+    display: none !important;
 }
 
 .focus-mode #habitsSection {
@@ -1506,11 +1496,45 @@ input::placeholder,
     flex: 2;
 }
 
-/* ─── TODO LIST ──────────────────────────────────────────────── */
-
-#todoSection {
-    display: none;
+.focus-mode .focus-links {
+    display: flex;
 }
+
+/* ─── FOCUS LINKS ────────────────────────────────────────────── */
+
+.focus-links {
+    display: none;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-bottom: 0.75rem;
+}
+
+.focus-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.focus-link-btn:hover {
+    border-color: var(--accent);
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.focus-link-btn i {
+    font-size: 1rem;
+    color: var(--accent);
+}
+
+/* ─── TODO LIST ──────────────────────────────────────────────── */
 
 .todo-input-row {
     display: flex;
