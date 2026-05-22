@@ -26,7 +26,7 @@ html, body { height: 100%; }
 .dashboard-body {
     background: var(--bg-primary);
     height: 100vh;
-    overflow: hidden;
+    overflow-y: auto;
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -1308,10 +1308,11 @@ input::placeholder,
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 0.55rem 1rem;
+    padding: 0.65rem 1.1rem;
     flex-shrink: 0;
     min-height: 0;
     overflow: hidden;
+    margin-bottom: 0.25rem;
 }
 
 .greeting-text {
@@ -1600,75 +1601,55 @@ input::placeholder,
 .todo-item:hover .todo-delete { opacity: 1; }
 .todo-delete:hover { color: #ef4444; }
 
-/* ─── GYM MONTH CALENDAR ─────────────────────────────────────── */
+/* ─── GYM PROGRESS ─────────────────────────────────────────────── */
 
-.gym-month-wrapper {
-    margin-top: 0.85rem;
-    padding-top: 0.85rem;
-    border-top: 1px solid var(--border);
+.gym-cover {
+    width: 100%;
+    height: 130px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
 }
 
-.gym-month-title {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 0.6rem;
-}
-
-.gym-month-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 3px;
-}
-
-.gym-day-header {
-    font-size: 0.58rem;
-    color: var(--text-dim);
-    font-weight: 600;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    padding-bottom: 3px;
-}
-
-.gym-day-cell {
-    aspect-ratio: 1;
+.gym-progress-info {
     display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.gym-progress-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.gym-progress-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
     align-items: center;
-    justify-content: center;
-    font-size: 0.65rem;
-    font-weight: 500;
-    border-radius: 5px;
-    background: var(--bg-input);
+}
+
+.gym-stat {
+    font-size: 0.75rem;
     color: var(--text-dim);
-    transition: background 0.15s;
+    font-weight: 500;
 }
 
-.gym-day-cell.empty {
-    background: transparent;
-}
-
-.gym-day-cell.done {
-    background: var(--green);
-    color: #fff;
-    font-weight: 700;
-    box-shadow: 0 0 8px var(--green-glow);
-}
-
-.gym-day-cell.today {
-    border: 1.5px solid var(--accent);
+.gym-stat i {
     color: var(--accent);
-    font-weight: 700;
 }
 
-.gym-day-cell.today.done {
-    border-color: var(--green);
-    color: #fff;
+.gym-rating {
+    color: #f59e0b;
+    letter-spacing: 1px;
 }
 
-.gym-day-cell.future {
-    opacity: 0.3;
+.gym-progress-desc {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+    margin-top: 0.2rem;
 }
 
