@@ -23,6 +23,9 @@
                 <nav id="toolkitBar" class="toolkit-bar"></nav>
             </div>
             <div class="header-right">
+                <button id="cookingTimeBtn" class="btn-cooking">
+                    <i class="fas fa-fire"></i><span>Cooking Time</span>
+                </button>
                 <button id="wakePc" class="btn-icon" title="PC aanzetten"><i class="fas fa-power-off"></i></button>
                 <button id="openSettings" class="btn-icon" title="Instellingen"><i class="fas fa-gear"></i></button>
                 <button id="signOut" class="btn btn-outline-light btn-sm">
@@ -31,11 +34,25 @@
             </div>
         </header>
 
+        <!-- Info Bar: greeting + weather + calendar -->
+        <div class="info-bar">
+            <span id="greetingText" class="greeting-text">Welkom, Kyano.</span>
+            <div class="info-widgets">
+                <div class="weather-strip" id="weatherStrip">
+                    <span class="text-dim" style="font-size:0.72rem">⛅ Laden...</span>
+                </div>
+                <div class="calendar-strip" id="calendarStrip">
+                    <i class="fas fa-calendar-days"></i>
+                    <a href="#" id="calConnectBtn" class="cal-connect-btn">Kalender verbinden</a>
+                </div>
+            </div>
+        </div>
+
         <main class="dashboard-main">
             <div class="dashboard-col">
 
                 <!-- Habit Tracker -->
-                <section class="dash-section">
+                <section class="dash-section" id="habitsSection">
                     <div class="section-head">
                         <h2><i class="fas fa-check-circle me-2"></i>Habits</h2>
                         <div class="week-nav">
@@ -51,8 +68,6 @@
                         <button id="addHabit" class="btn-ghost"><i class="fas fa-plus me-1"></i>Habit toevoegen</button>
                     </div>
 
-                    <div class="streaks-row" id="streaksRow"></div>
-
                     <div class="heatmap-wrapper">
                         <h3>Laatste 3 maanden</h3>
                         <div class="heatmap" id="heatmap"></div>
@@ -66,10 +81,13 @@
                             <span>Meer</span>
                         </div>
                     </div>
+
+                    <!-- Gym Month Calendar -->
+                    <div class="gym-month-wrapper" id="gymMonthWrapper"></div>
                 </section>
 
                 <!-- Weight Tracker -->
-                <section class="dash-section">
+                <section class="dash-section" id="weightSection">
                     <div class="section-head">
                         <h2><i class="fas fa-weight-scale me-2"></i>Gewicht</h2>
                         <div class="range-toggle" id="weightRange">
@@ -90,11 +108,28 @@
                     </div>
                 </section>
 
+                <!-- Todo List (focus mode) -->
+                <section class="dash-section todo-section" id="todoSection">
+                    <div class="section-head">
+                        <h2><i class="fas fa-list-check me-2"></i>To-Do</h2>
+                        <button id="clearDoneTodos" class="btn-ghost btn-ghost-sm" title="Afgeronde taken wissen">
+                            <i class="fas fa-broom me-1"></i>Opruimen
+                        </button>
+                    </div>
+                    <div id="todoList"></div>
+                    <div class="todo-input-row">
+                        <input type="text" id="todoInput" class="form-control dash-input" placeholder="Nieuwe taak...">
+                        <button id="addTodoBtn" class="btn-accent" style="padding:0.5rem 0.9rem">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </section>
+
             </div>
             <div class="dashboard-col">
 
             <!-- YouTube Section -->
-            <section class="dash-section">
+            <section class="dash-section" id="youtubeSection">
                 <div class="section-head">
                     <div class="channel-header">
                         <img id="channelAvatar" class="channel-avatar" src="" alt="">
@@ -150,7 +185,7 @@
             </section>
 
             <!-- Notepad -->
-            <section class="dash-section">
+            <section class="dash-section" id="notepadSection">
                 <div class="section-head">
                     <h2><i class="fas fa-sticky-note me-2"></i>Kladblok</h2>
                     <span id="notepadStatus" class="text-dim" style="font-size:0.7rem"></span>
@@ -158,6 +193,7 @@
                 <textarea id="notepadArea" class="notepad-area" placeholder="Schrijf hier notities..."></textarea>
             </section>
 
+            </div>
         </main>
     </div>
 
@@ -169,6 +205,15 @@
             <button id="closeSettings" class="btn-icon"><i class="fas fa-xmark"></i></button>
         </div>
         <div class="settings-body">
+
+            <div class="settings-group">
+                <h3>Verjaardag</h3>
+                <label class="settings-label">Geboortedatum (DD/MM)</label>
+                <div class="d-flex gap-2 align-items-center">
+                    <input type="text" id="settingsBirthday" class="form-control dash-input" placeholder="bijv. 15/03" style="width:120px">
+                    <button id="saveBirthday" class="btn-accent btn-sm">Opslaan</button>
+                </div>
+            </div>
 
             <div class="settings-group">
                 <h3>YouTube Channels</h3>

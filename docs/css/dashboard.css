@@ -643,7 +643,7 @@ tr:hover .habit-delete { opacity: 0.6; }
 .chart-container {
     position: relative;
     flex: 1;
-    min-height: 180px;
+    min-height: 260px;
 }
 
 /* Modal */
@@ -1298,3 +1298,377 @@ input::placeholder,
         height: 26px;
     }
 }
+
+/* ─── INFO BAR ─────────────────────────────────────────────── */
+
+.info-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.55rem 1rem;
+    flex-shrink: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.greeting-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+    color: var(--text);
+}
+
+.info-widgets {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* ─── WEATHER STRIP ─────────────────────────────────────────── */
+
+.weather-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+}
+
+.weather-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    padding: 0.2rem 0.45rem;
+    border-radius: 8px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    min-width: 44px;
+    transition: border-color 0.2s;
+}
+
+.weather-day.today {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+}
+
+.weather-day-name {
+    font-size: 0.58rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 600;
+}
+
+.weather-emoji {
+    font-size: 0.9rem;
+    line-height: 1.2;
+}
+
+.weather-temp {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+/* ─── CALENDAR STRIP ─────────────────────────────────────────── */
+
+.calendar-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+}
+
+.cal-connect-btn {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.72rem;
+    font-weight: 500;
+}
+
+.cal-connect-btn:hover {
+    color: var(--accent-hover);
+}
+
+.cal-event {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.18rem 0.5rem;
+    flex-shrink: 0;
+    max-width: 220px;
+    overflow: hidden;
+}
+
+.cal-event-day {
+    font-size: 0.62rem;
+    color: var(--accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+}
+
+.cal-event-time {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    flex-shrink: 0;
+}
+
+.cal-event-title {
+    font-size: 0.72rem;
+    color: var(--text);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ─── COOKING TIME BUTTON ────────────────────────────────────── */
+
+.btn-cooking {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 0.35rem 0.85rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.btn-cooking:hover {
+    border-color: var(--accent);
+    color: var(--text);
+}
+
+.btn-cooking.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 16px var(--accent-glow);
+    animation: cooking-pulse 2s ease-in-out infinite;
+}
+
+@keyframes cooking-pulse {
+    0%, 100% { box-shadow: 0 0 16px var(--accent-glow); }
+    50% { box-shadow: 0 0 28px rgba(99, 102, 241, 0.4); }
+}
+
+/* ─── FOCUS MODE ─────────────────────────────────────────────── */
+
+.focus-mode .toolkit-bar {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transition: max-height 0.35s ease, opacity 0.3s ease;
+}
+
+.focus-mode #weightSection {
+    display: none !important;
+}
+
+.focus-mode #notepadSection {
+    display: none !important;
+}
+
+.focus-mode #todoSection {
+    display: flex !important;
+}
+
+.focus-mode #habitsSection {
+    flex: 2;
+}
+
+.focus-mode #youtubeSection {
+    flex: 2;
+}
+
+/* ─── TODO LIST ──────────────────────────────────────────────── */
+
+#todoSection {
+    display: none;
+}
+
+.todo-input-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.75rem;
+    flex-shrink: 0;
+}
+
+.todo-input-row .dash-input {
+    flex: 1;
+}
+
+#todoList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.todo-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 0.6rem;
+    background: var(--bg-input);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    transition: border-color 0.15s;
+}
+
+.todo-item:hover {
+    border-color: rgba(255,255,255,0.12);
+}
+
+.todo-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: var(--bg-card);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    color: transparent;
+    font-size: 0.55rem;
+}
+
+.todo-check:hover {
+    border-color: var(--green);
+}
+
+.todo-check.checked {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+    box-shadow: 0 0 10px var(--green-glow);
+}
+
+.todo-text {
+    flex: 1;
+    font-size: 0.82rem;
+    color: var(--text);
+    min-width: 0;
+}
+
+.todo-text.done {
+    text-decoration: line-through;
+    color: var(--text-dim);
+}
+
+.todo-delete {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.65rem;
+    padding: 2px 5px;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s;
+    flex-shrink: 0;
+}
+
+.todo-item:hover .todo-delete { opacity: 1; }
+.todo-delete:hover { color: #ef4444; }
+
+/* ─── GYM MONTH CALENDAR ─────────────────────────────────────── */
+
+.gym-month-wrapper {
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--border);
+}
+
+.gym-month-title {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.6rem;
+}
+
+.gym-month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+}
+
+.gym-day-header {
+    font-size: 0.58rem;
+    color: var(--text-dim);
+    font-weight: 600;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding-bottom: 3px;
+}
+
+.gym-day-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 500;
+    border-radius: 5px;
+    background: var(--bg-input);
+    color: var(--text-dim);
+    transition: background 0.15s;
+}
+
+.gym-day-cell.empty {
+    background: transparent;
+}
+
+.gym-day-cell.done {
+    background: var(--green);
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 0 8px var(--green-glow);
+}
+
+.gym-day-cell.today {
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.gym-day-cell.today.done {
+    border-color: var(--green);
+    color: #fff;
+}
+
+.gym-day-cell.future {
+    opacity: 0.3;
+}
+
