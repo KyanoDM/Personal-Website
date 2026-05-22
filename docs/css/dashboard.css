@@ -1603,19 +1603,26 @@ input::placeholder,
 
 /* ─── GYM PROGRESS ─────────────────────────────────────────────── */
 
+.gym-layout {
+    display: flex;
+    gap: 1rem;
+}
+
 .gym-cover {
-    width: 100%;
-    height: 220px;
+    width: 120px;
+    min-height: 160px;
+    flex-shrink: 0;
     background-size: cover;
-    background-position: center top;
+    background-position: center;
     border-radius: 8px;
-    margin-bottom: 0.75rem;
 }
 
 .gym-progress-info {
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+    flex: 1;
+    min-width: 0;
 }
 
 .gym-progress-title {

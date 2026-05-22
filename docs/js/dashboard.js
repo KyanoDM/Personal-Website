@@ -1665,7 +1665,7 @@
         var el = document.getElementById('gymProgressContent');
         var monthName = GYM_MONTH_NAMES[(month.month || '').toLowerCase()] || month.month || '';
 
-        var html = '';
+        var html = '<div class="gym-layout">';
         if (month.coverURL) {
             html += '<div class="gym-cover" style="background-image:url(\'' + escapeHtml(month.coverURL) + '\')"></div>';
         }
@@ -1685,6 +1685,7 @@
         if (month.description) {
             html += '<div class="gym-progress-desc">' + escapeHtml(month.description) + '</div>';
         }
+        html += '</div>';
         html += '</div>';
         el.innerHTML = html;
     }
