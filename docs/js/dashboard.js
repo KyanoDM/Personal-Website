@@ -16,12 +16,25 @@
     var auth = firebase.auth();
     var db = firebase.firestore();
 
+    // Gym Progress App (separate Firebase project)
+    var gymApp = firebase.initializeApp({
+        apiKey: "AIzaSyAlmsUBdc7rDMFzt32FO1H3QOWdgO9FNzg",
+        authDomain: "gymprogressapp-18807.firebaseapp.com",
+        projectId: "gymprogressapp-18807",
+        storageBucket: "gymprogressapp-18807.firebasestorage.app",
+        messagingSenderId: "832434251038",
+        appId: "1:832434251038:web:81e5d4241e00127639550f"
+    }, 'gym');
+    var gymDb = gymApp.firestore();
+    var gymAuth = gymApp.auth();
+
     var currentWeekOffset = 0;
     var habits = [];
     var habitData = {};
     var weightChart = null;
     var weightEntriesAll = [];
     var weightRange = '6m';
+    var weightGoalKg = null;
 
     // 2AM boundary: returns the "habit date" for a given moment
     function getHabitDate(date) {
@@ -161,6 +174,7 @@
             loadWeather();
             initCalendar();
             initCookingTime();
+            loadGymProgress();
         } else {
             if (user) auth.signOut();
             window.location.href = 'index.html';
@@ -259,7 +273,6 @@
                 }
                 renderHabits();
                 renderHeatmap(allHabitData, start, end);
-                renderGymMonth();
             });
     }
 
@@ -447,11 +460,17 @@
     // ─── WEIGHT ─────────────────────────────────────
 
     function loadWeight() {
-        db.collection('weight').get().then(function (snapshot) {
+        Promise.all([
+            db.collection('weight').get(),
+            db.collection('config').doc('weightGoal').get()
+        ]).then(function (results) {
+            var snapshot = results[0];
+            var goalDoc = results[1];
+            weightGoalKg = (goalDoc.exists && goalDoc.data().kg) ? goalDoc.data().kg : null;
+
             var entries = [];
             snapshot.forEach(function (doc) {
                 var data = doc.data() || {};
-                // Date: prefer field, fall back to doc id; coerce Timestamp/Date to YYYY-MM-DD
                 var rawDate = data.date != null ? data.date : doc.id;
                 var dateStr = null;
                 if (typeof rawDate === 'string') {
@@ -461,7 +480,6 @@
                 } else if (rawDate instanceof Date) {
                     dateStr = formatDate(rawDate);
                 }
-                // Kg: coerce to number, drop garbage
                 var kg = Number(data.kg);
                 if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr) || !isFinite(kg)) return;
                 entries.push({ date: dateStr, kg: kg });
@@ -567,30 +585,48 @@
 
         if (weightChart) weightChart.destroy();
 
+        var datasets = [
+            {
+                label: 'Gewicht',
+                data: scalePoints,
+                borderColor: 'rgba(59, 130, 246, 0.5)',
+                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                showLine: false,
+                order: 2
+            },
+            {
+                label: 'Trend',
+                data: trendPoints,
+                borderColor: '#22c55e',
+                borderWidth: 2.5,
+                pointRadius: 0,
+                tension: 0.3,
+                order: 1
+            }
+        ];
+
+        if (weightGoalKg && scalePoints.length >= 2) {
+            datasets.push({
+                label: 'Doel (' + weightGoalKg + ' kg)',
+                data: [
+                    { x: scalePoints[0].x, y: weightGoalKg },
+                    { x: scalePoints[scalePoints.length - 1].x, y: weightGoalKg }
+                ],
+                borderColor: 'rgba(99, 102, 241, 0.5)',
+                borderWidth: 1.5,
+                borderDash: [6, 4],
+                pointRadius: 0,
+                fill: false,
+                order: 3
+            });
+        }
+
         weightChart = new Chart(ctx, {
             type: 'line',
             data: {
-                datasets: [
-                    {
-                        label: 'Gewicht',
-                        data: scalePoints,
-                        borderColor: 'rgba(59, 130, 246, 0.5)',
-                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        showLine: false,
-                        order: 2
-                    },
-                    {
-                        label: 'Trend',
-                        data: trendPoints,
-                        borderColor: '#22c55e',
-                        borderWidth: 2.5,
-                        pointRadius: 0,
-                        tension: 0.3,
-                        order: 1
-                    }
-                ]
+                datasets: datasets
             },
             options: {
                 responsive: true,
@@ -1435,7 +1471,7 @@
         var el = document.getElementById('calendarStrip');
         if (!events.length) {
             el.innerHTML = '<i class="fas fa-calendar-days" style="color:var(--accent)"></i>' +
-                '<span class="text-dim" style="font-size:0.72rem;margin-left:0.4rem">Geen afspraken deze week</span>';
+                '<span class="text-dim" style="font-size:0.72rem;margin-left:0.4rem">Geen afspraken komende 7 dagen</span>';
             return;
         }
         var today = new Date(); today.setHours(0, 0, 0, 0);
@@ -1558,40 +1594,85 @@
         });
     });
 
-    // ─── GYM MONTH ─────────────────────────────────────────────────
-    function renderGymMonth() {
-        var gymHabit = habits.find(function (h) { return h.name === 'Gym'; }) ||
-                       habits.find(function (h) { return h.name.toLowerCase().includes('gym'); });
-        var wrapper = document.getElementById('gymMonthWrapper');
-        if (!gymHabit || !wrapper) return;
-
-        var now = new Date();
-        var year = now.getFullYear();
-        var month = now.getMonth();
-        var daysInMonth = new Date(year, month + 1, 0).getDate();
-        var firstDow = new Date(year, month, 1).getDay() || 7;
-        var monthNames = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni',
-                          'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'];
-
-        var html = '<div class="gym-month-title">' + gymHabit.name + ' — ' + monthNames[month] + ' ' + year + '</div>';
-        html += '<div class="gym-month-grid">';
-        ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'].forEach(function (d) {
-            html += '<div class="gym-day-header">' + d + '</div>';
+    // ─── GYM PROGRESS (from Gym-Progress-App Firebase) ────────────
+    function loadGymProgress() {
+        gymAuth.onAuthStateChanged(function (user) {
+            if (user) {
+                fetchLatestGymMonth(user.uid);
+            } else {
+                showGymConnect();
+            }
         });
-        for (var i = 1; i < firstDow; i++) {
-            html += '<div class="gym-day-cell empty"></div>';
+    }
+
+    function showGymConnect() {
+        var el = document.getElementById('gymProgressContent');
+        el.innerHTML = '<button id="connectGymBtn" class="btn-ghost" style="width:100%">' +
+            '<i class="fas fa-link me-1"></i>Gym App verbinden</button>';
+        document.getElementById('connectGymBtn').addEventListener('click', connectGymApp);
+    }
+
+    function connectGymApp() {
+        var provider = new firebase.auth.GoogleAuthProvider();
+        gymAuth.signInWithPopup(provider).then(function (result) {
+            fetchLatestGymMonth(result.user.uid);
+        }).catch(function (err) {
+            console.log('Gym auth error:', err);
+        });
+    }
+
+    function fetchLatestGymMonth(uid) {
+        gymDb.collection('users').doc(uid).collection('months')
+            .orderBy('createdAt', 'desc')
+            .limit(1)
+            .get()
+            .then(function (snapshot) {
+                if (snapshot.empty) {
+                    document.getElementById('gymProgressContent').innerHTML =
+                        '<div class="text-dim" style="font-size:0.78rem">Geen maanden gevonden.</div>';
+                    return;
+                }
+                renderGymProgress(snapshot.docs[0].data());
+            })
+            .catch(function () {
+                document.getElementById('gymProgressContent').innerHTML =
+                    '<div class="text-dim" style="font-size:0.78rem">Kon data niet laden.</div>';
+            });
+    }
+
+    var GYM_MONTH_NAMES = {
+        'january': 'Januari', 'february': 'Februari', 'march': 'Maart',
+        'april': 'April', 'may': 'Mei', 'june': 'Juni',
+        'july': 'Juli', 'august': 'Augustus', 'september': 'September',
+        'october': 'Oktober', 'november': 'November', 'december': 'December'
+    };
+
+    function renderGymProgress(month) {
+        var el = document.getElementById('gymProgressContent');
+        var monthName = GYM_MONTH_NAMES[(month.month || '').toLowerCase()] || month.month || '';
+
+        var html = '';
+        if (month.coverURL) {
+            html += '<div class="gym-cover" style="background-image:url(\'' + escapeHtml(month.coverURL) + '\')"></div>';
         }
-        for (var d = 1; d <= daysInMonth; d++) {
-            var ds = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-            var done = allHabitData[ds] && allHabitData[ds][gymHabit.name];
-            var isToday = d === now.getDate();
-            html += '<div class="gym-day-cell' +
-                (done ? ' done' : '') +
-                (isToday ? ' today' : '') +
-                (d > now.getDate() ? ' future' : '') + '">' + d + '</div>';
+        html += '<div class="gym-progress-info">';
+        html += '<div class="gym-progress-title">' + escapeHtml(monthName + ' ' + (month.year || '')) + '</div>';
+        html += '<div class="gym-progress-stats">';
+        if (month.weight) html += '<span class="gym-stat"><i class="fas fa-weight-scale me-1"></i>' + month.weight + ' kg</span>';
+        if (month.gymVisits) html += '<span class="gym-stat"><i class="fas fa-calendar-check me-1"></i>' + month.gymVisits + ' bezoeken</span>';
+        if (month.rating) {
+            html += '<span class="gym-stat gym-rating">';
+            for (var i = 0; i < 5; i++) {
+                html += i < month.rating ? '★' : '☆';
+            }
+            html += '</span>';
         }
         html += '</div>';
-        wrapper.innerHTML = html;
+        if (month.description) {
+            html += '<div class="gym-progress-desc">' + escapeHtml(month.description) + '</div>';
+        }
+        html += '</div>';
+        el.innerHTML = html;
     }
 
 })();
