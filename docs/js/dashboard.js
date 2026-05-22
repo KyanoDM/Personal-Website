@@ -1466,7 +1466,11 @@
         var shown = 0;
         events.forEach(function (ev) {
             if (shown >= 4) return;
+            if (!ev.start) return;
+            var raw = ev.start.dateTime || ev.start.date;
+            if (!raw) return;
             var start = ev.start.dateTime ? new Date(ev.start.dateTime) : new Date(ev.start.date + 'T00:00:00');
+            if (isNaN(start.getTime())) return;
             var startDay = new Date(start); startDay.setHours(0, 0, 0, 0);
             var dayLabel = startDay.getTime() === today.getTime() ? 'Vandaag' :
                            startDay.getTime() === tomorrow.getTime() ? 'Morgen' :
