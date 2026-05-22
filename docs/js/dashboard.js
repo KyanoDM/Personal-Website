@@ -156,6 +156,10 @@
             loadKanban();
             loadSources();
             loadNotepad();
+            loadBirthday();
+            loadWeather();
+            initCalendar();
+            initCookingTime();
         } else {
             if (user) auth.signOut();
             window.location.href = 'index.html';
@@ -238,6 +242,7 @@
                 }
                 renderHabits();
                 renderHeatmap(allHabitData, start, end);
+                renderGymMonth();
             });
     }
 
@@ -313,8 +318,6 @@
                 renderHabits();
             });
         });
-
-        renderStreaks();
     }
 
     function toggleHabit(habitName, date, value) {
@@ -1132,6 +1135,7 @@
         document.getElementById('settingsSidebar').classList.add('open');
         renderSettingsChannels();
         loadWeightGoal();
+        loadBirthdaySetting();
     }
 
     function closeSettingsPanel() {
@@ -1232,5 +1236,345 @@
             renderHeatmap({}, new Date(), new Date());
         });
     });
+
+    // ─── GREETING ──────────────────────────────────────────────────
+    var birthdayData = null;
+
+    function loadBirthday() {
+        db.collection('config').doc('birthday').get().then(function (doc) {
+            if (doc.exists && doc.data().day) {
+                birthdayData = doc.data();
+            }
+            renderGreeting();
+        }).catch(function () { renderGreeting(); });
+    }
+
+    function renderGreeting() {
+        var now = new Date();
+        var hour = now.getHours();
+        var day = now.getDay();
+        var month = now.getMonth() + 1;
+        var date = now.getDate();
+        var el = document.getElementById('greetingText');
+        if (!el) return;
+
+        if (birthdayData && birthdayData.day === date && birthdayData.month === month) {
+            el.innerHTML = '🎂 <strong>Gelukkige verjaardag, Kyano!</strong>';
+            return;
+        }
+
+        var prefix;
+        if (hour >= 5 && hour < 12) prefix = 'Goedemorgen';
+        else if (hour >= 12 && hour < 18) prefix = 'Goedemiddag';
+        else if (hour >= 18 && hour < 23) prefix = 'Goedenavond';
+        else prefix = 'Goede nacht';
+
+        var extra = '';
+        if (day === 5) extra = ' Fijne vrijdag! 🎉';
+        else if (day === 6) extra = ' Geniet van je zaterdag! 😎';
+        else if (day === 0) extra = ' Geniet van je zondag! ☀️';
+
+        el.textContent = prefix + ', Kyano.' + extra;
+    }
+
+    function loadBirthdaySetting() {
+        db.collection('config').doc('birthday').get().then(function (doc) {
+            if (doc.exists && doc.data().day) {
+                var d = doc.data();
+                document.getElementById('settingsBirthday').value =
+                    String(d.day).padStart(2, '0') + '/' + String(d.month).padStart(2, '0');
+            }
+        });
+    }
+
+    document.getElementById('saveBirthday').addEventListener('click', function () {
+        var val = document.getElementById('settingsBirthday').value.trim();
+        var match = val.match(/^(\d{1,2})\/(\d{1,2})$/);
+        if (!match) return;
+        var day = parseInt(match[1]), month = parseInt(match[2]);
+        if (day < 1 || day > 31 || month < 1 || month > 12) return;
+        birthdayData = { day: day, month: month };
+        db.collection('config').doc('birthday').set({ day: day, month: month });
+        renderGreeting();
+    });
+
+    // ─── WEATHER ──────────────────────────────────────────────────
+    function loadWeather() {
+        var lat = 51.0543, lon = 3.7174;
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function (pos) { fetchWeather(pos.coords.latitude, pos.coords.longitude); },
+                function () { fetchWeather(lat, lon); },
+                { timeout: 3000 }
+            );
+        } else {
+            fetchWeather(lat, lon);
+        }
+    }
+
+    function fetchWeather(lat, lon) {
+        fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
+              '&daily=temperature_2m_max,weathercode&timezone=auto&forecast_days=7')
+            .then(function (r) { return r.json(); })
+            .then(function (data) { renderWeatherStrip(data); })
+            .catch(function () { document.getElementById('weatherStrip').innerHTML = ''; });
+    }
+
+    function weatherEmoji(code) {
+        if (code === 0) return '☀️';
+        if (code <= 3) return '⛅';
+        if (code <= 48) return '🌫️';
+        if (code <= 57) return '🌦️';
+        if (code <= 67) return '🌧️';
+        if (code <= 77) return '❄️';
+        if (code <= 82) return '🌦️';
+        if (code <= 86) return '🌨️';
+        return '⛈️';
+    }
+
+    var DUTCH_SHORT_DAYS = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'];
+
+    function renderWeatherStrip(data) {
+        var el = document.getElementById('weatherStrip');
+        if (!data || !data.daily) { el.innerHTML = ''; return; }
+        var html = '';
+        data.daily.time.slice(0, 7).forEach(function (dateStr, i) {
+            var d = new Date(dateStr + 'T12:00:00');
+            var dayName = i === 0 ? 'Vandaag' : i === 1 ? 'Morgen' : DUTCH_SHORT_DAYS[d.getDay()];
+            var emoji = weatherEmoji(data.daily.weathercode[i]);
+            var temp = Math.round(data.daily.temperature_2m_max[i]);
+            html += '<div class="weather-day' + (i === 0 ? ' today' : '') + '">' +
+                '<span class="weather-day-name">' + dayName + '</span>' +
+                '<span class="weather-emoji">' + emoji + '</span>' +
+                '<span class="weather-temp">' + temp + '°</span>' +
+                '</div>';
+        });
+        el.innerHTML = html;
+    }
+
+    // ─── CALENDAR ──────────────────────────────────────────────────
+    var gcalToken = null;
+
+    function initCalendar() {
+        var token = sessionStorage.getItem('gcalToken');
+        if (token) {
+            gcalToken = token;
+            loadCalendarEvents(token);
+        }
+        bindCalConnectBtn();
+    }
+
+    function bindCalConnectBtn() {
+        var btn = document.getElementById('calConnectBtn');
+        if (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                connectGoogleCalendar();
+            });
+        }
+    }
+
+    function connectGoogleCalendar() {
+        var provider = new firebase.auth.GoogleAuthProvider();
+        provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
+        auth.signInWithPopup(provider).then(function (result) {
+            var token = result.credential ? result.credential.accessToken : null;
+            if (token) {
+                gcalToken = token;
+                sessionStorage.setItem('gcalToken', token);
+                loadCalendarEvents(token);
+            }
+        }).catch(function (err) { console.log('Calendar auth error:', err); });
+    }
+
+    function loadCalendarEvents(token) {
+        var now = new Date();
+        var end = new Date(now);
+        end.setDate(end.getDate() + 7);
+        fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?' +
+              'timeMin=' + encodeURIComponent(now.toISOString()) +
+              '&timeMax=' + encodeURIComponent(end.toISOString()) +
+              '&orderBy=startTime&singleEvents=true&maxResults=20',
+            { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(function (r) {
+                if (r.status === 401) {
+                    sessionStorage.removeItem('gcalToken');
+                    gcalToken = null;
+                    document.getElementById('calendarStrip').innerHTML =
+                        '<i class="fas fa-calendar-days"></i> <a href="#" id="calConnectBtn" class="cal-connect-btn">Kalender verbinden</a>';
+                    bindCalConnectBtn();
+                    return null;
+                }
+                return r.json();
+            })
+            .then(function (data) {
+                if (!data) return;
+                renderCalendarStrip(data.items || []);
+            })
+            .catch(function () {});
+    }
+
+    function renderCalendarStrip(events) {
+        var el = document.getElementById('calendarStrip');
+        if (!events.length) {
+            el.innerHTML = '<i class="fas fa-calendar-days" style="color:var(--accent)"></i>' +
+                '<span class="text-dim" style="font-size:0.72rem;margin-left:0.4rem">Geen afspraken deze week</span>';
+            return;
+        }
+        var today = new Date(); today.setHours(0, 0, 0, 0);
+        var tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+        var html = '<i class="fas fa-calendar-days" style="color:var(--accent);margin-right:0.4rem;flex-shrink:0"></i>';
+        var shown = 0;
+        events.forEach(function (ev) {
+            if (shown >= 4) return;
+            var start = ev.start.dateTime ? new Date(ev.start.dateTime) : new Date(ev.start.date + 'T00:00:00');
+            var startDay = new Date(start); startDay.setHours(0, 0, 0, 0);
+            var dayLabel = startDay.getTime() === today.getTime() ? 'Vandaag' :
+                           startDay.getTime() === tomorrow.getTime() ? 'Morgen' :
+                           DUTCH_SHORT_DAYS[startDay.getDay()] + ' ' + startDay.getDate() + '/' + (startDay.getMonth() + 1);
+            var timeStr = ev.start.dateTime ?
+                new Date(ev.start.dateTime).toLocaleTimeString('nl', { hour: '2-digit', minute: '2-digit' }) : '';
+            html += '<span class="cal-event">' +
+                '<span class="cal-event-day">' + dayLabel + '</span>' +
+                (timeStr ? '<span class="cal-event-time">' + timeStr + '</span>' : '') +
+                '<span class="cal-event-title">' + escapeHtml(ev.summary || 'Afspraak') + '</span>' +
+                '</span>';
+            shown++;
+        });
+        el.innerHTML = html;
+    }
+
+    // ─── FOCUS MODE (COOKING TIME) ──────────────────────────────────
+    var focusMode = false;
+
+    function initCookingTime() {
+        document.getElementById('cookingTimeBtn').addEventListener('click', toggleFocusMode);
+    }
+
+    function toggleFocusMode() {
+        focusMode = !focusMode;
+        var container = document.getElementById('dashboard');
+        var btn = document.getElementById('cookingTimeBtn');
+        if (focusMode) {
+            container.classList.add('focus-mode');
+            btn.innerHTML = '<i class="fas fa-stop"></i><span>Stop Focus</span>';
+            btn.classList.add('active');
+            var wrapper = document.querySelector('.yt-collapsible');
+            var ytMoreContent = document.getElementById('ytMoreContent');
+            if (wrapper && ytMoreContent && !wrapper.classList.contains('open')) {
+                wrapper.classList.add('open');
+                ytMoreContent.style.display = '';
+            }
+            loadTodos();
+        } else {
+            container.classList.remove('focus-mode');
+            btn.innerHTML = '<i class="fas fa-fire"></i><span>Cooking Time</span>';
+            btn.classList.remove('active');
+        }
+    }
+
+    // ─── TODO ──────────────────────────────────────────────────────
+    var todosUnsubscribe = null;
+
+    function loadTodos() {
+        if (todosUnsubscribe) return;
+        todosUnsubscribe = db.collection('todos')
+            .orderBy('createdAt', 'asc')
+            .onSnapshot(function (snapshot) {
+                var todos = [];
+                snapshot.forEach(function (doc) {
+                    todos.push(Object.assign({ id: doc.id }, doc.data()));
+                });
+                renderTodos(todos);
+            });
+    }
+
+    function renderTodos(todos) {
+        var list = document.getElementById('todoList');
+        if (!list) return;
+        if (!todos.length) {
+            list.innerHTML = '<div class="text-dim" style="font-size:0.78rem;padding:0.4rem 0">Geen taken. Voeg er een toe!</div>';
+            return;
+        }
+        var html = todos.map(function (todo) {
+            return '<div class="todo-item">' +
+                '<div class="todo-check' + (todo.done ? ' checked' : '') + '" data-id="' + todo.id + '" data-done="' + (todo.done ? 'true' : 'false') + '">' +
+                '<i class="fas fa-check"></i></div>' +
+                '<span class="todo-text' + (todo.done ? ' done' : '') + '">' + escapeHtml(todo.text) + '</span>' +
+                '<button class="todo-delete" data-id="' + todo.id + '"><i class="fas fa-xmark"></i></button>' +
+                '</div>';
+        }).join('');
+        list.innerHTML = html;
+        list.querySelectorAll('.todo-check').forEach(function (el) {
+            el.addEventListener('click', function () {
+                var done = this.dataset.done !== 'true';
+                db.collection('todos').doc(this.dataset.id).update({ done: done });
+            });
+        });
+        list.querySelectorAll('.todo-delete').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                db.collection('todos').doc(this.dataset.id).delete();
+            });
+        });
+    }
+
+    document.getElementById('addTodoBtn').addEventListener('click', function () {
+        var input = document.getElementById('todoInput');
+        var text = input.value.trim();
+        if (!text) return;
+        db.collection('todos').add({
+            text: text, done: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        input.value = '';
+    });
+
+    document.getElementById('todoInput').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') document.getElementById('addTodoBtn').click();
+    });
+
+    document.getElementById('clearDoneTodos').addEventListener('click', function () {
+        db.collection('todos').where('done', '==', true).get().then(function (snap) {
+            var batch = db.batch();
+            snap.forEach(function (doc) { batch.delete(doc.ref); });
+            return batch.commit();
+        });
+    });
+
+    // ─── GYM MONTH ─────────────────────────────────────────────────
+    function renderGymMonth() {
+        var gymHabit = habits.find(function (h) { return h.name === 'Gym'; }) ||
+                       habits.find(function (h) { return h.name.toLowerCase().includes('gym'); });
+        var wrapper = document.getElementById('gymMonthWrapper');
+        if (!gymHabit || !wrapper) return;
+
+        var now = new Date();
+        var year = now.getFullYear();
+        var month = now.getMonth();
+        var daysInMonth = new Date(year, month + 1, 0).getDate();
+        var firstDow = new Date(year, month, 1).getDay() || 7;
+        var monthNames = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni',
+                          'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'];
+
+        var html = '<div class="gym-month-title">' + gymHabit.name + ' — ' + monthNames[month] + ' ' + year + '</div>';
+        html += '<div class="gym-month-grid">';
+        ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'].forEach(function (d) {
+            html += '<div class="gym-day-header">' + d + '</div>';
+        });
+        for (var i = 1; i < firstDow; i++) {
+            html += '<div class="gym-day-cell empty"></div>';
+        }
+        for (var d = 1; d <= daysInMonth; d++) {
+            var ds = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+            var done = allHabitData[ds] && allHabitData[ds][gymHabit.name];
+            var isToday = d === now.getDate();
+            html += '<div class="gym-day-cell' +
+                (done ? ' done' : '') +
+                (isToday ? ' today' : '') +
+                (d > now.getDate() ? ' future' : '') + '">' + d + '</div>';
+        }
+        html += '</div>';
+        wrapper.innerHTML = html;
+    }
 
 })();
