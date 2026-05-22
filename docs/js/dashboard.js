@@ -1,5 +1,6 @@
 (function () {
     const ALLOWED_EMAIL = 'kyanodemaertelaere@gmail.com';
+    const TOTP_UID      = 'kyano-totp';
     const EMA_ALPHA = 0.1;
 
     const firebaseConfig = {
@@ -148,7 +149,7 @@
     // Auth
     auth.onAuthStateChanged(function (user) {
         document.getElementById('loading').style.display = 'none';
-        if (user && user.email === ALLOWED_EMAIL) {
+        if (user && (user.email === ALLOWED_EMAIL || user.uid === TOTP_UID)) {
             document.getElementById('dashboard').style.display = 'block';
             loadConfig();
             loadWeight();
@@ -170,6 +171,22 @@
         auth.signOut().then(function () {
             window.location.href = 'index.html';
         });
+    });
+
+    document.getElementById('wakePc').addEventListener('click', function () {
+        var btn = this;
+        var icon = btn.querySelector('i');
+        var prev = icon.className;
+        icon.className = 'fas fa-spinner fa-spin';
+        btn.disabled = true;
+        fetch('https://eoackxuj3hoenp.m.pipedream.net', { method: 'GET', mode: 'no-cors' })
+            .finally(function () {
+                icon.className = 'fas fa-check';
+                setTimeout(function () {
+                    icon.className = prev;
+                    btn.disabled = false;
+                }, 1500);
+            });
     });
 
     // ─── CONFIG (batch read: habits + toolkit) ────
