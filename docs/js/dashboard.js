@@ -174,6 +174,7 @@
             loadWeather();
             initCalendar();
             initCookingTime();
+            loadTodos();
             loadGymProgress();
         } else {
             if (user) auth.signOut();
@@ -1007,28 +1008,6 @@
         notepadTimer = setTimeout(saveNotepad, 800);
     });
 
-    // ─── VIDEO DOWNLOAD ─────────────────────────────
-
-    document.getElementById('downloadVideoBtn').addEventListener('click', function () {
-        var url = document.getElementById('videoDownloadUrl').value.trim();
-        if (!url) return;
-        // YouTube: replace domain with ssyoutube for direct download
-        if (/youtu\.?be/.test(url)) {
-            var dlUrl = url.replace(/youtube\.com/, 'ssyoutube.com').replace(/youtu\.be/, 'ssyoutube.com/watch?v=');
-            window.open(dlUrl, '_blank');
-        } else if (/instagram\.com/.test(url)) {
-            window.open('https://snapinsta.app/?' + encodeURIComponent(url), '_blank');
-        } else if (/tiktok\.com/.test(url)) {
-            window.open('https://snaptik.app/?url=' + encodeURIComponent(url), '_blank');
-        } else {
-            window.open('https://yt1s.io/?url=' + encodeURIComponent(url), '_blank');
-        }
-    });
-
-    document.getElementById('videoDownloadUrl').addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') document.getElementById('downloadVideoBtn').click();
-    });
-
     // ─── TOOLKIT ────────────────────────────────────
 
     var ICON_OPTIONS = [
@@ -1515,6 +1494,7 @@
         focusMode = !focusMode;
         var container = document.getElementById('dashboard');
         var btn = document.getElementById('cookingTimeBtn');
+        var focusLinksEl = document.getElementById('focusLinks');
         if (focusMode) {
             container.classList.add('focus-mode');
             btn.innerHTML = '<i class="fas fa-stop"></i><span>Stop Focus</span>';
@@ -1525,11 +1505,19 @@
                 wrapper.classList.add('open');
                 ytMoreContent.style.display = '';
             }
-            loadTodos();
+            var toolkitLinks = document.querySelectorAll('.toolkit-bar .toolkit-link');
+            var html = '';
+            toolkitLinks.forEach(function (link) {
+                html += '<a href="' + link.href + '" target="_blank" rel="noopener" class="focus-link-btn">' +
+                    '<i class="' + (link.querySelector('i') ? link.querySelector('i').className : '') + '"></i>' +
+                    '<span>' + link.textContent.trim() + '</span></a>';
+            });
+            focusLinksEl.innerHTML = html;
         } else {
             container.classList.remove('focus-mode');
             btn.innerHTML = '<i class="fas fa-fire"></i><span>Cooking Time</span>';
             btn.classList.remove('active');
+            focusLinksEl.innerHTML = '';
         }
     }
 
