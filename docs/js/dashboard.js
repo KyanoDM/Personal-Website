@@ -1450,11 +1450,18 @@
               '&orderBy=startTime&singleEvents=true&maxResults=20',
             { headers: { 'Authorization': 'Bearer ' + token } })
             .then(function (r) {
-                if (r.status === 401) {
+                if (r.status === 401 || r.status === 403) {
                     sessionStorage.removeItem('gcalToken');
                     gcalToken = null;
-                    document.getElementById('calendarStrip').innerHTML =
-                        '<i class="fas fa-calendar-days"></i> <a href="#" id="calConnectBtn" class="cal-connect-btn">Kalender verbinden</a>';
+                    var el = document.getElementById('calendarStrip');
+                    if (r.status === 403) {
+                        el.innerHTML = '<i class="fas fa-calendar-days"></i>' +
+                            '<span class="text-dim" style="font-size:0.72rem;margin-left:0.4rem">Calendar API niet ingeschakeld</span>' +
+                            ' <a href="#" id="calConnectBtn" class="cal-connect-btn" style="font-size:0.72rem;margin-left:0.3rem">Opnieuw</a>';
+                    } else {
+                        el.innerHTML =
+                            '<i class="fas fa-calendar-days"></i> <a href="#" id="calConnectBtn" class="cal-connect-btn">Kalender verbinden</a>';
+                    }
                     bindCalConnectBtn();
                     return null;
                 }
@@ -1464,7 +1471,7 @@
                 if (!data) return;
                 renderCalendarStrip(data.items || []);
             })
-            .catch(function () {});
+            .catch(function (err) { console.log('Calendar fetch error:', err); });
     }
 
     function renderCalendarStrip(events) {
@@ -1614,10 +1621,17 @@
 
     function connectGymApp() {
         var provider = new firebase.auth.GoogleAuthProvider();
+        var btn = document.getElementById('connectGymBtn');
+        if (btn) btn.textContent = 'Verbinden...';
         gymAuth.signInWithPopup(provider).then(function (result) {
             fetchLatestGymMonth(result.user.uid);
         }).catch(function (err) {
             console.log('Gym auth error:', err);
+            var el = document.getElementById('gymProgressContent');
+            el.innerHTML = '<div class="text-dim" style="font-size:0.78rem">Kon niet verbinden. Voeg je domein toe aan de Gym Firebase authorized domains.</div>' +
+                '<button id="connectGymBtn" class="btn-ghost" style="width:100%;margin-top:0.5rem">' +
+                '<i class="fas fa-link me-1"></i>Opnieuw proberen</button>';
+            document.getElementById('connectGymBtn').addEventListener('click', connectGymApp);
         });
     }
 

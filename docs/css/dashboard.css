@@ -1312,7 +1312,7 @@ input::placeholder,
     flex-shrink: 0;
     min-height: 0;
     overflow: hidden;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.75rem;
 }
 
 .greeting-text {
