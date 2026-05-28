@@ -393,6 +393,12 @@ section {
     margin-top: 2rem;
 }
 
+a.internship-card {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
 .internship-card {
     background: var(--bg-light);
     border-radius: 14px;
