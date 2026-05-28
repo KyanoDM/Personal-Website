@@ -173,7 +173,7 @@
             loadBirthday();
             loadWeather();
             initCalendar();
-            initCookingTime();
+            initNotepadToggle();
             loadTodos();
             loadGymProgress();
         } else {
@@ -1166,7 +1166,6 @@
         document.getElementById('settingsOverlay').classList.add('open');
         document.getElementById('settingsSidebar').classList.add('open');
         renderSettingsChannels();
-        loadWeightGoal();
         loadBirthdaySetting();
     }
 
@@ -1222,52 +1221,6 @@
         document.getElementById('settingsChannelId').value = '';
     });
 
-    // --- Weight goal ---
-
-    function loadWeightGoal() {
-        db.collection('config').doc('weightGoal').get().then(function (doc) {
-            if (doc.exists && doc.data().kg != null) {
-                document.getElementById('settingsWeightGoal').value = doc.data().kg;
-            } else {
-                document.getElementById('settingsWeightGoal').value = '';
-            }
-        });
-    }
-
-    document.getElementById('saveWeightGoal').addEventListener('click', function () {
-        var val = parseFloat(document.getElementById('settingsWeightGoal').value);
-        if (!val || val < 30 || val > 300) return;
-        db.collection('config').doc('weightGoal').set({ kg: val });
-    });
-
-    document.getElementById('clearWeightGoal').addEventListener('click', function () {
-        db.collection('config').doc('weightGoal').delete();
-        document.getElementById('settingsWeightGoal').value = '';
-    });
-
-    // --- Clear notepad ---
-
-    document.getElementById('clearNotepad').addEventListener('click', function () {
-        if (!confirm('Weet je zeker dat je het kladblok wilt leegmaken?')) return;
-        document.getElementById('notepadArea').value = '';
-        db.collection('config').doc('notepad').set({ text: '' });
-    });
-
-    // --- Reset habit data ---
-
-    document.getElementById('resetHabitData').addEventListener('click', function () {
-        if (!confirm('ALLE habit data permanent verwijderen? Dit kan niet ongedaan worden!')) return;
-        db.collection('habitData').get().then(function (snapshot) {
-            var batch = db.batch();
-            snapshot.forEach(function (doc) { batch.delete(doc.ref); });
-            return batch.commit();
-        }).then(function () {
-            allHabitData = {};
-            habitData = {};
-            renderHabits();
-            renderHeatmap({}, new Date(), new Date());
-        });
-    });
 
     // ─── GREETING ──────────────────────────────────────────────────
     var birthdayData = null;
@@ -1487,42 +1440,15 @@
         el.innerHTML = html;
     }
 
-    // ─── FOCUS MODE (COOKING TIME) ──────────────────────────────────
-    var focusMode = false;
+    // ─── NOTEPAD TOGGLE ──────────────────────────────────────────────
 
-    function initCookingTime() {
-        document.getElementById('cookingTimeBtn').addEventListener('click', toggleFocusMode);
-    }
-
-    function toggleFocusMode() {
-        focusMode = !focusMode;
-        var container = document.getElementById('dashboard');
-        var btn = document.getElementById('cookingTimeBtn');
-        var focusLinksEl = document.getElementById('focusLinks');
-        if (focusMode) {
-            container.classList.add('focus-mode');
-            btn.innerHTML = '<i class="fas fa-stop"></i><span>Stop Focus</span>';
-            btn.classList.add('active');
-            var wrapper = document.querySelector('.yt-collapsible');
-            var ytMoreContent = document.getElementById('ytMoreContent');
-            if (wrapper && ytMoreContent && !wrapper.classList.contains('open')) {
-                wrapper.classList.add('open');
-                ytMoreContent.style.display = '';
-            }
-            var toolkitLinks = document.querySelectorAll('.toolkit-bar .toolkit-link');
-            var html = '';
-            toolkitLinks.forEach(function (link) {
-                html += '<a href="' + link.href + '" target="_blank" rel="noopener" class="focus-link-btn">' +
-                    '<i class="' + (link.querySelector('i') ? link.querySelector('i').className : '') + '"></i>' +
-                    '<span>' + link.textContent.trim() + '</span></a>';
-            });
-            focusLinksEl.innerHTML = html;
-        } else {
-            container.classList.remove('focus-mode');
-            btn.innerHTML = '<i class="fas fa-fire"></i><span>Cooking Time</span>';
-            btn.classList.remove('active');
-            focusLinksEl.innerHTML = '';
-        }
+    function initNotepadToggle() {
+        document.getElementById('notepadToggle').addEventListener('click', function () {
+            var content = document.getElementById('notepadContent');
+            var section = document.getElementById('notepadSection');
+            var isOpen = section.classList.toggle('notepad-open');
+            content.style.display = isOpen ? '' : 'none';
+        });
     }
 
     // ─── TODO ──────────────────────────────────────────────────────
