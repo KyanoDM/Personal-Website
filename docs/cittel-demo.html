@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cittel,Systeemarchitectuur</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #0a0e1a;
+    color: #e2e8f0;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ── Canvas ── */
+  .canvas {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Achtergrond grid ── */
+  .canvas::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0);
+    background-size: 40px 40px;
+  }
+
+  /* ── Titel overlay ── */
+  .title-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    background: #0a0e1a;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+  }
+  .title-overlay.hidden { opacity: 0; visibility: hidden; }
+
+  .title-overlay img {
+    width: 280px;
+    margin-bottom: 2rem;
+    filter: brightness(1.1);
+  }
+  .title-overlay h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+  }
+  .title-overlay p {
+    font-size: 1.15rem;
+    color: #94a3b8;
+    margin-bottom: 3rem;
+  }
+  .start-btn {
+    padding: 14px 48px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+  }
+  .start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(59,130,246,0.4);
+  }
+
+  /* ── Nodes ── */
+  .node {
+    position: absolute;
+    padding: 18px 28px;
+    border-radius: 16px;
+    text-align: center;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.6s ease, transform 0.6s ease, box-shadow 0.4s ease;
+    z-index: 10;
+    min-width: 160px;
+  }
+  .node.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .node.active {
+    box-shadow: 0 0 40px rgba(59,130,246,0.3);
+  }
+  .node-icon {
+    font-size: 1.8rem;
+    margin-bottom: 6px;
+  }
+  .node-label {
+    font-weight: 600;
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+  .node-sub {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 4px;
+  }
+
+  /* Node kleuren */
+  .node-cp       { background: linear-gradient(135deg, #1e293b, #334155); border: 1px solid #475569; top: 42%; left: 8%; }
+  .node-python   { background: linear-gradient(135deg, #1a1a2e, #16213e); border: 1px solid #3b82f6; top: 32%; left: 35%; }
+  .node-woo      { background: linear-gradient(135deg, #1a1a2e, #1e1a2e); border: 1px solid #8b5cf6; top: 42%; right: 8%; }
+  .node-icecat   { background: linear-gradient(135deg, #0f2027, #1a3a3a); border: 1px solid #14b8a6; top: 12%; left: 28%; }
+  .node-butler   { background: linear-gradient(135deg, #1a1a0f, #2a2a1a); border: 1px solid #eab308; top: 12%; left: 48%; }
+  .node-gemini   { background: linear-gradient(135deg, #1a0f2e, #2d1a4e); border: 1px solid #a78bfa; top: 12%; right: 14%; }
+  .node-odoo     { background: linear-gradient(135deg, #1a0f1a, #2e1a2e); border: 1px solid #ec4899; bottom: 28%; right: 20%; }
+  .node-klant    { background: linear-gradient(135deg, #0f1a0f, #1a2e1a); border: 1px solid #22c55e; bottom: 28%; right: 45%; }
+  .node-webhook  { background: linear-gradient(135deg, #2e1a0f, #3e2a1a); border: 1px solid #f97316; top: 58%; left: 15%; }
+
+  /* ── Verbindingslijnen (SVG) ── */
+  svg.connections {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    pointer-events: none;
+  }
+  .conn-line {
+    stroke: #334155;
+    stroke-width: 2;
+    fill: none;
+    stroke-dasharray: 8 4;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  .conn-line.visible { opacity: 0.6; }
+  .conn-line.active {
+    stroke: #3b82f6;
+    opacity: 1;
+    stroke-dasharray: none;
+  }
+
+  /* Animated dot along path */
+  .flow-dot {
+    fill: #3b82f6;
+    opacity: 0;
+    filter: drop-shadow(0 0 6px rgba(59,130,246,0.8));
+  }
+  .flow-dot.active {
+    opacity: 1;
+  }
+
+  /* ── Info panel ── */
+  .info-panel {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(59,130,246,0.3);
+    border-radius: 20px;
+    padding: 24px 40px;
+    max-width: 700px;
+    width: 90%;
+    text-align: center;
+    z-index: 50;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .info-panel.visible { opacity: 1; }
+  .info-panel h3 {
+    font-size: 1.15rem;
+    color: #3b82f6;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .info-panel p {
+    font-size: 0.95rem;
+    color: #cbd5e1;
+    line-height: 1.6;
+  }
+
+  /* ── Stap indicator ── */
+  .step-indicator {
+    position: absolute;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 50;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .step-indicator.visible { opacity: 1; }
+
+  .step-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .step-group.visible { opacity: 1; transform: translateY(0); }
+
+  .step-group-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #475569;
+    margin-right: 4px;
+    white-space: nowrap;
+  }
+
+  .step-group-sep {
+    width: 1px;
+    height: 18px;
+    background: #334155;
+    margin: 0 4px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .step-group-sep.visible { opacity: 1; }
+
+  .step-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #334155;
+    transition: background 0.3s, transform 0.3s;
+  }
+  .step-dot.active {
+    background: #3b82f6;
+    transform: scale(1.3);
+  }
+  .step-dot.done {
+    background: #22c55e;
+  }
+
+  /* ── Nav knoppen ── */
+  .nav-buttons {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    display: flex;
+    gap: 12px;
+    z-index: 60;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .nav-buttons.visible { opacity: 1; }
+  .nav-btn {
+    padding: 10px 24px;
+    border-radius: 10px;
+    border: 1px solid #475569;
+    background: rgba(15, 23, 42, 0.8);
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .nav-btn:hover { border-color: #3b82f6; background: rgba(59,130,246,0.1); }
+  .nav-btn.primary { background: #2563eb; border-color: #2563eb; }
+  .nav-btn.primary:hover { background: #1d4ed8; }
+
+  /* ── Stock demo widget ── */
+  .stock-demo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+  .stock-demo.visible { opacity: 1; pointer-events: auto; }
+
+  .stock-card {
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 24px 32px;
+    min-width: 220px;
+    text-align: center;
+    transition: border-color 0.4s;
+  }
+  .stock-card h4 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #64748b;
+    margin-bottom: 12px;
+  }
+  .stock-card .stock-product {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-bottom: 16px;
+  }
+  .stock-value {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    transition: color 0.3s, transform 0.3s;
+    line-height: 1;
+  }
+  .stock-value.updating {
+    color: #3b82f6;
+    transform: scale(1.2);
+  }
+  .stock-value.updated {
+    color: #22c55e;
+  }
+  .stock-label {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 8px;
+  }
+
+  .stock-arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .stock-arrow-line {
+    width: 80px;
+    height: 2px;
+    background: #334155;
+    position: relative;
+    transition: background 0.4s;
+  }
+  .stock-arrow-line.active { background: #3b82f6; }
+  .stock-arrow-line::after {
+    content: '';
+    position: absolute;
+    right: -6px;
+    top: -4px;
+    border: 5px solid transparent;
+    border-left: 8px solid #334155;
+    transition: border-left-color 0.4s;
+  }
+  .stock-arrow-line.active::after { border-left-color: #3b82f6; }
+  .stock-arrow-label {
+    font-size: 0.7rem;
+    color: #64748b;
+    transition: color 0.4s;
+  }
+  .stock-arrow-label.active { color: #3b82f6; }
+
+  .stock-trigger-btn {
+    margin-top: 16px;
+    padding: 8px 20px;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .stock-trigger-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(249,115,22,0.4);
+  }
+  .stock-trigger-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* ── Dim overlay voor focus ── */
+  .dim-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 15;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+  .dim-overlay.visible { opacity: 1; }
+
+  /* ── Pulse animatie op actieve node ── */
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(59,130,246,0.2); }
+    50% { box-shadow: 0 0 40px rgba(59,130,246,0.5); }
+  }
+  .node.active { animation: pulse 2s ease-in-out infinite; }
+
+  /* ── Dot movement ── */
+  @keyframes moveDot {
+    0% { offset-distance: 0%; opacity: 1; }
+    100% { offset-distance: 100%; opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Titelscherm -->
+<div class="title-overlay" id="titleScreen">
+  <h1>Cittel Webshop</h1>
+  <p>Automatische product import, live synchronisatie & order verwerking</p>
+  <button class="start-btn" onclick="startDemo()">Start Demo →</button>
+</div>
+
+<!-- Stap indicator -->
+<div class="step-indicator" id="stepIndicator"></div>
+
+<!-- Canvas -->
+<div class="canvas" id="canvas">
+
+  <!-- Nodes -->
+  <div class="node node-cp" id="node-cp">
+    <div class="node-icon">📦</div>
+    <div class="node-label">Connect+</div>
+    <div class="node-sub">Exellent API</div>
+  </div>
+
+  <div class="node node-python" id="node-python">
+    <div class="node-icon">⚙️</div>
+    <div class="node-label">Import Engine</div>
+    <div class="node-sub">Python scripts</div>
+  </div>
+
+  <div class="node node-woo" id="node-woo">
+    <div class="node-icon">🛒</div>
+    <div class="node-label">WooCommerce</div>
+    <div class="node-sub">webshop.cittel.be</div>
+  </div>
+
+  <div class="node node-icecat" id="node-icecat">
+    <div class="node-icon">📋</div>
+    <div class="node-label">Icecat</div>
+    <div class="node-sub">Specs & foto's</div>
+  </div>
+
+  <div class="node node-butler" id="node-butler">
+    <div class="node-icon">🖼️</div>
+    <div class="node-label">Butler+</div>
+    <div class="node-sub">Foto & spec fallback</div>
+  </div>
+
+  <div class="node node-gemini" id="node-gemini">
+    <div class="node-icon">✨</div>
+    <div class="node-label">Gemini AI</div>
+    <div class="node-sub">Beschrijvingen</div>
+  </div>
+
+  <div class="node node-klant" id="node-klant">
+    <div class="node-icon">👤</div>
+    <div class="node-label">Klant</div>
+    <div class="node-sub">Bestelling & betaling</div>
+  </div>
+
+  <div class="node node-odoo" id="node-odoo">
+    <div class="node-icon">📊</div>
+    <div class="node-label">Odoo</div>
+    <div class="node-sub">Facturatie & boekhouding</div>
+  </div>
+
+  <div class="node node-webhook" id="node-webhook">
+    <div class="node-icon">🔄</div>
+    <div class="node-label">Webhooks</div>
+    <div class="node-sub">Live stock & prijs</div>
+  </div>
+
+  <!-- Dim overlay -->
+  <div class="dim-overlay" id="dimOverlay"></div>
+
+  <!-- Stock demo widget -->
+  <div class="stock-demo" id="stockDemo">
+    <div class="stock-card" id="stockCardCP" style="border-color: #475569;">
+      <h4>Connect+ API</h4>
+      <div class="stock-product">HP EliteBook 840 G9</div>
+      <div class="stock-value" id="stockCP">12</div>
+      <div class="stock-label">voorraad</div>
+      <button class="stock-trigger-btn" id="stockBtn" onclick="simulateStockChange()">Wijzig stock → 8</button>
+    </div>
+
+    <div class="stock-arrow">
+      <div class="stock-arrow-label" id="arrowLabel1">webhook</div>
+      <div class="stock-arrow-line" id="arrowLine1"></div>
+    </div>
+
+    <div class="stock-card" style="border-color: #f97316;">
+      <h4>Webhook</h4>
+      <div class="stock-product">Verwerking</div>
+      <div class="stock-value" id="stockWebhook" style="font-size: 1.5rem; color: #64748b;">wacht...</div>
+      <div class="stock-label">status</div>
+    </div>
+
+    <div class="stock-arrow">
+      <div class="stock-arrow-label" id="arrowLabel2">update</div>
+      <div class="stock-arrow-line" id="arrowLine2"></div>
+    </div>
+
+    <div class="stock-card" style="border-color: #8b5cf6;">
+      <h4>Webshop</h4>
+      <div class="stock-product">HP EliteBook 840 G9</div>
+      <div class="stock-value" id="stockWoo">12</div>
+      <div class="stock-label">voorraad</div>
+    </div>
+  </div>
+
+  <!-- SVG verbindingen -->
+  <svg class="connections" id="svgConnections"></svg>
+</div>
+
+<!-- Info panel -->
+<div class="info-panel" id="infoPanel">
+  <h3 id="infoTitle"></h3>
+  <p id="infoText"></p>
+</div>
+
+<!-- Navigatie -->
+<div class="nav-buttons" id="navButtons">
+  <button class="nav-btn" onclick="prevStep()">← Vorige</button>
+  <button class="nav-btn primary" onclick="nextStep()">Volgende →</button>
+</div>
+
+<script>
+// ── Stappen definitie ──
+const steps = [
+  {
+    title: "De catalogus",
+    text: "Connect+ (Exellent) bevat 20.000+ producten met SKU, EAN, prijs en voorraad. Wij gebruiken hiervan 3.000+ artikelen. Dit is de centrale productcatalogus.",
+    nodes: ["node-cp"],
+    active: "node-cp",
+    connections: []
+  },
+  {
+    title: "Product import",
+    text: "Een Python script haalt alle producten op uit Connect+ en verrijkt ze met data uit drie externe bronnen voordat ze naar de webshop gaan.",
+    nodes: ["node-cp", "node-python"],
+    active: "node-python",
+    connections: [["node-cp", "node-python"]]
+  },
+  {
+    title: "Data verrijking, Icecat",
+    text: "Icecat is een publieke database met productdata voor miljoenen artikelen. Het levert gedetailleerde specificaties, bullet points en professionele productfoto's op basis van EAN of MPN. Dit is de primaire databron.",
+    nodes: ["node-cp", "node-python", "node-icecat"],
+    active: "node-icecat",
+    connections: [["node-cp", "node-python"], ["node-icecat", "node-python"]]
+  },
+  {
+    title: "Data verrijking, Butler+",
+    text: "Als Icecat geen data heeft, worden foto's, specs en beschrijvingen gescrapet van Butler+ (het B2B portaal van Exellent). Dit is de fallback.",
+    nodes: ["node-cp", "node-python", "node-icecat", "node-butler"],
+    active: "node-butler",
+    connections: [["node-cp", "node-python"], ["node-icecat", "node-python"], ["node-butler", "node-python"]]
+  },
+  {
+    title: "AI beschrijvingen, Gemini",
+    text: "Google Gemini genereert unieke Nederlandse productbeschrijvingen op basis van de verzamelde specs en bullet points. Elke beschrijving is SEO-geoptimaliseerd.",
+    nodes: ["node-cp", "node-python", "node-icecat", "node-butler", "node-gemini"],
+    active: "node-gemini",
+    connections: [["node-cp", "node-python"], ["node-icecat", "node-python"], ["node-butler", "node-python"], ["node-gemini", "node-python"]]
+  },
+  {
+    title: "Webshop",
+    text: "De verrijkte producten worden via de WooCommerce REST API aangemaakt met foto's, specs, AI-beschrijving, prijs, voorraad, merk en categorie.",
+    nodes: ["node-cp", "node-python", "node-icecat", "node-butler", "node-gemini", "node-woo"],
+    active: "node-woo",
+    connections: [["node-cp", "node-python"], ["node-icecat", "node-python"], ["node-butler", "node-python"], ["node-gemini", "node-python"], ["node-python", "node-woo"]]
+  },
+  {
+    title: "Live synchronisatie",
+    text: "Connect+ stuurt webhooks naar de webshop bij elke stock- of prijswijziging. Een custom WordPress-plugin vangt deze webhooks op en verwerkt ze. De voorraad op de website is altijd actueel, zonder vertraging.",
+    nodes: ["node-cp", "node-woo", "node-webhook"],
+    active: "node-webhook",
+    connections: [["node-cp", "node-webhook"], ["node-webhook", "node-woo"]]
+  },
+  {
+    title: "Live demo - Stock update",
+    text: "Klik op 'Wijzig stock' en zie hoe de voorraad real-time doorstroomt van Connect+ via de webhook naar de webshop. De custom plugin verwerkt de data en update het product automatisch.",
+    dimBackground: true,
+    nodes: ["node-cp", "node-woo", "node-webhook"],
+    active: null,
+    connections: [["node-cp", "node-webhook"], ["node-webhook", "node-woo"]],
+    showStockDemo: true
+  },
+  {
+    title: "Nightly sync",
+    text: "Elke nacht draait een Python script dat nieuwe producten toevoegt, verwijderde producten offline haalt, en prijzen & voorraad bijwerkt. Zo blijft de webshop compleet, ook als een webhook gemist wordt.",
+    nodes: ["node-cp", "node-python", "node-woo"],
+    active: "node-python",
+    connections: [["node-cp", "node-python"], ["node-python", "node-woo"]]
+  },
+  {
+    title: "Klant bestelt",
+    text: "De klant rekent af via Bancontact of creditcard via Mollie, een betaalprovider die alle populaire betaalmethodes aanbiedt. Na betaling wordt de bestelling automatisch verwerkt, zonder handmatige tussenkomst.",
+    nodes: ["node-cp", "node-woo", "node-klant"],
+    active: "node-klant",
+    connections: [["node-klant", "node-woo"]]
+  },
+  {
+    title: "Automatische verwerking",
+    text: "WooCommerce stuurt de bestelling rechtstreeks naar Connect+ voor verzending via DPD, en naar Odoo voor facturatie. Volledig automatisch, inclusief BTW-nummer.",
+    nodes: ["node-cp", "node-woo", "node-klant", "node-odoo"],
+    active: "node-odoo",
+    connections: [["node-klant", "node-woo"], ["node-woo", "node-cp"], ["node-woo", "node-odoo"]]
+  },
+  {
+    title: "Volledig automatisch",
+    text: "Van catalogus tot factuur, alles draait zonder handmatige tussenkomst. Nieuwe producten verschijnen 's nachts, stock en prijs updaten live, en elke bestelling stroomt automatisch door het hele systeem.",
+    nodes: ["node-cp", "node-python", "node-icecat", "node-butler", "node-gemini", "node-woo", "node-webhook", "node-klant", "node-odoo"],
+    active: null,
+    connections: [["node-cp", "node-python"], ["node-icecat", "node-python"], ["node-butler", "node-python"], ["node-gemini", "node-python"], ["node-python", "node-woo"], ["node-cp", "node-webhook"], ["node-webhook", "node-woo"], ["node-klant", "node-woo"], ["node-woo", "node-cp"], ["node-woo", "node-odoo"]]
+  }
+];
+
+let currentStep = -1;
+const allNodeIds = ["node-cp", "node-python", "node-woo", "node-icecat", "node-butler", "node-gemini", "node-klant", "node-odoo", "node-webhook"];
+
+// ── Stap groepen ──
+const stepGroups = [
+  { label: "Product",    steps: [0, 1, 2, 3, 4, 5] },
+  { label: "Sync",       steps: [6, 7, 8] },
+  { label: "Bestelling", steps: [9, 10, 11] },
+];
+
+function getGroupForStep(stepIndex) {
+  return stepGroups.findIndex(g => g.steps.includes(stepIndex));
+}
+
+// ── Init step dots per groep ──
+function initStepDots() {
+  const indicator = document.getElementById('stepIndicator');
+  stepGroups.forEach((group, gi) => {
+    if (gi > 0) {
+      const sep = document.createElement('div');
+      sep.className = 'step-group-sep';
+      sep.dataset.sepAfter = gi - 1;
+      indicator.appendChild(sep);
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'step-group';
+    wrap.dataset.group = gi;
+
+    const lbl = document.createElement('span');
+    lbl.className = 'step-group-label';
+    lbl.textContent = group.label;
+    wrap.appendChild(lbl);
+
+    group.steps.forEach(si => {
+      const dot = document.createElement('div');
+      dot.className = 'step-dot';
+      dot.dataset.step = si;
+      wrap.appendChild(dot);
+    });
+    indicator.appendChild(wrap);
+  });
+}
+
+// ── Node center positie ophalen ──
+function getNodeCenter(id) {
+  const el = document.getElementById(id);
+  if (!el) return { x: 0, y: 0 };
+  const r = el.getBoundingClientRect();
+  return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+}
+
+// ── Verbindingen tekenen ──
+let _activeConns = {};  // key → { path, circle }
+
+function _connKey(from, to) { return from + '→' + to; }
+
+function drawConnections(connections, allActive) {
+  const svg = document.getElementById('svgConnections');
+  const newKeys = new Set(connections.map(([f, t]) => _connKey(f, t)));
+
+  // Verwijder connecties die niet meer nodig zijn (fade out)
+  Object.keys(_activeConns).forEach(key => {
+    if (!newKeys.has(key)) {
+      const { path, circle } = _activeConns[key];
+      path.classList.remove('visible', 'active');
+      circle.classList.remove('active');
+      // Verwijder na fade-out
+      setTimeout(() => { path.remove(); circle.remove(); }, 600);
+      delete _activeConns[key];
+    }
+  });
+
+  connections.forEach(([fromId, toId], idx) => {
+    const key = _connKey(fromId, toId);
+
+    // Bestaande connectie: update positie, skip aanmaken
+    if (_activeConns[key]) {
+      const from = getNodeCenter(fromId);
+      const to = getNodeCenter(toId);
+      const midX = (from.x + to.x) / 2;
+      const midY = (from.y + to.y) / 2 - 30;
+      const d = `M ${from.x} ${from.y} Q ${midX} ${midY} ${to.x} ${to.y}`;
+      _activeConns[key].path.setAttribute('d', d);
+      _activeConns[key].path.setAttribute('id', `path-${idx}`);
+      // Update mpath href
+      const mp = _activeConns[key].circle.querySelector('mpath');
+      if (mp) mp.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `#path-${idx}`);
+      if (allActive) _activeConns[key].path.classList.add('active');
+      return;
+    }
+
+    // Nieuwe connectie aanmaken
+    const from = getNodeCenter(fromId);
+    const to = getNodeCenter(toId);
+    const midX = (from.x + to.x) / 2;
+    const midY = (from.y + to.y) / 2 - 30;
+    const d = `M ${from.x} ${from.y} Q ${midX} ${midY} ${to.x} ${to.y}`;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('id', `path-${idx}`);
+    path.classList.add('conn-line');
+    setTimeout(() => path.classList.add('visible'), 50);
+    if (allActive) path.classList.add('active');
+    svg.appendChild(path);
+
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('r', '5');
+    circle.classList.add('flow-dot');
+
+    const animMotion = document.createElementNS('http://www.w3.org/2000/svg', 'animateMotion');
+    animMotion.setAttribute('dur', '2s');
+    animMotion.setAttribute('repeatCount', 'indefinite');
+    const mpath = document.createElementNS('http://www.w3.org/2000/svg', 'mpath');
+    mpath.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `#path-${idx}`);
+    animMotion.appendChild(mpath);
+    circle.appendChild(animMotion);
+
+    setTimeout(() => circle.classList.add('active'), 200);
+    svg.appendChild(circle);
+
+    _activeConns[key] = { path, circle };
+  });
+}
+
+// ── Stock demo simulatie ──
+function resetStockDemo() {
+  document.getElementById('stockCP').textContent = '12';
+  document.getElementById('stockWoo').textContent = '12';
+  document.getElementById('stockWebhook').textContent = 'wacht...';
+  document.getElementById('stockWebhook').style.fontSize = '1.5rem';
+  document.getElementById('stockWebhook').style.color = '#64748b';
+  document.getElementById('stockBtn').disabled = false;
+  ['stockCP', 'stockWoo', 'stockWebhook'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('updating', 'updated');
+  });
+  ['arrowLine1', 'arrowLine2'].forEach(id => {
+    document.getElementById(id).classList.remove('active');
+  });
+  ['arrowLabel1', 'arrowLabel2'].forEach(id => {
+    document.getElementById(id).classList.remove('active');
+  });
+}
+
+function simulateStockChange() {
+  const btn = document.getElementById('stockBtn');
+  btn.disabled = true;
+
+  const cpVal   = document.getElementById('stockCP');
+  const whVal   = document.getElementById('stockWebhook');
+  const wooVal  = document.getElementById('stockWoo');
+  const arrow1  = document.getElementById('arrowLine1');
+  const arrow2  = document.getElementById('arrowLine2');
+  const label1  = document.getElementById('arrowLabel1');
+  const label2  = document.getElementById('arrowLabel2');
+
+  // Stap 1: Connect+ stock wijzigt → 8
+  cpVal.classList.add('updating');
+  setTimeout(() => {
+    cpVal.textContent = '8';
+    cpVal.classList.remove('updating');
+    cpVal.classList.add('updated');
+  }, 400);
+
+  // Stap 2: Pijl 1 activeert, webhook ontvangt
+  setTimeout(() => {
+    arrow1.classList.add('active');
+    label1.classList.add('active');
+  }, 900);
+
+  setTimeout(() => {
+    whVal.textContent = 'ontvangen';
+    whVal.style.fontSize = '1.2rem';
+    whVal.style.color = '#f97316';
+  }, 1400);
+
+  // Stap 3: Webhook verwerkt
+  setTimeout(() => {
+    whVal.textContent = 'verwerkt ✓';
+    whVal.style.color = '#22c55e';
+  }, 2200);
+
+  // Stap 4: Pijl 2 activeert, WooCommerce stock wijzigt → 8
+  setTimeout(() => {
+    arrow2.classList.add('active');
+    label2.classList.add('active');
+  }, 2800);
+
+  setTimeout(() => {
+    wooVal.classList.add('updating');
+  }, 3200);
+
+  setTimeout(() => {
+    wooVal.textContent = '8';
+    wooVal.classList.remove('updating');
+    wooVal.classList.add('updated');
+  }, 3600);
+
+  // Stap 5: Reset knop na 5 seconden
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.textContent = 'Opnieuw ↻';
+    btn.onclick = () => {
+      resetStockDemo();
+      btn.textContent = 'Wijzig stock → 8';
+      btn.onclick = simulateStockChange;
+    };
+  }, 4500);
+}
+
+// ── Stap weergeven ──
+function showStep(stepIndex) {
+  const step = steps[stepIndex];
+
+  // Stock demo + dim overlay tonen/verbergen
+  const stockDemo = document.getElementById('stockDemo');
+  const dimOverlay = document.getElementById('dimOverlay');
+  if (step.showStockDemo) {
+    resetStockDemo();
+    stockDemo.classList.add('visible');
+  } else {
+    stockDemo.classList.remove('visible');
+  }
+  dimOverlay.classList.toggle('visible', !!step.dimBackground);
+
+  // Nodes
+  allNodeIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (step.nodes.includes(id)) {
+      el.classList.add('visible');
+    } else {
+      el.classList.remove('visible');
+    }
+    el.classList.toggle('active', id === step.active);
+  });
+
+  // Connections
+  const isLastStep = stepIndex === steps.length - 1;
+  setTimeout(() => drawConnections(step.connections, isLastStep), 300);
+
+  // Info panel
+  const panel = document.getElementById('infoPanel');
+  const title = document.getElementById('infoTitle');
+  const text = document.getElementById('infoText');
+  panel.classList.remove('visible');
+  setTimeout(() => {
+    title.textContent = step.title;
+    text.textContent = step.text;
+    panel.classList.add('visible');
+  }, 200);
+
+  // Step dots — toon alleen de actieve groep
+  const activeGroup = getGroupForStep(stepIndex);
+
+  document.querySelectorAll('.step-group').forEach(g => {
+    const gi = parseInt(g.dataset.group);
+    g.classList.toggle('visible', gi <= activeGroup);
+  });
+  document.querySelectorAll('.step-group-sep').forEach(s => {
+    const after = parseInt(s.dataset.sepAfter);
+    s.classList.toggle('visible', after < activeGroup);
+  });
+
+  document.querySelectorAll('.step-dot').forEach(dot => {
+    const si = parseInt(dot.dataset.step);
+    dot.classList.remove('active', 'done');
+    if (si < stepIndex) dot.classList.add('done');
+    if (si === stepIndex) dot.classList.add('active');
+  });
+}
+
+function nextStep() {
+  if (currentStep < steps.length - 1) {
+    currentStep++;
+    showStep(currentStep);
+  }
+}
+
+function prevStep() {
+  if (currentStep > 0) {
+    currentStep--;
+    showStep(currentStep);
+  }
+}
+
+function startDemo() {
+  document.getElementById('titleScreen').classList.add('hidden');
+  document.getElementById('stepIndicator').classList.add('visible');
+  document.getElementById('navButtons').classList.add('visible');
+  currentStep = 0;
+  showStep(0);
+}
+
+// Keyboard navigatie
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') {
+    e.preventDefault();
+    if (currentStep === -1) startDemo();
+    else nextStep();
+  }
+  if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    prevStep();
+  }
+});
+
+// Init
+initStepDots();
+
+// Herpositioneer bij resize — wis cache zodat posities opnieuw berekend worden
+window.addEventListener('resize', () => {
+  if (currentStep >= 0) {
+    // Posities zijn veranderd, herbereken bestaande paden
+    const conns = steps[currentStep].connections;
+    conns.forEach(([fromId, toId], idx) => {
+      const key = _connKey(fromId, toId);
+      if (_activeConns[key]) {
+        const from = getNodeCenter(fromId);
+        const to = getNodeCenter(toId);
+        const midX = (from.x + to.x) / 2;
+        const midY = (from.y + to.y) / 2 - 30;
+        _activeConns[key].path.setAttribute('d', `M ${from.x} ${from.y} Q ${midX} ${midY} ${to.x} ${to.y}`);
+      }
+    });
+  }
+});
+
+</script>
+</body>
+</html>
