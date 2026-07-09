@@ -1,6 +1,6 @@
 (function () {
     const ALLOWED_EMAIL = 'kyanodemaertelaere@gmail.com';
-    const TOTP_UID      = 'kyano-totp';
+    const TOTP_UID = 'kyano-totp';
     const EMA_ALPHA = 0.1;
 
     const firebaseConfig = {
@@ -127,7 +127,7 @@
                 .then(function (data) {
                     if (data.title) element.textContent = data.title;
                 })
-                .catch(function () {});
+                .catch(function () { });
             return;
         }
         var handle = url.match(/youtube\.com\/@([\w.-]+)/);
@@ -139,7 +139,7 @@
                         element.textContent = data.items[0].snippet.title;
                     }
                 })
-                .catch(function () {});
+                .catch(function () { });
             return;
         }
         var chanId = url.match(/youtube\.com\/channel\/([\w-]+)/);
@@ -151,7 +151,7 @@
                         element.textContent = data.items[0].snippet.title;
                     }
                 })
-                .catch(function () {});
+                .catch(function () { });
         }
     }
 
@@ -194,7 +194,7 @@
         var prev = icon.className;
         icon.className = 'fas fa-spinner fa-spin';
         btn.disabled = true;
-        fetch('https://eoackxuj3hoenp.m.pipedream.net', { method: 'GET', mode: 'no-cors' })
+        fetch('https://wake.kyanodm.be/wake', { method: 'GET', mode: 'no-cors' })
             .finally(function () {
                 icon.className = 'fas fa-check';
                 setTimeout(function () {
@@ -821,14 +821,14 @@
                             html += '<a href="https://youtube.com/watch?v=' + vid + '" target="_blank" class="yt-video-row">' +
                                 '<img src="' + thumb + '" class="yt-thumb" alt="">' +
                                 '<div class="yt-video-info">' +
-                                    '<div class="yt-video-title">' + sn.title + '</div>' +
-                                    '<div class="yt-video-stats">' +
-                                        '<span><i class="fas fa-eye me-1"></i>' + fmtNum(st.viewCount) + '</span>' +
-                                        '<span><i class="fas fa-thumbs-up me-1"></i>' + fmtNum(st.likeCount) + '</span>' +
-                                        '<span><i class="fas fa-clock me-1"></i>' + timeAgo + '</span>' +
-                                    '</div>' +
+                                '<div class="yt-video-title">' + sn.title + '</div>' +
+                                '<div class="yt-video-stats">' +
+                                '<span><i class="fas fa-eye me-1"></i>' + fmtNum(st.viewCount) + '</span>' +
+                                '<span><i class="fas fa-thumbs-up me-1"></i>' + fmtNum(st.likeCount) + '</span>' +
+                                '<span><i class="fas fa-clock me-1"></i>' + timeAgo + '</span>' +
                                 '</div>' +
-                            '</a>';
+                                '</div>' +
+                                '</a>';
                         });
                         document.getElementById('ytVideos').innerHTML = html;
 
@@ -900,8 +900,8 @@
 
             card.innerHTML =
                 '<div class="kanban-card-body">' +
-                    embedHtml +
-                    '<div class="kanban-card-title">' + escapeHtml(displayTitle) + '</div>' +
+                embedHtml +
+                '<div class="kanban-card-title">' + escapeHtml(displayTitle) + '</div>' +
                 '</div>' +
                 '<div class="kanban-card-actions">' +
                 '<button class="kanban-btn delete" data-id="' + idea.id + '" data-action="delete" title="Verwijder"><i class="fas fa-trash"></i></button>' +
@@ -953,8 +953,8 @@
                 var embedHtml = url ? buildEmbed(url) : '';
                 return '<div class="source-item" data-fetch="' + (needsFetch ? url : '') + '">' +
                     '<div class="source-body">' +
-                        embedHtml +
-                        '<span class="source-text">' + escapeHtml(displayText) + '</span>' +
+                    embedHtml +
+                    '<span class="source-text">' + escapeHtml(displayText) + '</span>' +
                     '</div>' +
                     '<button class="source-delete" data-id="' + s.id + '"><i class="fas fa-xmark"></i></button>' +
                     '</div>';
@@ -1299,7 +1299,7 @@
 
     function fetchWeather(lat, lon) {
         fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
-              '&daily=temperature_2m_max,weathercode&timezone=auto&forecast_days=7')
+            '&daily=temperature_2m_max,weathercode&timezone=auto&forecast_days=7')
             .then(function (r) { return r.json(); })
             .then(function (data) { renderWeatherStrip(data); })
             .catch(function () { document.getElementById('weatherStrip').innerHTML = ''; });
@@ -1377,9 +1377,9 @@
         var end = new Date(now);
         end.setDate(end.getDate() + 7);
         fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?' +
-              'timeMin=' + encodeURIComponent(now.toISOString()) +
-              '&timeMax=' + encodeURIComponent(end.toISOString()) +
-              '&orderBy=startTime&singleEvents=true&maxResults=20',
+            'timeMin=' + encodeURIComponent(now.toISOString()) +
+            '&timeMax=' + encodeURIComponent(end.toISOString()) +
+            '&orderBy=startTime&singleEvents=true&maxResults=20',
             { headers: { 'Authorization': 'Bearer ' + token } })
             .then(function (r) {
                 if (r.status === 401 || r.status === 403) {
@@ -1426,8 +1426,8 @@
             if (isNaN(start.getTime())) return;
             var startDay = new Date(start); startDay.setHours(0, 0, 0, 0);
             var dayLabel = startDay.getTime() === today.getTime() ? 'Vandaag' :
-                           startDay.getTime() === tomorrow.getTime() ? 'Morgen' :
-                           DUTCH_SHORT_DAYS[startDay.getDay()] + ' ' + startDay.getDate() + '/' + (startDay.getMonth() + 1);
+                startDay.getTime() === tomorrow.getTime() ? 'Morgen' :
+                    DUTCH_SHORT_DAYS[startDay.getDay()] + ' ' + startDay.getDate() + '/' + (startDay.getMonth() + 1);
             var timeStr = ev.start.dateTime ?
                 new Date(ev.start.dateTime).toLocaleTimeString('nl', { hour: '2-digit', minute: '2-digit' }) : '';
             html += '<span class="cal-event">' +
