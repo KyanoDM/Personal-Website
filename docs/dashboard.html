@@ -20,7 +20,6 @@
         <header class="dashboard-header">
             <div class="header-left">
                 <h1>Dashboard</h1>
-                <nav id="toolkitBar" class="toolkit-bar"></nav>
             </div>
             <div class="header-right">
                 <button id="wakePc" class="btn-icon" title="PC aanzetten"><i class="fas fa-power-off"></i></button>
@@ -281,26 +280,6 @@
                     <input type="text" id="sourceTextInput" class="form-control dash-input mb-3" placeholder="URL, account, idee...">
                     <div class="d-flex gap-2">
                         <button id="confirmAddSource" class="btn-accent flex-grow-1">Toevoegen</button>
-                        <button class="btn-ghost" data-bs-dismiss="modal">Annuleer</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Toolkit Link Modal -->
-    <div class="modal fade" id="addToolkitModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content dash-modal">
-                <div class="modal-body p-4">
-                    <h5 class="mb-3">Nieuwe link</h5>
-                    <input type="text" id="toolkitNameInput" class="form-control dash-input mb-3" placeholder="Naam">
-                    <input type="text" id="toolkitUrlInput" class="form-control dash-input mb-3" placeholder="https://...">
-                    <label class="form-label text-dim" style="font-size:0.75rem">Icoon</label>
-                    <div class="icon-picker-grid mb-3" id="iconPickerGrid"></div>
-                    <input type="hidden" id="toolkitIconInput" value="">
-                    <div class="d-flex gap-2">
-                        <button id="confirmAddToolkit" class="btn-accent flex-grow-1">Toevoegen</button>
                         <button class="btn-ghost" data-bs-dismiss="modal">Annuleer</button>
                     </div>
                 </div>

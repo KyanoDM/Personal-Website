@@ -251,16 +251,10 @@
             });
     });
 
-    // ─── CONFIG (batch read: habits + toolkit) ────
+    // ─── CONFIG (batch read: habits) ────
 
     function loadConfig() {
-        Promise.all([
-            db.collection('config').doc('habits').get(),
-            db.collection('config').doc('toolkit').get()
-        ]).then(function (docs) {
-            var habitsDoc = docs[0];
-            var toolkitDoc = docs[1];
-
+        db.collection('config').doc('habits').get().then(function (habitsDoc) {
             if (habitsDoc.exists) {
                 habits = habitsDoc.data().list || [];
             } else {
@@ -271,14 +265,6 @@
                 ];
                 saveHabitConfig();
             }
-
-            if (toolkitDoc.exists && toolkitDoc.data().list) {
-                toolkitLinks = toolkitDoc.data().list;
-            } else {
-                toolkitLinks = DEFAULT_TOOLKIT.slice();
-                saveToolkit();
-            }
-            renderToolkit();
             loadWeekData();
         });
     }
@@ -1053,149 +1039,6 @@
     document.getElementById('notepadArea').addEventListener('input', function () {
         clearTimeout(notepadTimer);
         notepadTimer = setTimeout(saveNotepad, 800);
-    });
-
-    // ─── TOOLKIT ────────────────────────────────────
-
-    var ICON_OPTIONS = [
-        { icon: 'fab fa-youtube', label: 'YouTube' },
-        { icon: 'fab fa-instagram', label: 'Instagram' },
-        { icon: 'fab fa-tiktok', label: 'TikTok' },
-        { icon: 'fab fa-twitter', label: 'Twitter' },
-        { icon: 'fab fa-spotify', label: 'Spotify' },
-        { icon: 'fab fa-github', label: 'GitHub' },
-        { icon: 'fab fa-discord', label: 'Discord' },
-        { icon: 'fab fa-google', label: 'Google' },
-        { icon: 'fab fa-figma', label: 'Figma' },
-        { icon: 'fab fa-dribbble', label: 'Dribbble' },
-        { icon: 'fas fa-microphone', label: 'Micro' },
-        { icon: 'fas fa-chart-bar', label: 'Stats' },
-        { icon: 'fas fa-camera', label: 'Camera' },
-        { icon: 'fas fa-palette', label: 'Design' },
-        { icon: 'fas fa-code', label: 'Code' },
-        { icon: 'fas fa-music', label: 'Muziek' },
-        { icon: 'fas fa-pen', label: 'Pen' },
-        { icon: 'fas fa-envelope', label: 'Mail' },
-        { icon: 'fas fa-bolt', label: 'Bolt' },
-        { icon: 'fas fa-globe', label: 'Web' },
-        { icon: 'fas fa-book', label: 'Boek' },
-        { icon: 'fas fa-film', label: 'Film' },
-        { icon: 'fas fa-robot', label: 'AI' },
-        { icon: 'fas fa-link', label: 'Link' }
-    ];
-
-    var toolkitLinks = [];
-    var DEFAULT_TOOLKIT = [
-        { name: 'YT Downloader', url: 'https://yt1s.io', icon: 'fab fa-youtube' },
-        { name: 'Insta Downloader', url: 'https://snapinsta.app', icon: 'fab fa-instagram' },
-        { name: 'ElevenLabs', url: 'https://elevenlabs.io', icon: 'fas fa-microphone' },
-        { name: 'YT Studio', url: 'https://studio.youtube.com', icon: 'fas fa-chart-bar' }
-    ];
-
-    function saveToolkit() {
-        db.collection('config').doc('toolkit').set({ list: toolkitLinks });
-    }
-
-    function normalizeIcon(icon) {
-        if (!icon) return 'fas fa-link';
-        icon = icon.trim();
-        if (icon.indexOf('fa-') === 0) return 'fas ' + icon;
-        if (icon.indexOf('fa ') === 0 || icon.indexOf('fas ') === 0 ||
-            icon.indexOf('fab ') === 0 || icon.indexOf('far ') === 0) return icon;
-        return 'fas fa-' + icon;
-    }
-
-    function renderToolkit() {
-        var bar = document.getElementById('toolkitBar');
-        var html = '';
-        toolkitLinks.forEach(function (link, idx) {
-            var icon = normalizeIcon(link.icon);
-            html += '<a href="' + escapeHtml(link.url) + '" target="_blank" rel="noopener" class="toolkit-link" draggable="true" data-idx="' + idx + '">' +
-                '<i class="' + escapeHtml(icon) + '"></i><span>' + escapeHtml(link.name) + '</span>' +
-                '<button class="toolkit-delete" data-idx="' + idx + '" title="Verwijder"><i class="fas fa-xmark"></i></button>' +
-                '</a>';
-        });
-        html += '<button id="addToolkit" class="toolkit-add" title="Link toevoegen"><i class="fas fa-plus"></i></button>';
-        bar.innerHTML = html;
-
-        // Drag and drop
-        var dragIdx = null;
-        document.querySelectorAll('.toolkit-link').forEach(function (el) {
-            el.addEventListener('dragstart', function (e) {
-                dragIdx = parseInt(this.dataset.idx);
-                this.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
-            });
-            el.addEventListener('dragend', function () {
-                this.classList.remove('dragging');
-                document.querySelectorAll('.toolkit-link').forEach(function (l) { l.classList.remove('drag-over'); });
-            });
-            el.addEventListener('dragover', function (e) {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-                this.classList.add('drag-over');
-            });
-            el.addEventListener('dragleave', function () {
-                this.classList.remove('drag-over');
-            });
-            el.addEventListener('drop', function (e) {
-                e.preventDefault();
-                var dropIdx = parseInt(this.dataset.idx);
-                if (dragIdx === null || dragIdx === dropIdx) return;
-                var item = toolkitLinks.splice(dragIdx, 1)[0];
-                toolkitLinks.splice(dropIdx, 0, item);
-                saveToolkit();
-                renderToolkit();
-            });
-        });
-
-        document.querySelectorAll('.toolkit-delete').forEach(function (btn) {
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var idx = parseInt(this.dataset.idx);
-                toolkitLinks.splice(idx, 1);
-                saveToolkit();
-                renderToolkit();
-            });
-        });
-
-        document.getElementById('addToolkit').addEventListener('click', function () {
-            document.getElementById('toolkitNameInput').value = '';
-            document.getElementById('toolkitUrlInput').value = '';
-            document.getElementById('toolkitIconInput').value = '';
-            renderIconPicker('');
-            new bootstrap.Modal(document.getElementById('addToolkitModal')).show();
-        });
-    }
-
-    function renderIconPicker(selectedIcon) {
-        var grid = document.getElementById('iconPickerGrid');
-        var html = '';
-        ICON_OPTIONS.forEach(function (opt) {
-            var sel = opt.icon === selectedIcon ? ' selected' : '';
-            html += '<button type="button" class="icon-picker-btn' + sel + '" data-icon="' + opt.icon + '" title="' + opt.label + '"><i class="' + opt.icon + '"></i></button>';
-        });
-        grid.innerHTML = html;
-        grid.querySelectorAll('.icon-picker-btn').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                grid.querySelectorAll('.icon-picker-btn').forEach(function (b) { b.classList.remove('selected'); });
-                this.classList.add('selected');
-                document.getElementById('toolkitIconInput').value = this.dataset.icon;
-            });
-        });
-    }
-
-    document.getElementById('confirmAddToolkit').addEventListener('click', function () {
-        var name = document.getElementById('toolkitNameInput').value.trim();
-        var url = document.getElementById('toolkitUrlInput').value.trim();
-        var icon = document.getElementById('toolkitIconInput').value.trim();
-        if (!name || !url) return;
-        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-        toolkitLinks.push({ name: name, url: url, icon: icon || 'fas fa-link' });
-        saveToolkit();
-        bootstrap.Modal.getInstance(document.getElementById('addToolkitModal')).hide();
-        renderToolkit();
     });
 
     // ─── YT MORE TOGGLE ─────────────────────────────
