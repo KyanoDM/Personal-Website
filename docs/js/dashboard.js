@@ -176,6 +176,7 @@
             initNotepadToggle();
             loadTodos();
             loadGymProgress();
+            refreshPcStatus();
         } else {
             if (user) auth.signOut();
             window.location.href = 'index.html';
@@ -188,19 +189,61 @@
         });
     });
 
+    // ─── PC WAKE + STATUS (rood = uit, groen = online) ────────
+    var WAKE_BASE    = 'https://wake.kyanodm.be';
+    var _wakePolling = false;
+
+    function pcToken() {
+        var u = auth.currentUser;
+        return u ? u.getIdToken() : Promise.reject(new Error('niet ingelogd'));
+    }
+
+    function setPcState(state) {
+        var btn  = document.getElementById('wakePc');
+        var icon = btn.querySelector('i');
+        if (state === 'on')        { btn.style.color = '#10b981'; icon.className = 'fas fa-power-off'; btn.title = 'PC is online'; }
+        else if (state === 'off')  { btn.style.color = '#ef4444'; icon.className = 'fas fa-power-off'; btn.title = 'PC aanzetten'; }
+        else if (state === 'wait') { btn.style.color = '#f59e0b'; icon.className = 'fas fa-spinner fa-spin'; btn.title = 'Bezig...'; }
+    }
+
+    function checkStatus() {
+        return pcToken()
+            .then(function (t) { return fetch(WAKE_BASE + '/status', { headers: { Authorization: 'Bearer ' + t } }); })
+            .then(function (r) { return r.json(); })
+            .then(function (d) { return !!d.online; });
+    }
+
+    function refreshPcStatus() {
+        checkStatus()
+            .then(function (online) { if (!_wakePolling) setPcState(online ? 'on' : 'off'); })
+            .catch(function ()      { if (!_wakePolling) setPcState('off'); });
+    }
+
     document.getElementById('wakePc').addEventListener('click', function () {
         var btn = this;
-        var icon = btn.querySelector('i');
-        var prev = icon.className;
-        icon.className = 'fas fa-spinner fa-spin';
+        if (btn.style.color === 'rgb(16, 185, 129)') return;   // al groen/online
+        setPcState('wait');
         btn.disabled = true;
-        fetch('https://wake.kyanodm.be/wake', { method: 'GET', mode: 'no-cors' })
-            .finally(function () {
-                icon.className = 'fas fa-check';
-                setTimeout(function () {
-                    icon.className = prev;
-                    btn.disabled = false;
-                }, 1500);
+        _wakePolling = true;
+
+        pcToken()
+            .then(function (t) { return fetch(WAKE_BASE + '/wake', { method: 'POST', headers: { Authorization: 'Bearer ' + t } }); })
+            .then(function (r) {
+                if (!r.ok) throw new Error('wake geweigerd (' + r.status + ')');
+                var tries = 0;
+                var iv = setInterval(function () {
+                    tries++;
+                    checkStatus()
+                        .then(function (online) {
+                            if (online)          { clearInterval(iv); _wakePolling = false; btn.disabled = false; setPcState('on'); }
+                            else if (tries >= 20) { clearInterval(iv); _wakePolling = false; btn.disabled = false; setPcState('off'); }
+                        })
+                        .catch(function () {});
+                }, 3000);   // ~20 pogingen × 3s ≈ 60s
+            })
+            .catch(function (err) {
+                _wakePolling = false; btn.disabled = false; setPcState('off');
+                console.log('Wake fout:', err.message);
             });
     });
 
