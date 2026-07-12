@@ -189,7 +189,7 @@
         });
     });
 
-    // ─── PC WAKE + STATUS (rood = uit, groen = online) ────────
+    // ─── PC WAKE + STATUS (groen=aan, rood=uit, grijs=server onbereikbaar) ──
     var WAKE_BASE    = 'https://wake.kyanodm.be';
     var _wakePolling = false;
 
@@ -201,22 +201,26 @@
     function setPcState(state) {
         var btn  = document.getElementById('wakePc');
         var icon = btn.querySelector('i');
-        if (state === 'on')        { btn.style.color = '#10b981'; icon.className = 'fas fa-power-off'; btn.title = 'PC is online'; }
-        else if (state === 'off')  { btn.style.color = '#ef4444'; icon.className = 'fas fa-power-off'; btn.title = 'PC aanzetten'; }
-        else if (state === 'wait') { btn.style.color = '#f59e0b'; icon.className = 'fas fa-spinner fa-spin'; btn.title = 'Bezig...'; }
+        if (state === 'on')        { btn.style.color = '#10b981'; icon.className = 'fas fa-power-off';         btn.title = 'PC is online'; }
+        else if (state === 'off')  { btn.style.color = '#ef4444'; icon.className = 'fas fa-power-off';         btn.title = 'PC aanzetten'; }
+        else if (state === 'wait') { btn.style.color = '#f59e0b'; icon.className = 'fas fa-spinner fa-spin';   btn.title = 'Bezig...'; }
+        else if (state === 'down') { btn.style.color = '#6b7280'; icon.className = 'fas fa-plug-circle-xmark'; btn.title = 'Server niet bereikbaar'; }
     }
 
     function checkStatus() {
         return pcToken()
             .then(function (t) { return fetch(WAKE_BASE + '/status', { headers: { Authorization: 'Bearer ' + t } }); })
-            .then(function (r) { return r.json(); })
-            .then(function (d) { return !!d.online; });
+            .then(function (r) {
+                if (!r.ok) throw new Error('server ' + r.status);   // bv. Cloudflare 1033
+                return r.json();
+            })
+            .then(function (d) { return d.online ? 'on' : 'off'; });
     }
 
     function refreshPcStatus() {
         checkStatus()
-            .then(function (online) { if (!_wakePolling) setPcState(online ? 'on' : 'off'); })
-            .catch(function ()      { if (!_wakePolling) setPcState('off'); });
+            .then(function (state) { if (!_wakePolling) setPcState(state); })
+            .catch(function ()      { if (!_wakePolling) setPcState('down'); });
     }
 
     document.getElementById('wakePc').addEventListener('click', function () {
@@ -234,15 +238,15 @@
                 var iv = setInterval(function () {
                     tries++;
                     checkStatus()
-                        .then(function (online) {
-                            if (online)          { clearInterval(iv); _wakePolling = false; btn.disabled = false; setPcState('on'); }
+                        .then(function (state) {
+                            if (state === 'on')   { clearInterval(iv); _wakePolling = false; btn.disabled = false; setPcState('on'); }
                             else if (tries >= 20) { clearInterval(iv); _wakePolling = false; btn.disabled = false; setPcState('off'); }
                         })
                         .catch(function () {});
                 }, 3000);   // ~20 pogingen × 3s ≈ 60s
             })
             .catch(function (err) {
-                _wakePolling = false; btn.disabled = false; setPcState('off');
+                _wakePolling = false; btn.disabled = false; setPcState('down');
                 console.log('Wake fout:', err.message);
             });
     });
