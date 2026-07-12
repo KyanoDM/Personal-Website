@@ -1410,7 +1410,17 @@
     });
 
     // ─── GYM PROGRESS (from Gym-Progress-App Firebase) ────────────
+    var IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
     function loadGymProgress() {
+        gymAuth.getRedirectResult().then(function (result) {
+            if (result && result.user) {
+                fetchLatestGymMonth(result.user.uid);
+            }
+        }).catch(function (err) {
+            console.log('Gym redirect auth error:', err);
+        });
+
         gymAuth.onAuthStateChanged(function (user) {
             if (user) {
                 fetchLatestGymMonth(user.uid);
@@ -1431,6 +1441,12 @@
         var provider = new firebase.auth.GoogleAuthProvider();
         var btn = document.getElementById('connectGymBtn');
         if (btn) btn.textContent = 'Verbinden...';
+
+        if (IS_MOBILE) {
+            gymAuth.signInWithRedirect(provider);
+            return;
+        }
+
         gymAuth.signInWithPopup(provider).then(function (result) {
             fetchLatestGymMonth(result.user.uid);
         }).catch(function (err) {

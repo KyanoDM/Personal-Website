@@ -55,6 +55,7 @@ html, body { height: 100%; }
     justify-content: space-between;
     gap: 1rem;
     flex-shrink: 0;
+    min-width: 0;
     margin-bottom: 0.75rem;
 }
 
@@ -100,6 +101,7 @@ html, body { height: 100%; }
 .dashboard-main {
     flex: 1;
     min-height: 0;
+    min-width: 0;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 1rem;
@@ -120,6 +122,7 @@ html, body { height: 100%; }
     padding: 1.1rem 1.2rem;
     border: 1px solid var(--border);
     overflow-y: auto;
+    overflow-x: hidden;
     min-height: 0;
     min-width: 0;
     display: flex;
@@ -140,6 +143,8 @@ html, body { height: 100%; }
     flex-wrap: wrap;
     gap: 0.5rem;
     flex-shrink: 0;
+    min-width: 0;
+    width: 100%;
 }
 
 .section-head h2 {
@@ -895,6 +900,7 @@ input::placeholder,
     display: flex;
     align-items: center;
     gap: 0.7rem;
+    min-width: 0;
 }
 .channel-avatar {
     width: 36px;
@@ -902,13 +908,20 @@ input::placeholder,
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid var(--border);
+    flex-shrink: 0;
 }
 .channel-avatar[src=""] {
     display: none;
 }
+.channel-header-info {
+    min-width: 0;
+}
 .channel-header-info h2 {
     margin: 0;
     font-size: 1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Channel Switcher */
@@ -916,6 +929,7 @@ input::placeholder,
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    min-width: 0;
 }
 .channel-select {
     background: var(--bg-input);
@@ -926,6 +940,7 @@ input::placeholder,
     padding: 0.25rem 0.5rem;
     outline: none;
     cursor: pointer;
+    max-width: 130px;
 }
 .channel-select:focus {
     border-color: var(--accent);
@@ -1145,6 +1160,16 @@ input::placeholder,
         align-items: flex-start;
     }
 
+    .section-head > * {
+        max-width: 100%;
+    }
+
+    .channel-header,
+    .channel-switcher {
+        width: 100%;
+        min-width: 0;
+    }
+
     .weight-stats {
         gap: 1.25rem;
     }
@@ -1152,6 +1177,35 @@ input::placeholder,
     .habit-check {
         width: 26px;
         height: 26px;
+    }
+
+    .info-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.6rem;
+    }
+
+    .greeting-text {
+        white-space: normal;
+    }
+
+    .info-widgets {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.6rem;
+        width: 100%;
+    }
+
+    .weather-strip {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 2px;
+    }
+
+    .calendar-strip {
+        width: 100%;
+        flex-wrap: wrap;
     }
 }
 
@@ -1167,6 +1221,7 @@ input::placeholder,
     padding: 0.65rem 1.1rem;
     flex-shrink: 0;
     min-height: 0;
+    min-width: 0;
     overflow: hidden;
     margin-bottom: 0.75rem;
 }
@@ -1391,6 +1446,8 @@ input::placeholder,
 .gym-layout {
     display: flex;
     gap: 1rem;
+    min-width: 0;
+    width: 100%;
 }
 
 .gym-cover {
