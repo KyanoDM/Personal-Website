@@ -17,6 +17,9 @@
     firebase.initializeApp(firebaseConfig);
     const auth     = firebase.auth();
     const provider = new firebase.auth.GoogleAuthProvider();
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function (err) {
+        console.log('Auth persistence error:', err);
+    });
 
     // Al ingelogd → meteen door
     auth.onAuthStateChanged(function (user) {

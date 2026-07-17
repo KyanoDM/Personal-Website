@@ -15,6 +15,9 @@
     firebase.initializeApp(firebaseConfig);
     var auth = firebase.auth();
     var db = firebase.firestore();
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function (err) {
+        console.log('Auth persistence error:', err);
+    });
 
     // Gym Progress App (separate Firebase project)
     var gymApp = firebase.initializeApp({
