@@ -335,15 +335,6 @@ section {
     transform: scale(1.1);
 }
 
-.project-icon-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: #fff;
-    font-size: 3.5rem;
-}
-
 .project-overlay {
     position: absolute;
     top: 0;
