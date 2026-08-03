@@ -90,7 +90,7 @@
             window.location.href = 'dashboard.html';
         })
         .catch(function (err) {
-            setHint(err.message === 'Verkeerde code' ? 'Verkeerde code — probeer opnieuw.' : err.message);
+            setHint(err.message === 'Verkeerde code' ? 'Verkeerde code, probeer opnieuw.' : err.message);
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-arrow-right"></i>';
             document.getElementById('totpInput').value = '';
