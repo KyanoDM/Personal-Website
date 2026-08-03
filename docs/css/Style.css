@@ -121,8 +121,16 @@ section {
 .hero-subtitle {
     font-size: 1.5rem;
     color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 2rem;
+    margin-bottom: 0.75rem;
     animation: fadeInUp 1s ease 0.2s backwards;
+}
+
+.hero-summary {
+    font-size: 1.05rem;
+    color: rgba(255, 255, 255, 0.7);
+    max-width: 560px;
+    margin: 0 auto 2rem;
+    animation: fadeInUp 1s ease 0.3s backwards;
 }
 
 .hero-buttons {
@@ -388,7 +396,7 @@ section {
 
 .internship-cards {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1.5rem;
     margin-top: 2rem;
 }
