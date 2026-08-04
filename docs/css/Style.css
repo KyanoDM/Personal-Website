@@ -409,7 +409,7 @@ section {
     gap: 1rem;
 }
 
-.internship-highlights i {
+.internship-highlights li > i {
     flex-shrink: 0;
     width: 38px;
     height: 38px;
@@ -441,6 +441,23 @@ section {
 
 .internship-highlights a:hover {
     text-decoration: underline;
+}
+
+.highlight-demo-link {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 0.5rem;
+    padding: 0.2rem 0.7rem;
+    background: rgba(52, 152, 219, 0.1);
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.highlight-demo-link:hover {
+    background: rgba(52, 152, 219, 0.18);
+    text-decoration: none !important;
 }
 
 

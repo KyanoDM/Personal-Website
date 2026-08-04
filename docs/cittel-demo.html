@@ -283,129 +283,32 @@
   .nav-btn.primary { background: #2563eb; border-color: #2563eb; }
   .nav-btn.primary:hover { background: #1d4ed8; }
 
-  /* ── Stock demo widget ── */
-  .stock-demo {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    gap: 40px;
-    align-items: center;
-    z-index: 20;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.6s ease;
-  }
-  .stock-demo.visible { opacity: 1; pointer-events: auto; }
-
-  .stock-card {
-    background: rgba(15, 23, 42, 0.95);
-    border: 1px solid #334155;
-    border-radius: 16px;
-    padding: 24px 32px;
-    min-width: 220px;
-    text-align: center;
-    transition: border-color 0.4s;
-  }
-  .stock-card h4 {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #64748b;
-    margin-bottom: 12px;
-  }
-  .stock-card .stock-product {
-    font-size: 0.85rem;
-    color: #94a3b8;
-    margin-bottom: 16px;
-  }
-  .stock-value {
-    font-size: 3rem;
-    font-weight: 700;
-    color: #e2e8f0;
-    transition: color 0.3s, transform 0.3s;
-    line-height: 1;
-  }
-  .stock-value.updating {
-    color: #3b82f6;
-    transform: scale(1.2);
-  }
-  .stock-value.updated {
-    color: #22c55e;
-  }
-  .stock-label {
-    font-size: 0.8rem;
-    color: #64748b;
-    margin-top: 8px;
-  }
-
-  .stock-arrow {
-    display: flex;
-    flex-direction: column;
+  /* ── Mini terug-knop ── */
+  .mini-back-btn {
+    position: fixed;
+    top: 24px;
+    left: 24px;
+    z-index: 200;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
-  }
-  .stock-arrow-line {
-    width: 80px;
-    height: 2px;
-    background: #334155;
-    position: relative;
-    transition: background 0.4s;
-  }
-  .stock-arrow-line.active { background: #3b82f6; }
-  .stock-arrow-line::after {
-    content: '';
-    position: absolute;
-    right: -6px;
-    top: -4px;
-    border: 5px solid transparent;
-    border-left: 8px solid #334155;
-    transition: border-left-color 0.4s;
-  }
-  .stock-arrow-line.active::after { border-left-color: #3b82f6; }
-  .stock-arrow-label {
-    font-size: 0.7rem;
-    color: #64748b;
-    transition: color 0.4s;
-  }
-  .stock-arrow-label.active { color: #3b82f6; }
-
-  .stock-trigger-btn {
-    margin-top: 16px;
-    padding: 8px 20px;
-    background: linear-gradient(135deg, #f97316, #ea580c);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid #475569;
+    background: rgba(15, 23, 42, 0.8);
+    color: #e2e8f0;
     font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
+    font-weight: 500;
+    text-decoration: none;
     font-family: inherit;
-    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    transition: all 0.2s;
   }
-  .stock-trigger-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(249,115,22,0.4);
+  .mini-back-btn:hover {
+    border-color: #3b82f6;
+    background: rgba(59,130,246,0.15);
+    color: #fff;
   }
-  .stock-trigger-btn:disabled {
-    opacity: 0.5;
-    cursor: default;
-    transform: none;
-    box-shadow: none;
-  }
-
-  /* ── Dim overlay voor focus ── */
-  .dim-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.85);
-    z-index: 15;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.6s ease;
-  }
-  .dim-overlay.visible { opacity: 1; }
 
   /* ── Pulse animatie op actieve node ── */
   @keyframes pulse {
@@ -422,6 +325,9 @@
 </style>
 </head>
 <body>
+
+<!-- Mini terug-knop -->
+<a href="index.html#internship" class="mini-back-btn" id="miniBackBtn" onclick="return handleMiniBackClick(event)">&larr; Terug naar site</a>
 
 <!-- Titelscherm -->
 <div class="title-overlay" id="titleScreen">
@@ -491,44 +397,6 @@
     <div class="node-sub">Live stock & prijs</div>
   </div>
 
-  <!-- Dim overlay -->
-  <div class="dim-overlay" id="dimOverlay"></div>
-
-  <!-- Stock demo widget -->
-  <div class="stock-demo" id="stockDemo">
-    <div class="stock-card" id="stockCardCP" style="border-color: #475569;">
-      <h4>Connect+ API</h4>
-      <div class="stock-product">HP EliteBook 840 G9</div>
-      <div class="stock-value" id="stockCP">12</div>
-      <div class="stock-label">voorraad</div>
-      <button class="stock-trigger-btn" id="stockBtn" onclick="simulateStockChange()">Wijzig stock → 8</button>
-    </div>
-
-    <div class="stock-arrow">
-      <div class="stock-arrow-label" id="arrowLabel1">webhook</div>
-      <div class="stock-arrow-line" id="arrowLine1"></div>
-    </div>
-
-    <div class="stock-card" style="border-color: #f97316;">
-      <h4>Webhook</h4>
-      <div class="stock-product">Verwerking</div>
-      <div class="stock-value" id="stockWebhook" style="font-size: 1.5rem; color: #64748b;">wacht...</div>
-      <div class="stock-label">status</div>
-    </div>
-
-    <div class="stock-arrow">
-      <div class="stock-arrow-label" id="arrowLabel2">update</div>
-      <div class="stock-arrow-line" id="arrowLine2"></div>
-    </div>
-
-    <div class="stock-card" style="border-color: #8b5cf6;">
-      <h4>Webshop</h4>
-      <div class="stock-product">HP EliteBook 840 G9</div>
-      <div class="stock-value" id="stockWoo">12</div>
-      <div class="stock-label">voorraad</div>
-    </div>
-  </div>
-
   <!-- SVG verbindingen -->
   <svg class="connections" id="svgConnections"></svg>
 </div>
@@ -542,7 +410,7 @@
 <!-- Navigatie -->
 <div class="nav-buttons" id="navButtons">
   <button class="nav-btn" onclick="prevStep()">← Vorige</button>
-  <button class="nav-btn primary" onclick="nextStep()">Volgende →</button>
+  <button class="nav-btn primary" id="nextBtn" onclick="nextStep()">Volgende →</button>
 </div>
 
 <script>
@@ -598,15 +466,6 @@ const steps = [
     connections: [["node-cp", "node-webhook"], ["node-webhook", "node-woo"]]
   },
   {
-    title: "Live demo - Stock update",
-    text: "Klik op 'Wijzig stock' en zie hoe de voorraad real-time doorstroomt van Connect+ via de webhook naar de webshop. De custom plugin verwerkt de data en update het product automatisch.",
-    dimBackground: true,
-    nodes: ["node-cp", "node-woo", "node-webhook"],
-    active: null,
-    connections: [["node-cp", "node-webhook"], ["node-webhook", "node-woo"]],
-    showStockDemo: true
-  },
-  {
     title: "Nightly sync",
     text: "Elke nacht draait een Python script dat nieuwe producten toevoegt, verwijderde producten offline haalt, en prijzen & voorraad bijwerkt. Zo blijft de webshop compleet, ook als een webhook gemist wordt.",
     nodes: ["node-cp", "node-python", "node-woo"],
@@ -642,8 +501,8 @@ const allNodeIds = ["node-cp", "node-python", "node-woo", "node-icecat", "node-b
 // ── Stap groepen ──
 const stepGroups = [
   { label: "Product",    steps: [0, 1, 2, 3, 4, 5] },
-  { label: "Sync",       steps: [6, 7, 8] },
-  { label: "Bestelling", steps: [9, 10, 11] },
+  { label: "Sync",       steps: [6, 7] },
+  { label: "Bestelling", steps: [8, 9, 10] },
 ];
 
 function getGroupForStep(stepIndex) {
@@ -761,106 +620,9 @@ function drawConnections(connections, allActive) {
   });
 }
 
-// ── Stock demo simulatie ──
-function resetStockDemo() {
-  document.getElementById('stockCP').textContent = '12';
-  document.getElementById('stockWoo').textContent = '12';
-  document.getElementById('stockWebhook').textContent = 'wacht...';
-  document.getElementById('stockWebhook').style.fontSize = '1.5rem';
-  document.getElementById('stockWebhook').style.color = '#64748b';
-  document.getElementById('stockBtn').disabled = false;
-  ['stockCP', 'stockWoo', 'stockWebhook'].forEach(id => {
-    const el = document.getElementById(id);
-    el.classList.remove('updating', 'updated');
-  });
-  ['arrowLine1', 'arrowLine2'].forEach(id => {
-    document.getElementById(id).classList.remove('active');
-  });
-  ['arrowLabel1', 'arrowLabel2'].forEach(id => {
-    document.getElementById(id).classList.remove('active');
-  });
-}
-
-function simulateStockChange() {
-  const btn = document.getElementById('stockBtn');
-  btn.disabled = true;
-
-  const cpVal   = document.getElementById('stockCP');
-  const whVal   = document.getElementById('stockWebhook');
-  const wooVal  = document.getElementById('stockWoo');
-  const arrow1  = document.getElementById('arrowLine1');
-  const arrow2  = document.getElementById('arrowLine2');
-  const label1  = document.getElementById('arrowLabel1');
-  const label2  = document.getElementById('arrowLabel2');
-
-  // Stap 1: Connect+ stock wijzigt → 8
-  cpVal.classList.add('updating');
-  setTimeout(() => {
-    cpVal.textContent = '8';
-    cpVal.classList.remove('updating');
-    cpVal.classList.add('updated');
-  }, 400);
-
-  // Stap 2: Pijl 1 activeert, webhook ontvangt
-  setTimeout(() => {
-    arrow1.classList.add('active');
-    label1.classList.add('active');
-  }, 900);
-
-  setTimeout(() => {
-    whVal.textContent = 'ontvangen';
-    whVal.style.fontSize = '1.2rem';
-    whVal.style.color = '#f97316';
-  }, 1400);
-
-  // Stap 3: Webhook verwerkt
-  setTimeout(() => {
-    whVal.textContent = 'verwerkt ✓';
-    whVal.style.color = '#22c55e';
-  }, 2200);
-
-  // Stap 4: Pijl 2 activeert, WooCommerce stock wijzigt → 8
-  setTimeout(() => {
-    arrow2.classList.add('active');
-    label2.classList.add('active');
-  }, 2800);
-
-  setTimeout(() => {
-    wooVal.classList.add('updating');
-  }, 3200);
-
-  setTimeout(() => {
-    wooVal.textContent = '8';
-    wooVal.classList.remove('updating');
-    wooVal.classList.add('updated');
-  }, 3600);
-
-  // Stap 5: Reset knop na 5 seconden
-  setTimeout(() => {
-    btn.disabled = false;
-    btn.textContent = 'Opnieuw ↻';
-    btn.onclick = () => {
-      resetStockDemo();
-      btn.textContent = 'Wijzig stock → 8';
-      btn.onclick = simulateStockChange;
-    };
-  }, 4500);
-}
-
 // ── Stap weergeven ──
 function showStep(stepIndex) {
   const step = steps[stepIndex];
-
-  // Stock demo + dim overlay tonen/verbergen
-  const stockDemo = document.getElementById('stockDemo');
-  const dimOverlay = document.getElementById('dimOverlay');
-  if (step.showStockDemo) {
-    resetStockDemo();
-    stockDemo.classList.add('visible');
-  } else {
-    stockDemo.classList.remove('visible');
-  }
-  dimOverlay.classList.toggle('visible', !!step.dimBackground);
 
   // Nodes
   allNodeIds.forEach(id => {
@@ -906,12 +668,35 @@ function showStep(stepIndex) {
     if (si < stepIndex) dot.classList.add('done');
     if (si === stepIndex) dot.classList.add('active');
   });
+
+  // Laatste stap: "Volgende" wordt "Terug naar site"
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.textContent = (stepIndex === steps.length - 1) ? 'Terug naar site →' : 'Volgende →';
+}
+
+// ── Terug naar de site waar de gebruiker vandaan kwam ──
+function goBackToSite() {
+  if (document.referrer && document.referrer.indexOf(window.location.origin) === 0) {
+    history.back();
+  } else {
+    window.location.href = 'index.html#internship';
+  }
+}
+
+function handleMiniBackClick(e) {
+  // Laat ctrl/cmd/middle-click gewoon in nieuwe tab openen
+  if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return true;
+  e.preventDefault();
+  goBackToSite();
+  return false;
 }
 
 function nextStep() {
   if (currentStep < steps.length - 1) {
     currentStep++;
     showStep(currentStep);
+  } else {
+    goBackToSite();
   }
 }
 
