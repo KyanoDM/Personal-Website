@@ -258,6 +258,46 @@ section {
     font-weight: 500;
 }
 
+.credentials-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.credential-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--bg-light);
+    border-radius: 12px;
+    padding: 0.75rem 1.1rem;
+}
+
+.credential-badge i {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(52, 152, 219, 0.12);
+    color: var(--secondary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.credential-badge strong {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+}
+
+.credential-badge span {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-light);
+}
+
 /* Animations */
 .slide-in-left {
     animation: slideInLeft 1s ease;
@@ -543,38 +583,10 @@ section {
     border-bottom: 2px solid var(--secondary-color);
 }
 
-.skill-bar-item {
-    margin-bottom: 1.5rem;
-}
-
-.skill-bar-header {
+.lang-tags {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-}
-
-.skill-name {
-    font-weight: 600;
-    color: var(--text-dark);
-}
-
-.skill-level {
-    font-size: 0.85rem;
-    color: var(--text-light);
-}
-
-.skill-bar-bg {
-    height: 10px;
-    background: #e9ecef;
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.skill-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--secondary-color), #5dade2);
-    border-radius: 10px;
-    transition: width 1s ease;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 .software-grid {
