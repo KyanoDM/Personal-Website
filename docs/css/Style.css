@@ -560,36 +560,45 @@ section {
     background: var(--bg-light);
 }
 
-.skills-category {
+.skills-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.skill-card {
     background: #fff;
     border-radius: 15px;
     padding: 2rem;
-    height: 100%;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
     transition: var(--transition);
 }
 
-.skills-category:hover {
+.skill-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
 
+.skill-card-wide {
+    grid-column: 1 / -1;
+}
+
 .category-title {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: 600;
     color: var(--primary-color);
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.85rem;
     border-bottom: 2px solid var(--secondary-color);
 }
 
-.lang-tags {
+.tag-cloud {
     display: flex;
     flex-wrap: wrap;
     gap: 0.6rem;
 }
 
-.lang-tag {
+.skill-tag {
     display: inline-block;
     padding: 0.5rem 1.1rem;
     background: rgba(52, 152, 219, 0.1);
@@ -601,157 +610,10 @@ section {
     transition: var(--transition);
 }
 
-.lang-tag:hover {
-    background: var(--secondary-color);
-    color: #fff;
-    transform: translateY(-2px);
-}
-
-.software-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
-}
-
-.software-item {
-    text-align: center;
-    padding: 1.5rem;
-    background: var(--bg-light);
-    border-radius: 10px;
-    transition: var(--transition);
-}
-
-.software-item:hover {
-    background: #fff;
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.software-icon {
-    width: 60px;
-    height: 60px;
-    margin: 0 auto 1rem;
-    background: linear-gradient(135deg, var(--secondary-color), #5dade2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 1.5rem;
-}
-
-.software-item h4 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 0.5rem;
-}
-
-.software-item p {
-    font-size: 0.85rem;
-    color: var(--text-light);
-    margin: 0;
-}
-
-/* Additional Tools in Software Section */
-.additional-tools {
-    border-top: 1px solid #e9ecef;
-    padding-top: 1rem;
-}
-
-.tools-label {
-    font-size: 0.8rem;
-    color: var(--text-light);
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-}
-
-.tools-scroll {
-    display: flex;
-    gap: 0.5rem;
-    overflow-x: auto;
-    padding-bottom: 0.5rem;
-    scrollbar-width: thin;
-    scrollbar-color: var(--secondary-color) #e9ecef;
-}
-
-.tools-scroll::-webkit-scrollbar {
-    height: 4px;
-}
-
-.tools-scroll::-webkit-scrollbar-track {
-    background: #e9ecef;
-    border-radius: 10px;
-}
-
-.tools-scroll::-webkit-scrollbar-thumb {
-    background: var(--secondary-color);
-    border-radius: 10px;
-}
-
-.tool-tag {
-    display: inline-block;
-    padding: 0.3rem 0.7rem;
-    background: var(--bg-light);
-    color: var(--text-dark);
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    white-space: nowrap;
-    transition: var(--transition);
-    border: 1px solid #e0e0e0;
-}
-
-.tool-tag:hover {
-    background: var(--secondary-color);
-    color: #fff;
-    border-color: var(--secondary-color);
-    transform: translateY(-1px);
-}
-
-/* Additional Skills */
-.additional-skills {
-    background: #fff;
-    border-radius: 15px;
-    padding: 1.5rem 2rem;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-}
-
-.additional-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 1rem;
-}
-
-.skills-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.8rem;
-}
-
-.skill-tag {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.4rem 1rem;
-    background: var(--bg-light);
-    color: var(--text-dark);
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: var(--transition);
-    border: 1px solid transparent;
-}
-
 .skill-tag:hover {
     background: var(--secondary-color);
     color: #fff;
-    border-color: var(--secondary-color);
     transform: translateY(-2px);
-}
-
-.skill-tag i {
-    font-size: 0.9rem;
 }
 
 /* Footer */
@@ -783,7 +645,7 @@ section {
         justify-content: center;
     }
 
-    .software-grid {
+    .skills-grid {
         grid-template-columns: 1fr;
     }
 }
