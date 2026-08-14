@@ -43,6 +43,22 @@
         window.addEventListener('load', showLogin);
     }
 
+    // Geheime tap-trigger (mobiel): 5x snel op het logo "Kyano" tikken
+    var tapTarget = document.querySelector('.navbar-brand');
+    var tapCount = 0;
+    var tapTimer = null;
+    if (tapTarget) {
+        tapTarget.addEventListener('click', function () {
+            tapCount++;
+            clearTimeout(tapTimer);
+            tapTimer = setTimeout(function () { tapCount = 0; }, 1500);
+            if (tapCount >= 5) {
+                tapCount = 0;
+                showLogin();
+            }
+        });
+    }
+
     function showLogin() {
         new bootstrap.Modal(document.getElementById('konamiModal')).show();
     }
