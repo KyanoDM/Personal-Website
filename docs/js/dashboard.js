@@ -1344,7 +1344,7 @@
     var gcalToken = null;
 
     function initCalendar() {
-        var token = sessionStorage.getItem('gcalToken');
+        var token = localStorage.getItem('gcalToken');
         if (token) {
             gcalToken = token;
             loadCalendarEvents(token);
@@ -1369,7 +1369,7 @@
             var token = result.credential ? result.credential.accessToken : null;
             if (token) {
                 gcalToken = token;
-                sessionStorage.setItem('gcalToken', token);
+                localStorage.setItem('gcalToken', token);
                 loadCalendarEvents(token);
             }
         }).catch(function (err) { console.log('Calendar auth error:', err); });
@@ -1386,7 +1386,7 @@
             { headers: { 'Authorization': 'Bearer ' + token } })
             .then(function (r) {
                 if (r.status === 401 || r.status === 403) {
-                    sessionStorage.removeItem('gcalToken');
+                    localStorage.removeItem('gcalToken');
                     gcalToken = null;
                     var el = document.getElementById('calendarStrip');
                     if (r.status === 403) {
