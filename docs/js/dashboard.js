@@ -254,6 +254,116 @@
             });
     });
 
+    // ─── SHAKE MODE (schud gsm = pc wekken, enkel actief terwijl deze tab open/zichtbaar is) ──
+    var SHAKE_THRESHOLD = 18;   // m/s² gecombineerd verschil tussen 2 metingen
+    var SHAKE_COOLDOWN  = 4000; // ms tussen triggers
+    var _lastShakeTime  = 0;
+    var _lastAccel      = null;
+    var _shakeActive    = false;
+
+    function handleMotion(e) {
+        var acc = e.accelerationIncludingGravity || e.acceleration;
+        if (!acc || acc.x === null || acc.x === undefined) return;
+        if (_lastAccel) {
+            var delta = Math.abs(acc.x - _lastAccel.x) + Math.abs(acc.y - _lastAccel.y) + Math.abs(acc.z - _lastAccel.z);
+            if (delta > SHAKE_THRESHOLD) {
+                var now = Date.now();
+                if (now - _lastShakeTime > SHAKE_COOLDOWN) {
+                    _lastShakeTime = now;
+                    document.getElementById('wakePc').click();
+                }
+            }
+        }
+        _lastAccel = { x: acc.x, y: acc.y, z: acc.z };
+    }
+
+    function startShakeListener() {
+        if (_shakeActive) return;
+        window.addEventListener('devicemotion', handleMotion);
+        _shakeActive = true;
+    }
+
+    function stopShakeListener() {
+        window.removeEventListener('devicemotion', handleMotion);
+        _shakeActive = false;
+        _lastAccel = null;
+    }
+
+    function setShakeStatus(msg) {
+        var el = document.getElementById('shakeModeStatus');
+        if (el) el.textContent = msg;
+    }
+
+    function needsMotionPermission() {
+        return typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function';
+    }
+
+    function enableShakeMode(fromToggle) {
+        if (typeof DeviceMotionEvent === 'undefined') {
+            setShakeStatus('Bewegingssensoren niet ondersteund op dit toestel.');
+            document.getElementById('shakeModeToggle').checked = false;
+            localStorage.setItem('shakeModeEnabled', 'false');
+            return;
+        }
+        if (needsMotionPermission()) {
+            DeviceMotionEvent.requestPermission().then(function (result) {
+                if (result === 'granted') {
+                    localStorage.setItem('shakeModeEnabled', 'true');
+                    startShakeListener();
+                    setShakeStatus('Actief — schud je telefoon om je pc te wekken.');
+                } else {
+                    document.getElementById('shakeModeToggle').checked = false;
+                    localStorage.setItem('shakeModeEnabled', 'false');
+                    setShakeStatus('Toestemming geweigerd voor bewegingssensoren.');
+                }
+            }).catch(function (err) {
+                document.getElementById('shakeModeToggle').checked = false;
+                localStorage.setItem('shakeModeEnabled', 'false');
+                setShakeStatus(fromToggle ? 'Kon geen toestemming vragen.' : 'Tik om toestemming te geven.');
+            });
+        } else {
+            localStorage.setItem('shakeModeEnabled', 'true');
+            startShakeListener();
+            setShakeStatus('Actief — schud je telefoon om je pc te wekken.');
+        }
+    }
+
+    function disableShakeMode() {
+        localStorage.setItem('shakeModeEnabled', 'false');
+        stopShakeListener();
+        setShakeStatus('Uit.');
+    }
+
+    document.getElementById('shakeModeToggle').addEventListener('change', function () {
+        if (this.checked) enableShakeMode(true);
+        else disableShakeMode();
+    });
+
+    (function initShakeMode() {
+        var enabled = localStorage.getItem('shakeModeEnabled') === 'true';
+        var toggle = document.getElementById('shakeModeToggle');
+        toggle.checked = enabled;
+        if (!enabled) { setShakeStatus('Uit.'); return; }
+
+        if (needsMotionPermission()) {
+            // iOS: bij een eerdere toestemming meestal geen nieuwe prompt nodig.
+            DeviceMotionEvent.requestPermission().then(function (result) {
+                if (result === 'granted') {
+                    startShakeListener();
+                    setShakeStatus('Actief — schud je telefoon om je pc te wekken.');
+                } else {
+                    toggle.checked = false;
+                    setShakeStatus('Zet aan om opnieuw toestemming te geven.');
+                }
+            }).catch(function () {
+                setShakeStatus('Zet aan om opnieuw toestemming te geven.');
+            });
+        } else {
+            startShakeListener();
+            setShakeStatus('Actief — schud je telefoon om je pc te wekken.');
+        }
+    })();
+
     // ─── CONFIG (batch read: habits) ────
 
     function loadConfig() {
