@@ -1169,7 +1169,6 @@
         document.getElementById('settingsOverlay').classList.add('open');
         document.getElementById('settingsSidebar').classList.add('open');
         renderSettingsChannels();
-        loadBirthdaySetting();
     }
 
     function closeSettingsPanel() {
@@ -1264,27 +1263,6 @@
 
         el.textContent = prefix + ', Kyano.' + extra;
     }
-
-    function loadBirthdaySetting() {
-        db.collection('config').doc('birthday').get().then(function (doc) {
-            if (doc.exists && doc.data().day) {
-                var d = doc.data();
-                document.getElementById('settingsBirthday').value =
-                    String(d.day).padStart(2, '0') + '/' + String(d.month).padStart(2, '0');
-            }
-        });
-    }
-
-    document.getElementById('saveBirthday').addEventListener('click', function () {
-        var val = document.getElementById('settingsBirthday').value.trim();
-        var match = val.match(/^(\d{1,2})\/(\d{1,2})$/);
-        if (!match) return;
-        var day = parseInt(match[1]), month = parseInt(match[2]);
-        if (day < 1 || day > 31 || month < 1 || month > 12) return;
-        birthdayData = { day: day, month: month };
-        db.collection('config').doc('birthday').set({ day: day, month: month });
-        renderGreeting();
-    });
 
     // ─── WEATHER ──────────────────────────────────────────────────
     function loadWeather() {
