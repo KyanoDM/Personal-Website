@@ -287,7 +287,7 @@
                         <li>
                             <i class="fas fa-shopping-cart"></i>
                             <span>
-                                <strong>Webshop:</strong> WordPress met custom plugins en automatische productsync vanuit de leverancier. Staat momenteel niet live.
+                                <strong>Webshop:</strong> WordPress met custom plugins en automatische productsync vanuit de leverancier.
                                 <a href="cittel-demo.html" class="highlight-demo-link"><i class="fas fa-play me-1"></i>Bekijk hoe het werkt</a>
                             </span>
                         </li>
@@ -336,6 +336,11 @@
                                 Dashboard om Steam-achievements bij te houden per profiel: voortgang, perfecte games en
                                 completion-statistieken. Live op sam.kyanodm.be.
                             </p>
+                            <div class="project-tags">
+                                <span class="project-tag">HTML/CSS</span>
+                                <span class="project-tag">JavaScript</span>
+                                <span class="project-tag">API's</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -358,6 +363,11 @@
                                 Track je fitness vooruitgang met maandelijkse foto's en video's. Beschikbaar als web- en
                                 mobiele versie.
                             </p>
+                            <div class="project-tags">
+                                <span class="project-tag">HTML/CSS</span>
+                                <span class="project-tag">JavaScript</span>
+                                <span class="project-tag">Firebase</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -379,6 +389,10 @@
                             <p class="project-description">
                                 Een interactieve portfolio website met 3D elementen, gemaakt voor mijn broer.
                             </p>
+                            <div class="project-tags">
+                                <span class="project-tag">HTML/CSS</span>
+                                <span class="project-tag">JavaScript</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -400,6 +414,10 @@
                             <p class="project-description">
                                 Website project gemaakt tijdens mijn studentenjob bij Lotus.
                             </p>
+                            <div class="project-tags">
+                                <span class="project-tag">HTML/CSS</span>
+                                <span class="project-tag">JavaScript</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -420,6 +438,11 @@
                             <p class="project-description">
                                Burrow, een mobiele app voor communities. Dit is een prototype en is gemaakt in 3 weken.
                             </p>
+                            <div class="project-tags">
+                                <span class="project-tag">C#</span>
+                                <span class="project-tag">Blazor (Hybrid)</span>
+                                <span class="project-tag">Firebase</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -435,8 +458,8 @@
                 <div class="title-underline mx-auto bg-white"></div>
                 <p class="section-subtitle text-white">Neem gerust contact met me op</p>
             </div>
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
+            <div class="row justify-content-center g-4">
+                <div class="col-lg-5">
                     <div class="contact-info">
                         <div class="contact-item">
                             <i class="fas fa-envelope"></i>
@@ -467,6 +490,30 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="col-lg-7">
+                    <form class="contact-form" action="https://api.web3forms.com/submit" method="POST">
+                        <input type="hidden" name="access_key" value="67e961bf-0b3d-4c0a-8bb7-6343713ad347">
+                        <input type="hidden" name="subject" value="Nieuw bericht via kyanodm.be">
+                        <input type="checkbox" name="botcheck" class="d-none" style="display: none;">
+
+                        <div class="mb-3">
+                            <label for="contact-name" class="form-label">Naam</label>
+                            <input type="text" id="contact-name" name="name" class="form-control contact-form-input" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contact-email" class="form-label">Email</label>
+                            <input type="email" id="contact-email" name="email" class="form-control contact-form-input" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contact-message" class="form-label">Bericht</label>
+                            <textarea id="contact-message" name="message" rows="5" class="form-control contact-form-input" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-accent">
+                            <i class="fas fa-paper-plane me-2"></i>Verstuur bericht
+                        </button>
+                        <p class="contact-form-status mt-3"></p>
+                    </form>
                 </div>
             </div>
         </div>

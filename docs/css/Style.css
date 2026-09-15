@@ -405,6 +405,22 @@ section {
     margin-bottom: 0.5rem;
 }
 
+.project-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.project-tag {
+    background: rgba(52, 152, 219, 0.1);
+    color: var(--secondary-color);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.3rem 0.7rem;
+    border-radius: 20px;
+}
+
 .project-description {
     color: var(--text-light);
     font-size: 0.95rem;
@@ -553,6 +569,71 @@ section {
 
 .contact-item a:hover {
     color: var(--secondary-color);
+}
+
+.contact-form {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 2.5rem;
+    border-radius: 12px;
+    height: 100%;
+}
+
+.contact-form .form-label {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.contact-form-input {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-radius: 8px;
+    padding: 0.65rem 0.9rem;
+}
+
+.contact-form-input:focus {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: var(--secondary-color);
+    color: #fff;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+.contact-form-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.contact-form .btn-accent {
+    background: var(--secondary-color);
+    color: #fff;
+    border: none;
+    padding: 0.7rem 1.75rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.contact-form .btn-accent:hover {
+    background: #2980b9;
+}
+
+.contact-form .btn-accent:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.contact-form-status {
+    font-size: 0.9rem;
+    min-height: 1.2rem;
+}
+
+.contact-form-status.success {
+    color: #2ecc71;
+}
+
+.contact-form-status.error {
+    color: #e74c3c;
 }
 
 /* Skills Section */

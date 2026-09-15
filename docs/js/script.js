@@ -39,6 +39,47 @@ function initialize() {
         });
     }
 
+    // Contact form submission via Web3Forms (no backend, no page reload)
+    const contactForm = document.querySelector(".contact-form");
+    if (contactForm) {
+        contactForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const submitBtn = contactForm.querySelector('button[type="submit"]');
+            const status = contactForm.querySelector('.contact-form-status');
+            const originalBtnHtml = submitBtn.innerHTML;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Versturen...';
+            status.textContent = '';
+            status.className = 'contact-form-status mt-3';
+
+            fetch(contactForm.action, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                body: new FormData(contactForm)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        status.textContent = 'Bedankt! Je bericht is verzonden, ik antwoord zo snel mogelijk.';
+                        status.classList.add('success');
+                        contactForm.reset();
+                    } else {
+                        throw new Error(data.message || 'Er ging iets mis.');
+                    }
+                })
+                .catch(() => {
+                    status.textContent = 'Er ging iets mis bij het versturen. Probeer het later opnieuw of mail me rechtstreeks.';
+                    status.classList.add('error');
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHtml;
+                });
+        });
+    }
+
     // Smooth scroll for navigation links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
