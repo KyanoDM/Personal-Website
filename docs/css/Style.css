@@ -111,44 +111,6 @@ section {
     padding-bottom: 100px;
 }
 
-.availability-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(46, 204, 113, 0.12);
-    border: 1px solid rgba(46, 204, 113, 0.4);
-    color: #2ecc71;
-    font-size: 0.85rem;
-    font-weight: 600;
-    padding: 0.45rem 1rem;
-    border-radius: 30px;
-    margin-bottom: 1.5rem;
-    animation: fadeInUp 1s ease 0.1s backwards;
-}
-
-.availability-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #2ecc71;
-    box-shadow: 0 0 0 rgba(46, 204, 113, 0.6);
-    animation: pulse-dot 2s infinite;
-}
-
-@keyframes pulse-dot {
-    0% {
-        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.6);
-    }
-
-    70% {
-        box-shadow: 0 0 0 8px rgba(46, 204, 113, 0);
-    }
-
-    100% {
-        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
-    }
-}
-
 .hero-title {
     font-size: 4rem;
     font-weight: 700;
@@ -322,6 +284,11 @@ section {
     align-items: center;
     justify-content: center;
     font-size: 1rem;
+}
+
+.credential-badge-available i {
+    background: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
 }
 
 .credential-badge strong {
