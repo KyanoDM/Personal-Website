@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard.html
+Disallow: /qr-auth.html
+
+Sitemap: https://kyanodm.be/sitemap.xml
