@@ -426,6 +426,12 @@
     function renderHabits() {
         var days = getWeekDays(currentWeekOffset);
         var todayStr = getHabitDate(new Date());
+        var weekStartStr = formatDate(days[0]);
+
+        // Enkel habits die deze week nog actief waren (niet gearchiveerd, of pas gearchiveerd na start van deze week)
+        var visibleHabits = habits.filter(function (h) {
+            return !h.archived || (h.archivedDate && h.archivedDate >= weekStartStr);
+        });
 
         // Week label
         var d0 = days[0]; var d6 = days[6];
@@ -441,7 +447,7 @@
         }
         html += '<th></th></tr></thead><tbody>';
 
-        habits.forEach(function (habit, hIdx) {
+        visibleHabits.forEach(function (habit) {
             var weekCount = 0;
             for (var d = 0; d < 7; d++) {
                 var ds = formatDate(days[d]);
@@ -455,9 +461,11 @@
                 targetLabel = '<span class="week-progress ' + (met ? 'met' : '') + '">' + weekCount + '/' + target + '</span>';
             }
 
-            html += '<tr><td><div class="habit-name-cell">' +
-                '<button class="habit-delete" data-idx="' + hIdx + '"><i class="fas fa-xmark"></i></button>' +
-                habit.name +
+            html += '<tr' + (habit.archived ? ' class="habit-archived"' : '') + '><td><div class="habit-name-cell">' +
+                (habit.archived
+                    ? '<span class="habit-archived-label" title="Gearchiveerd"><i class="fas fa-box-archive"></i></span>'
+                    : '<button class="habit-delete" data-name="' + escapeHtml(habit.name) + '"><i class="fas fa-xmark"></i></button>') +
+                escapeHtml(habit.name) +
                 (habit.type === 'weekly' ? ' <span class="habit-type-label">' + (habit.target || 3) + 'x/week</span>' : '') +
                 '</div></td>';
 
@@ -489,8 +497,11 @@
 
         document.querySelectorAll('.habit-delete').forEach(function (el) {
             el.addEventListener('click', function () {
-                var idx = parseInt(this.dataset.idx);
-                habits.splice(idx, 1);
+                var name = this.dataset.name;
+                var habit = habits.find(function (h) { return h.name === name; });
+                if (!habit) return;
+                habit.archived = true;
+                habit.archivedDate = getHabitDate(new Date());
                 saveHabitConfig();
                 renderHabits();
             });
@@ -538,8 +549,8 @@
     }
 
     function renderHeatmap(allData, start, end) {
-        var dailyHabits = habits.filter(function (h) { return h.type === 'daily'; });
-        if (dailyHabits.length === 0) {
+        var dailyHabitsAll = habits.filter(function (h) { return h.type === 'daily'; });
+        if (dailyHabitsAll.length === 0) {
             document.getElementById('heatmap').innerHTML = '';
             return;
         }
@@ -551,15 +562,19 @@
 
         while (d <= end) {
             var ds = formatDate(d);
+            // Enkel habits die op déze specifieke dag actief waren
+            var activeHabits = dailyHabitsAll.filter(function (h) {
+                return !h.archived || (h.archivedDate && h.archivedDate >= ds);
+            });
             var count = 0;
             if (allData[ds]) {
-                dailyHabits.forEach(function (h) {
+                activeHabits.forEach(function (h) {
                     if (allData[ds][h.name]) count++;
                 });
             }
-            var ratio = count / dailyHabits.length;
+            var ratio = activeHabits.length ? count / activeHabits.length : 0;
             var level = ratio === 0 ? 0 : ratio < 0.25 ? 1 : ratio < 0.5 ? 2 : ratio < 1 ? 3 : 4;
-            cells += '<div class="heatmap-cell" style="background:var(--heat-' + level + ')" title="' + ds + ': ' + count + '/' + dailyHabits.length + '"></div>';
+            cells += '<div class="heatmap-cell" style="background:var(--heat-' + level + ')" title="' + ds + ': ' + count + '/' + activeHabits.length + '"></div>';
             d.setDate(d.getDate() + 1);
         }
 

@@ -311,6 +311,14 @@ html, body { height: 100%; }
 tr:hover .habit-delete { opacity: 0.6; }
 .habit-delete:hover { color: #ef4444; opacity: 1 !important; }
 
+.habit-archived td { opacity: 0.55; }
+.habit-archived-label {
+    color: var(--text-dim);
+    font-size: 0.6rem;
+    padding: 2px;
+    flex-shrink: 0;
+}
+
 /* Checkboxes */
 .habit-check {
     width: 22px;
