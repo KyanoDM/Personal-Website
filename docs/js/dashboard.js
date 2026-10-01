@@ -1547,15 +1547,11 @@
                 '<div class="todo-check" data-id="' + todo.id + '" title="Afronden">' +
                 '<i class="fas fa-check"></i></div>' +
                 '<span class="todo-text">' + escapeHtml(todo.title) + '</span>' +
-                '<button class="todo-delete" data-id="' + todo.id + '" title="Verbergen"><i class="fas fa-xmark"></i></button>' +
                 '</div>';
         }).join('');
         list.innerHTML = html;
         list.querySelectorAll('.todo-check').forEach(function (el) {
-            el.addEventListener('click', function () { setTodoStatus(this.dataset.id, 'Completed'); });
-        });
-        list.querySelectorAll('.todo-delete').forEach(function (btn) {
-            btn.addEventListener('click', function () { setTodoStatus(this.dataset.id, 'Failed'); });
+            el.addEventListener('click', function () { setTodoStatus(this.dataset.id, 'Done'); });
         });
     }
 
