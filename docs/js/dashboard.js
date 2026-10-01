@@ -427,10 +427,14 @@
         var days = getWeekDays(currentWeekOffset);
         var todayStr = getHabitDate(new Date());
         var weekStartStr = formatDate(days[0]);
+        var weekEndStr = formatDate(days[6]);
 
-        // Enkel habits die deze week nog actief waren (niet gearchiveerd, of pas gearchiveerd na start van deze week)
+        // Enkel habits die deze week al bestonden (niet later aangemaakt) en nog actief waren
+        // (niet gearchiveerd, of pas gearchiveerd na start van deze week)
         var visibleHabits = habits.filter(function (h) {
-            return !h.archived || (h.archivedDate && h.archivedDate >= weekStartStr);
+            var existedThisWeek = !h.createdDate || h.createdDate <= weekEndStr;
+            var activeThisWeek = !h.archived || (h.archivedDate && h.archivedDate >= weekStartStr);
+            return existedThisWeek && activeThisWeek;
         });
         var activeNames = habits.filter(function (h) { return !h.archived; }).map(function (h) { return h.name; });
 
@@ -605,9 +609,11 @@
 
             for (var dow = 0; dow < 7 && d <= end; dow++) {
                 var ds = formatDate(d);
-                // Enkel habits die op déze specifieke dag actief waren
+                // Enkel habits die op déze specifieke dag al bestonden en nog actief waren
                 var activeHabits = dailyHabitsAll.filter(function (h) {
-                    return !h.archived || (h.archivedDate && h.archivedDate >= ds);
+                    var existed = !h.createdDate || h.createdDate <= ds;
+                    var active = !h.archived || (h.archivedDate && h.archivedDate >= ds);
+                    return existed && active;
                 });
                 var count = 0;
                 if (allData[ds]) {
@@ -658,7 +664,7 @@
         var name = document.getElementById('habitNameInput').value.trim();
         var type = document.getElementById('habitTypeInput').value;
         if (!name) return;
-        var habit = { name: name, type: type };
+        var habit = { name: name, type: type, createdDate: getHabitDate(new Date()) };
         if (type === 'weekly') {
             habit.target = parseInt(document.getElementById('habitTargetInput').value) || 3;
         }
