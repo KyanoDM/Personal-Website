@@ -585,8 +585,8 @@
     var MONTH_NAMES_SHORT = ['Jan', 'Feb', 'Mrt', 'Apr', 'Mei', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'];
 
     function renderHeatmap(allData, start, end) {
-        var dailyHabitsAll = habits.filter(function (h) { return h.type === 'daily'; });
-        if (dailyHabitsAll.length === 0) {
+        var heatmapHabits = habits;
+        if (heatmapHabits.length === 0) {
             document.getElementById('heatmap').innerHTML = '';
             document.getElementById('heatmapMonths').innerHTML = '';
             return;
@@ -610,7 +610,7 @@
             for (var dow = 0; dow < 7 && d <= end; dow++) {
                 var ds = formatDate(d);
                 // Enkel habits die op déze specifieke dag al bestonden en nog actief waren
-                var activeHabits = dailyHabitsAll.filter(function (h) {
+                var activeHabits = heatmapHabits.filter(function (h) {
                     var existed = !h.createdDate || h.createdDate <= ds;
                     var active = !h.archived || (h.archivedDate && h.archivedDate >= ds);
                     return existed && active;
