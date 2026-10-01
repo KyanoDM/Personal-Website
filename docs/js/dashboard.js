@@ -1504,20 +1504,35 @@
         });
     }
 
-    // ─── TODO ──────────────────────────────────────────────────────
-    var todosUnsubscribe = null;
+    // ─── TODO (gesynct met Notion via Cloudflare Worker) ────────────
+    var TODO_BASE = 'https://notion-todo.kyanodemaertelaere.workers.dev';
+    var _todoPollTimer = null;
 
     function loadTodos() {
-        if (todosUnsubscribe) return;
-        todosUnsubscribe = db.collection('todos')
-            .orderBy('createdAt', 'asc')
-            .onSnapshot(function (snapshot) {
-                var todos = [];
-                snapshot.forEach(function (doc) {
-                    todos.push(Object.assign({ id: doc.id }, doc.data()));
+        pcToken()
+            .then(function (t) {
+                return fetch(TODO_BASE + '/todos', { headers: { Authorization: 'Bearer ' + t } });
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) { renderTodos(data.todos || []); })
+            .catch(function (err) { console.log('Todo laden mislukt:', err); });
+
+        if (!_todoPollTimer) {
+            _todoPollTimer = setInterval(loadTodos, 60000);
+        }
+    }
+
+    function setTodoStatus(id, status) {
+        pcToken()
+            .then(function (t) {
+                return fetch(TODO_BASE + '/todos/' + id + '/status', {
+                    method: 'POST',
+                    headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: status })
                 });
-                renderTodos(todos);
-            });
+            })
+            .then(function () { loadTodos(); })
+            .catch(function (err) { console.log('Taak bijwerken mislukt:', err); });
     }
 
     function renderTodos(todos) {
@@ -1529,23 +1544,18 @@
         }
         var html = todos.map(function (todo) {
             return '<div class="todo-item">' +
-                '<div class="todo-check' + (todo.done ? ' checked' : '') + '" data-id="' + todo.id + '" data-done="' + (todo.done ? 'true' : 'false') + '">' +
+                '<div class="todo-check" data-id="' + todo.id + '" title="Afronden">' +
                 '<i class="fas fa-check"></i></div>' +
-                '<span class="todo-text' + (todo.done ? ' done' : '') + '">' + escapeHtml(todo.text) + '</span>' +
-                '<button class="todo-delete" data-id="' + todo.id + '"><i class="fas fa-xmark"></i></button>' +
+                '<span class="todo-text">' + escapeHtml(todo.title) + '</span>' +
+                '<button class="todo-delete" data-id="' + todo.id + '" title="Verbergen"><i class="fas fa-xmark"></i></button>' +
                 '</div>';
         }).join('');
         list.innerHTML = html;
         list.querySelectorAll('.todo-check').forEach(function (el) {
-            el.addEventListener('click', function () {
-                var done = this.dataset.done !== 'true';
-                db.collection('todos').doc(this.dataset.id).update({ done: done });
-            });
+            el.addEventListener('click', function () { setTodoStatus(this.dataset.id, 'Completed'); });
         });
         list.querySelectorAll('.todo-delete').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                db.collection('todos').doc(this.dataset.id).delete();
-            });
+            btn.addEventListener('click', function () { setTodoStatus(this.dataset.id, 'Failed'); });
         });
     }
 
@@ -1553,11 +1563,17 @@
         var input = document.getElementById('todoInput');
         var text = input.value.trim();
         if (!text) return;
-        db.collection('todos').add({
-            text: text, done: false,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
         input.value = '';
+        pcToken()
+            .then(function (t) {
+                return fetch(TODO_BASE + '/todos', {
+                    method: 'POST',
+                    headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: text })
+                });
+            })
+            .then(function () { loadTodos(); })
+            .catch(function (err) { console.log('Taak toevoegen mislukt:', err); });
     });
 
     document.getElementById('todoInput').addEventListener('keydown', function (e) {
@@ -1565,11 +1581,7 @@
     });
 
     document.getElementById('clearDoneTodos').addEventListener('click', function () {
-        db.collection('todos').where('done', '==', true).get().then(function (snap) {
-            var batch = db.batch();
-            snap.forEach(function (doc) { batch.delete(doc.ref); });
-            return batch.commit();
-        });
+        loadTodos();
     });
 
     // ─── GYM PROGRESS (from Gym-Progress-App Firebase) ────────────
