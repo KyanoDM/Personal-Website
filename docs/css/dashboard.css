@@ -311,6 +311,29 @@ html, body { height: 100%; }
 tr:hover .habit-delete { opacity: 0.6; }
 .habit-delete:hover { color: #ef4444; opacity: 1 !important; }
 
+.habit-move-group {
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+tr:hover .habit-move-group { opacity: 0.7; }
+
+.habit-move {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.5rem;
+    line-height: 1;
+    padding: 1px 2px;
+    transition: color 0.2s;
+}
+
+.habit-move:hover { color: var(--accent); }
+.habit-move.is-hidden { visibility: hidden; }
+
 .habit-archived td { opacity: 0.55; }
 .habit-archived-label {
     color: var(--text-dim);
@@ -471,20 +494,34 @@ tr:hover .habit-delete { opacity: 0.6; }
     letter-spacing: 0.5px;
 }
 
+.heatmap-months {
+    display: grid;
+    grid-template-rows: 1fr;
+    margin-bottom: 0.35rem;
+}
+
+.heatmap-months span {
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    font-weight: 500;
+}
+
 .heatmap {
     display: grid;
-    grid-template-columns: repeat(13, 1fr);
-    grid-auto-rows: 12px;
-    gap: 3px;
-    max-width: 220px;
+    grid-template-rows: repeat(7, 1fr);
+    gap: 4px;
+    width: 100%;
+    height: 116px;
 }
 
 .heatmap-cell {
-    width: 12px;
-    height: 12px;
-    border-radius: 3px;
+    border-radius: 4px;
     background: var(--heat-0);
-    transition: background 0.2s;
+    transition: background 0.15s, transform 0.15s;
+}
+
+.heatmap-cell:hover {
+    transform: scale(1.35);
 }
 
 .heatmap-legend {

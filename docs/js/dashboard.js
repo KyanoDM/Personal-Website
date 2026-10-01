@@ -432,6 +432,7 @@
         var visibleHabits = habits.filter(function (h) {
             return !h.archived || (h.archivedDate && h.archivedDate >= weekStartStr);
         });
+        var activeNames = habits.filter(function (h) { return !h.archived; }).map(function (h) { return h.name; });
 
         // Week label
         var d0 = days[0]; var d6 = days[6];
@@ -461,10 +462,19 @@
                 targetLabel = '<span class="week-progress ' + (met ? 'met' : '') + '">' + weekCount + '/' + target + '</span>';
             }
 
+            var moveButtons = '';
+            if (!habit.archived) {
+                var pos = activeNames.indexOf(habit.name);
+                moveButtons =
+                    '<button class="habit-move' + (pos <= 0 ? ' is-hidden' : '') + '" data-name="' + escapeHtml(habit.name) + '" data-dir="-1" title="Omhoog"><i class="fas fa-chevron-up"></i></button>' +
+                    '<button class="habit-move' + (pos >= activeNames.length - 1 ? ' is-hidden' : '') + '" data-name="' + escapeHtml(habit.name) + '" data-dir="1" title="Omlaag"><i class="fas fa-chevron-down"></i></button>';
+            }
+
             html += '<tr' + (habit.archived ? ' class="habit-archived"' : '') + '><td><div class="habit-name-cell">' +
                 (habit.archived
                     ? '<span class="habit-archived-label" title="Gearchiveerd"><i class="fas fa-box-archive"></i></span>'
                     : '<button class="habit-delete" data-name="' + escapeHtml(habit.name) + '"><i class="fas fa-xmark"></i></button>') +
+                '<span class="habit-move-group">' + moveButtons + '</span>' +
                 escapeHtml(habit.name) +
                 (habit.type === 'weekly' ? ' <span class="habit-type-label">' + (habit.target || 3) + 'x/week</span>' : '') +
                 '</div></td>';
@@ -506,6 +516,26 @@
                 renderHabits();
             });
         });
+
+        document.querySelectorAll('.habit-move').forEach(function (el) {
+            el.addEventListener('click', function () {
+                moveHabit(this.dataset.name, parseInt(this.dataset.dir));
+            });
+        });
+    }
+
+    function moveHabit(name, direction) {
+        var activeNames = habits.filter(function (h) { return !h.archived; }).map(function (h) { return h.name; });
+        var pos = activeNames.indexOf(name);
+        var newPos = pos + direction;
+        if (pos === -1 || newPos < 0 || newPos >= activeNames.length) return;
+        var i1 = habits.findIndex(function (h) { return h.name === name; });
+        var i2 = habits.findIndex(function (h) { return h.name === activeNames[newPos]; });
+        var tmp = habits[i1];
+        habits[i1] = habits[i2];
+        habits[i2] = tmp;
+        saveHabitConfig();
+        renderHabits();
     }
 
     function toggleHabit(habitName, date, value) {
@@ -548,37 +578,58 @@
         document.getElementById('streaksRow').innerHTML = html;
     }
 
+    var MONTH_NAMES_SHORT = ['Jan', 'Feb', 'Mrt', 'Apr', 'Mei', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'];
+
     function renderHeatmap(allData, start, end) {
         var dailyHabitsAll = habits.filter(function (h) { return h.type === 'daily'; });
         if (dailyHabitsAll.length === 0) {
             document.getElementById('heatmap').innerHTML = '';
+            document.getElementById('heatmapMonths').innerHTML = '';
             return;
         }
 
         var cells = '';
+        var months = '';
         var d = new Date(start);
         // Align to Monday
         while (d.getDay() !== 1) d.setDate(d.getDate() - 1);
 
+        var col = 0;
+        var lastMonth = null;
+
         while (d <= end) {
-            var ds = formatDate(d);
-            // Enkel habits die op déze specifieke dag actief waren
-            var activeHabits = dailyHabitsAll.filter(function (h) {
-                return !h.archived || (h.archivedDate && h.archivedDate >= ds);
-            });
-            var count = 0;
-            if (allData[ds]) {
-                activeHabits.forEach(function (h) {
-                    if (allData[ds][h.name]) count++;
-                });
+            if (d.getMonth() !== lastMonth) {
+                months += '<span style="grid-column:' + (col + 1) + '">' + MONTH_NAMES_SHORT[d.getMonth()] + '</span>';
+                lastMonth = d.getMonth();
             }
-            var ratio = activeHabits.length ? count / activeHabits.length : 0;
-            var level = ratio === 0 ? 0 : ratio < 0.25 ? 1 : ratio < 0.5 ? 2 : ratio < 1 ? 3 : 4;
-            cells += '<div class="heatmap-cell" style="background:var(--heat-' + level + ')" title="' + ds + ': ' + count + '/' + activeHabits.length + '"></div>';
-            d.setDate(d.getDate() + 1);
+
+            for (var dow = 0; dow < 7 && d <= end; dow++) {
+                var ds = formatDate(d);
+                // Enkel habits die op déze specifieke dag actief waren
+                var activeHabits = dailyHabitsAll.filter(function (h) {
+                    return !h.archived || (h.archivedDate && h.archivedDate >= ds);
+                });
+                var count = 0;
+                if (allData[ds]) {
+                    activeHabits.forEach(function (h) {
+                        if (allData[ds][h.name]) count++;
+                    });
+                }
+                var ratio = activeHabits.length ? count / activeHabits.length : 0;
+                var level = ratio === 0 ? 0 : ratio < 0.25 ? 1 : ratio < 0.5 ? 2 : ratio < 1 ? 3 : 4;
+                cells += '<div class="heatmap-cell" style="grid-column:' + (col + 1) + ';background:var(--heat-' + level + ')" title="' +
+                    ds + ': ' + count + '/' + activeHabits.length + '"></div>';
+                d.setDate(d.getDate() + 1);
+            }
+            col++;
         }
 
-        document.getElementById('heatmap').innerHTML = cells;
+        var heatmapEl = document.getElementById('heatmap');
+        var monthsEl = document.getElementById('heatmapMonths');
+        heatmapEl.style.gridTemplateColumns = 'repeat(' + col + ', 1fr)';
+        monthsEl.style.gridTemplateColumns = 'repeat(' + col + ', 1fr)';
+        heatmapEl.innerHTML = cells;
+        monthsEl.innerHTML = months;
     }
 
     // Week nav
