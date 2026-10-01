@@ -623,7 +623,7 @@
                 }
                 var ratio = activeHabits.length ? count / activeHabits.length : 0;
                 var level = ratio === 0 ? 0 : ratio < 0.25 ? 1 : ratio < 0.5 ? 2 : ratio < 1 ? 3 : 4;
-                cells += '<div class="heatmap-cell" style="grid-column:' + (col + 1) + ';background:var(--heat-' + level + ')" title="' +
+                cells += '<div class="heatmap-cell" style="grid-column:' + (col + 1) + ';grid-row:' + (dow + 1) + ';background:var(--heat-' + level + ')" title="' +
                     ds + ': ' + count + '/' + activeHabits.length + '"></div>';
                 d.setDate(d.getDate() + 1);
             }
