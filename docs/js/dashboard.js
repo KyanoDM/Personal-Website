@@ -1551,7 +1551,7 @@
         }).join('');
         list.innerHTML = html;
         list.querySelectorAll('.todo-check').forEach(function (el) {
-            el.addEventListener('click', function () { setTodoStatus(this.dataset.id, 'Done'); });
+            el.addEventListener('click', function () { setTodoStatus(this.dataset.id, 'Completed'); });
         });
     }
 
