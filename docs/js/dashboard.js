@@ -1509,7 +1509,6 @@
     var timers = [];
     var TIMER_MAX = 4;
     var TIMER_COLORS = ['129, 140, 248', '52, 211, 153', '251, 191, 36', '244, 114, 182'];
-    var TIMER_EMOJIS = ['❤️', '🎂', '✈️', '🎓', '🏋️', '🎉', '🚀', '🏠', '🎮', '⭐'];
     var TIMER_MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
     var editingTimerId = null;
     var _timerRenderedDay = null;
@@ -1568,39 +1567,27 @@
             var target = parseDate(t.date);
             var diff = Math.round((today - target) / 86400000);
             var abs = Math.abs(diff);
-            var number, unit;
-            if (diff === 0) {
-                number = '<span class="timer-number is-today">Vandaag!</span>';
-                unit = '';
-            } else {
-                number = '<span class="timer-number">' + abs + '</span>';
-                unit = '<span class="timer-unit">' + (abs === 1 ? 'dag' : 'dagen') +
-                    (diff > 0 ? ' sinds' : ' te gaan') + '</span>';
-            }
+            var number = diff === 0
+                ? '<span class="timer-number is-today">Vandaag!</span>'
+                : '<span class="timer-number">' + abs + '</span>';
+            var emoji = t.emoji ? '<span class="timer-emoji">' + escapeHtml(t.emoji) + '</span>' : '';
+            var text = t.text ? '<span class="timer-text">' + escapeHtml(t.text) + '</span>' : '';
+            var dateLabel = target.getDate() + ' ' + TIMER_MONTHS[target.getMonth()] + ' ' + target.getFullYear();
+            var unit = diff === 0 ? '' :
+                '<span class="timer-unit">' + (abs === 1 ? 'dag' : 'dagen') + (diff > 0 ? ' sinds' : ' te gaan') + '</span> · ';
             var breakdown = '';
             if (abs > 30) {
                 var txt = diff > 0 ? timerBreakdown(target, today) : timerBreakdown(today, target);
-                breakdown = '<span class="timer-breakdown">' + escapeHtml(txt) + '</span>';
+                breakdown = '<span class="timer-meta">' + escapeHtml(txt) + '</span>';
             }
-            var dateLabel = target.getDate() + ' ' + TIMER_MONTHS[target.getMonth()] + ' ' + target.getFullYear();
             return '<button type="button" class="timer-card" data-id="' + escapeHtml(t.id) + '" ' +
                 'style="--tc:' + TIMER_COLORS[i % TIMER_COLORS.length] + '" title="Bewerken">' +
-                '<span class="timer-top">' +
-                '<span class="timer-emoji">' + escapeHtml(t.emoji || '⭐') + '</span>' +
-                '</span>' +
-                number + unit +
-                '<span class="timer-text">' + escapeHtml(t.text) + '</span>' +
+                '<span class="timer-head">' + number + emoji + '</span>' +
+                text +
+                '<span class="timer-meta">' + unit + escapeHtml(dateLabel) + '</span>' +
                 breakdown +
-                '<span class="timer-date">' + escapeHtml(dateLabel) + '</span>' +
                 '</button>';
         }).join('');
-    }
-
-    function setTimerEmoji(emoji) {
-        document.getElementById('timerEmojiInput').value = emoji;
-        document.querySelectorAll('#timerEmojiPicks .timer-pick').forEach(function (b) {
-            b.classList.toggle('active', b.dataset.emoji === emoji);
-        });
     }
 
     function openTimerModal(id) {
@@ -1608,25 +1595,12 @@
         if (!t && timers.length >= TIMER_MAX) return;
         editingTimerId = t ? t.id : null;
         document.getElementById('timerModalTitle').textContent = t ? 'Teller bewerken' : 'Nieuwe teller';
-        document.getElementById('timerTextInput').value = t ? t.text : '';
+        document.getElementById('timerEmojiInput').value = t ? (t.emoji || '') : '';
+        document.getElementById('timerTextInput').value = t ? (t.text || '') : '';
         document.getElementById('timerDateInput').value = t ? t.date : formatDate(new Date());
         document.getElementById('deleteTimer').style.display = t ? '' : 'none';
-        setTimerEmoji(t ? (t.emoji || '⭐') : '⭐');
         bootstrap.Modal.getOrCreateInstance(document.getElementById('timerModal')).show();
     }
-
-    document.getElementById('timerEmojiPicks').innerHTML = TIMER_EMOJIS.map(function (e) {
-        return '<button type="button" class="timer-pick" data-emoji="' + e + '">' + e + '</button>';
-    }).join('');
-
-    document.getElementById('timerEmojiPicks').addEventListener('click', function (e) {
-        var btn = e.target.closest('.timer-pick');
-        if (btn) setTimerEmoji(btn.dataset.emoji);
-    });
-
-    document.getElementById('timerEmojiInput').addEventListener('input', function () {
-        setTimerEmoji(this.value.trim());
-    });
 
     document.getElementById('addTimerBtn').addEventListener('click', function () { openTimerModal(null); });
 
@@ -1639,8 +1613,7 @@
     document.getElementById('confirmTimer').addEventListener('click', function () {
         var text = document.getElementById('timerTextInput').value.trim();
         var date = document.getElementById('timerDateInput').value;
-        var emoji = document.getElementById('timerEmojiInput').value.trim() || '⭐';
-        if (!text) { document.getElementById('timerTextInput').focus(); return; }
+        var emoji = document.getElementById('timerEmojiInput').value.trim();
         if (!date) { document.getElementById('timerDateInput').focus(); return; }
 
         if (editingTimerId) {

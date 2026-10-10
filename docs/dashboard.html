@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/dashboard.css?v=7">
+    <link rel="stylesheet" href="css/dashboard.css?v=8">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="img/logo.png" type="image/png">
 </head>
@@ -277,11 +277,11 @@
             <div class="modal-content dash-modal">
                 <div class="modal-body p-4">
                     <h5 class="mb-3" id="timerModalTitle">Nieuwe teller</h5>
-                    <div class="timer-emoji-row mb-2">
-                        <input type="text" id="timerEmojiInput" class="form-control dash-input timer-emoji-input" maxlength="8" placeholder="😀" aria-label="Emoji">
-                        <input type="text" id="timerTextInput" class="form-control dash-input" maxlength="60" placeholder="bv. mijn vriendin ontmoet">
+                    <div class="timer-emoji-row">
+                        <input type="text" id="timerEmojiInput" class="form-control dash-input timer-emoji-input" maxlength="16" placeholder="😀" aria-label="Emoji" autocomplete="off">
+                        <input type="text" id="timerTextInput" class="form-control dash-input" maxlength="60" placeholder="bv. mijn vriendin ontmoet" autocomplete="off">
                     </div>
-                    <div class="timer-emoji-picks mb-3" id="timerEmojiPicks"></div>
+                    <div class="timer-hint mb-3">Emoji: typ of plak er één (Windows: Win + . )</div>
                     <label class="timer-label" for="timerDateInput">Datum</label>
                     <input type="date" id="timerDateInput" class="form-control dash-input mb-3">
                     <div class="d-flex gap-2">
@@ -332,7 +332,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <script src="js/dashboard.js?v=12"></script>
+    <script src="js/dashboard.js?v=13"></script>
 </body>
 
 </html>
