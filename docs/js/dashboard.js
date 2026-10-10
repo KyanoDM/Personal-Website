@@ -169,6 +169,7 @@
             document.getElementById('dashboard').style.display = 'block';
             loadConfig();
             loadWeight();
+            loadTimers();
             loadChannels();
             loadKanban();
             loadSources();
@@ -1503,6 +1504,170 @@
             content.style.display = isOpen ? '' : 'none';
         });
     }
+
+    // ─── TELLERS (dagen sinds / tot een datum) ──────────────────────
+    var timers = [];
+    var TIMER_MAX = 4;
+    var TIMER_COLORS = ['129, 140, 248', '52, 211, 153', '251, 191, 36', '244, 114, 182'];
+    var TIMER_EMOJIS = ['❤️', '🎂', '✈️', '🎓', '🏋️', '🎉', '🚀', '🏠', '🎮', '⭐'];
+    var TIMER_MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+    var editingTimerId = null;
+    var _timerRenderedDay = null;
+
+    function loadTimers() {
+        db.collection('config').doc('timers').get().then(function (doc) {
+            timers = doc.exists ? (doc.data().list || []) : [];
+            renderTimers();
+        }).catch(function (err) { console.log('Tellers laden mislukt:', err); });
+    }
+
+    function saveTimers() {
+        db.collection('config').doc('timers').set({ list: timers })
+            .catch(function (err) { console.log('Tellers opslaan mislukt:', err); });
+    }
+
+    function todayMidnight() {
+        var d = new Date();
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+
+    function timerBreakdown(from, to) {
+        var y = to.getFullYear() - from.getFullYear();
+        var m = to.getMonth() - from.getMonth();
+        var d = to.getDate() - from.getDate();
+        if (d < 0) {
+            m--;
+            d += new Date(to.getFullYear(), to.getMonth(), 0).getDate();
+        }
+        if (m < 0) {
+            y--;
+            m += 12;
+        }
+        var parts = [];
+        if (y > 0) parts.push(y + ' jaar');
+        if (m > 0) parts.push(m + (m === 1 ? ' maand' : ' maanden'));
+        if (d > 0) parts.push(d + (d === 1 ? ' dag' : ' dagen'));
+        return parts.join(' · ');
+    }
+
+    function renderTimers() {
+        var grid = document.getElementById('timerGrid');
+        if (!grid) return;
+        _timerRenderedDay = formatDate(new Date());
+        document.getElementById('addTimerBtn').style.display = timers.length >= TIMER_MAX ? 'none' : '';
+
+        if (!timers.length) {
+            grid.innerHTML = '<button type="button" class="timer-empty" id="timerEmpty">' +
+                '<i class="fas fa-plus"></i>Voeg je eerste teller toe</button>';
+            return;
+        }
+
+        var today = todayMidnight();
+        grid.innerHTML = timers.map(function (t, i) {
+            var target = parseDate(t.date);
+            var diff = Math.round((today - target) / 86400000);
+            var abs = Math.abs(diff);
+            var number, unit;
+            if (diff === 0) {
+                number = '<span class="timer-number is-today">Vandaag!</span>';
+                unit = '';
+            } else {
+                number = '<span class="timer-number">' + abs + '</span>';
+                unit = '<span class="timer-unit">' + (abs === 1 ? 'dag' : 'dagen') +
+                    (diff > 0 ? ' sinds' : ' te gaan') + '</span>';
+            }
+            var breakdown = '';
+            if (abs > 30) {
+                var txt = diff > 0 ? timerBreakdown(target, today) : timerBreakdown(today, target);
+                breakdown = '<span class="timer-breakdown">' + escapeHtml(txt) + '</span>';
+            }
+            var dateLabel = target.getDate() + ' ' + TIMER_MONTHS[target.getMonth()] + ' ' + target.getFullYear();
+            return '<button type="button" class="timer-card" data-id="' + escapeHtml(t.id) + '" ' +
+                'style="--tc:' + TIMER_COLORS[i % TIMER_COLORS.length] + '" title="Bewerken">' +
+                '<span class="timer-top">' +
+                '<span class="timer-emoji">' + escapeHtml(t.emoji || '⭐') + '</span>' +
+                '</span>' +
+                number + unit +
+                '<span class="timer-text">' + escapeHtml(t.text) + '</span>' +
+                breakdown +
+                '<span class="timer-date">' + escapeHtml(dateLabel) + '</span>' +
+                '</button>';
+        }).join('');
+    }
+
+    function setTimerEmoji(emoji) {
+        document.getElementById('timerEmojiInput').value = emoji;
+        document.querySelectorAll('#timerEmojiPicks .timer-pick').forEach(function (b) {
+            b.classList.toggle('active', b.dataset.emoji === emoji);
+        });
+    }
+
+    function openTimerModal(id) {
+        var t = id ? timers.filter(function (x) { return x.id === id; })[0] : null;
+        if (!t && timers.length >= TIMER_MAX) return;
+        editingTimerId = t ? t.id : null;
+        document.getElementById('timerModalTitle').textContent = t ? 'Teller bewerken' : 'Nieuwe teller';
+        document.getElementById('timerTextInput').value = t ? t.text : '';
+        document.getElementById('timerDateInput').value = t ? t.date : formatDate(new Date());
+        document.getElementById('deleteTimer').style.display = t ? '' : 'none';
+        setTimerEmoji(t ? (t.emoji || '⭐') : '⭐');
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('timerModal')).show();
+    }
+
+    document.getElementById('timerEmojiPicks').innerHTML = TIMER_EMOJIS.map(function (e) {
+        return '<button type="button" class="timer-pick" data-emoji="' + e + '">' + e + '</button>';
+    }).join('');
+
+    document.getElementById('timerEmojiPicks').addEventListener('click', function (e) {
+        var btn = e.target.closest('.timer-pick');
+        if (btn) setTimerEmoji(btn.dataset.emoji);
+    });
+
+    document.getElementById('timerEmojiInput').addEventListener('input', function () {
+        setTimerEmoji(this.value.trim());
+    });
+
+    document.getElementById('addTimerBtn').addEventListener('click', function () { openTimerModal(null); });
+
+    document.getElementById('timerGrid').addEventListener('click', function (e) {
+        var card = e.target.closest('.timer-card');
+        if (card) { openTimerModal(card.dataset.id); return; }
+        if (e.target.closest('#timerEmpty')) openTimerModal(null);
+    });
+
+    document.getElementById('confirmTimer').addEventListener('click', function () {
+        var text = document.getElementById('timerTextInput').value.trim();
+        var date = document.getElementById('timerDateInput').value;
+        var emoji = document.getElementById('timerEmojiInput').value.trim() || '⭐';
+        if (!text) { document.getElementById('timerTextInput').focus(); return; }
+        if (!date) { document.getElementById('timerDateInput').focus(); return; }
+
+        if (editingTimerId) {
+            timers.forEach(function (t) {
+                if (t.id === editingTimerId) { t.text = text; t.date = date; t.emoji = emoji; }
+            });
+        } else {
+            if (timers.length >= TIMER_MAX) return;
+            timers.push({ id: Date.now().toString(36), text: text, date: date, emoji: emoji });
+        }
+        saveTimers();
+        renderTimers();
+        bootstrap.Modal.getInstance(document.getElementById('timerModal')).hide();
+    });
+
+    document.getElementById('deleteTimer').addEventListener('click', function () {
+        if (!editingTimerId) return;
+        timers = timers.filter(function (t) { return t.id !== editingTimerId; });
+        saveTimers();
+        renderTimers();
+        bootstrap.Modal.getInstance(document.getElementById('timerModal')).hide();
+    });
+
+    // Dag-wissel: tellers verversen als het dashboard na middernacht open blijft staan
+    setInterval(function () {
+        if (_timerRenderedDay && _timerRenderedDay !== formatDate(new Date())) renderTimers();
+    }, 10 * 60 * 1000);
 
     // ─── TODO (gesynct met Notion via Cloudflare Worker) ────────────
     var TODO_BASE = 'https://notion-todo.kyanodemaertelaere.workers.dev';
