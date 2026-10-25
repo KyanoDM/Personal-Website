@@ -1,5 +1,5 @@
 /**
- * Cloudflare Worker — Auth backend (TOTP + QR login)
+ * Cloudflare Worker — Auth backend (TOTP login met aanmeldlimiet)
  *
  * Secrets (stel in via: wrangler secret put <NAAM>)
  *   SA_CLIENT_EMAIL  →  service account e-mail  (uit Firebase service-account JSON)
@@ -10,9 +10,13 @@
  *   FIREBASE_PROJECT_ID  →  kyanodm-be
  *   ALLOWED_EMAIL        →  kyanodemaertelaere@gmail.com
  *   ALLOWED_ORIGIN       →  https://kyanodm.github.io
+ *
+ * Aanmeldpogingen worden geteld in Firestore (collectie "authGuard", enkel
+ * toegankelijk voor de service account en de eigenaar): max. 5 per IP en
+ * 20 in totaal per 15 minuten. De code wordt pas gecontroleerd nadat er een
+ * poging is gereserveerd, dus parallelle aanvragen komen er niet omheen.
  */
 
-const NONCE_TTL_MS = 5 * 60 * 1000; // 5 minuten
 const TOTP_UID     = 'kyano-totp';   // vaste UID voor TOTP-logins
 
 // ─── Base64url helpers ────────────────────────────────────────────────────────
@@ -22,15 +26,6 @@ function b64url(buffer) {
     let str = '';
     for (const b of bytes) str += String.fromCharCode(b);
     return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-}
-
-function b64urlDecode(s) {
-    s = s.replace(/-/g, '+').replace(/_/g, '/');
-    while (s.length % 4) s += '=';
-    const bin = atob(s);
-    const buf = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-    return buf;
 }
 
 // ─── RSA key import ───────────────────────────────────────────────────────────
@@ -144,62 +139,35 @@ async function getAccessToken(clientEmail, privateKeyPem) {
     return data.access_token;
 }
 
-// ─── Firebase ID token verificatie ───────────────────────────────────────────
+// ─── Aanmeldlimiet (atomische teller in Firestore) ──────────────────────────
 
-async function verifyIdToken(idToken, projectId) {
-    const parts = idToken.split('.');
-    if (parts.length !== 3) throw new Error('Ongeldig token formaat');
+const GUARD_WINDOW_MS  = 15 * 60 * 1000;
+const MAX_TRIES_PER_IP = 5;
+const MAX_TRIES_TOTAL  = 20;
 
-    const header = JSON.parse(new TextDecoder().decode(b64urlDecode(parts[0])));
-    const payload = JSON.parse(new TextDecoder().decode(b64urlDecode(parts[1])));
-
-    const now = Math.floor(Date.now() / 1000);
-    if (payload.exp < now) throw new Error('Token verlopen');
-    if (payload.aud !== projectId) throw new Error('Verkeerde audience');
-    if (payload.iss !== `https://securetoken.google.com/${projectId}`) throw new Error('Verkeerde issuer');
-
-    // Google public keys ophalen
-    const keysResp = await fetch(
-        'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com',
-        { cf: { cacheTtl: 3600 } } // Cloudflare cache
-    );
-    const { keys } = await keysResp.json();
-    const jwk = keys.find(k => k.kid === header.kid);
-    if (!jwk) throw new Error('Public key niet gevonden');
-
-    const publicKey = await crypto.subtle.importKey(
-        'jwk', jwk,
-        { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-        false, ['verify']
-    );
-
-    const valid = await crypto.subtle.verify(
-        'RSASSA-PKCS1-v1_5', publicKey,
-        b64urlDecode(parts[2]),
-        new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
-    );
-    if (!valid) throw new Error('Ongeldige handtekening');
-
-    return payload;
+async function sha256Hex(text) {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
 }
 
-// ─── Firestore REST ───────────────────────────────────────────────────────────
-
-async function firestorePatch(projectId, collection, docId, fields, accessToken) {
-    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}/${docId}`;
-    const resp = await fetch(url, {
-        method: 'PATCH',
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ fields }),
+// Verhoogt (of verlaagt) de tellers atomisch en geeft de nieuwe standen terug.
+async function bumpAttempts(projectId, accessToken, ids, delta) {
+    const base = `projects/${projectId}/databases/(default)/documents`;
+    const resp = await fetch(`https://firestore.googleapis.com/v1/${base}:commit`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            writes: ids.map(id => ({
+                transform: {
+                    document: `${base}/authGuard/${id}`,
+                    fieldTransforms: [{ fieldPath: 'count', increment: { integerValue: String(delta) } }],
+                },
+            })),
+        }),
     });
-    if (!resp.ok) {
-        const text = await resp.text();
-        throw new Error(`Firestore fout ${resp.status}: ${text}`);
-    }
-    return resp.json();
+    if (!resp.ok) throw new Error('Firestore fout ' + resp.status);
+    const data = await resp.json();
+    return data.writeResults.map(w => parseInt(w.transformResults[0].integerValue, 10));
 }
 
 // ─── Main handler ─────────────────────────────────────────────────────────────
@@ -232,13 +200,26 @@ export default {
         const url = new URL(request.url);
 
         try {
-            // ── POST /totp-login ── Google Authenticator code ────────────────
+            // ── POST /totp-login ── Google Authenticator code ────────────────────────
             if (url.pathname === '/totp-login' && request.method === 'POST') {
                 const { code } = await request.json();
                 if (!code || !/^\d{6}$/.test(code)) return json({ error: 'Ongeldige code' }, 400);
 
+                // Eerst een poging reserveren. Is er geen poging meer vrij, dan wordt de
+                // code niet eens gecontroleerd (ook niet bij een juiste code).
+                const accessToken = await getAccessToken(env.SA_CLIENT_EMAIL, env.SA_PRIVATE_KEY);
+                const bucket = Math.floor(Date.now() / GUARD_WINDOW_MS);
+                const ip = request.headers.get('CF-Connecting-IP') || 'onbekend';
+                const ids = ['ip-' + await sha256Hex(ip) + '-' + bucket, 'total-' + bucket];
+                const [ipCount, totalCount] = await bumpAttempts(env.FIREBASE_PROJECT_ID, accessToken, ids, 1);
+                if (ipCount > MAX_TRIES_PER_IP || totalCount > MAX_TRIES_TOTAL) {
+                    return json({ error: 'Te veel pogingen. Probeer het later opnieuw of log in met Google.' }, 429);
+                }
+
                 const valid = await verifyTOTP(env.TOTP_SECRET, code);
                 if (!valid) return json({ error: 'Verkeerde code' }, 401);
+
+                await bumpAttempts(env.FIREBASE_PROJECT_ID, accessToken, ids, -1); // geslaagd: telt niet mee
 
                 const customToken = await createCustomToken(
                     TOTP_UID,
@@ -247,49 +228,6 @@ export default {
                     { email: env.ALLOWED_EMAIL }
                 );
                 return json({ customToken });
-            }
-
-            // ── POST /create-nonce ── desktop start van de QR-flow ──────────
-            if (url.pathname === '/create-nonce' && request.method === 'POST') {
-                const nonce = crypto.randomUUID();
-                const accessToken = await getAccessToken(env.SA_CLIENT_EMAIL, env.SA_PRIVATE_KEY);
-
-                await firestorePatch(env.FIREBASE_PROJECT_ID, 'loginRequests', nonce, {
-                    status:    { stringValue: 'pending' },
-                    createdAt: { integerValue: String(Date.now()) },
-                    expiresAt: { integerValue: String(Date.now() + NONCE_TTL_MS) },
-                }, accessToken);
-
-                return json({ nonce });
-            }
-
-            // ── POST /approve ── telefoon keurt login goed ───────────────────
-            if (url.pathname === '/approve' && request.method === 'POST') {
-                const { nonce, idToken } = await request.json();
-                if (!nonce || !idToken) return json({ error: 'nonce en idToken vereist' }, 400);
-
-                // Verifieer de identiteit van de telefoon
-                const decoded = await verifyIdToken(idToken, env.FIREBASE_PROJECT_ID);
-                if (decoded.email !== env.ALLOWED_EMAIL) {
-                    return json({ error: 'Niet geautoriseerd' }, 403);
-                }
-
-                // Genereer custom token voor de desktop
-                const customToken = await createCustomToken(
-                    decoded.uid,
-                    env.SA_CLIENT_EMAIL,
-                    env.SA_PRIVATE_KEY
-                );
-
-                // Schrijf approved-status naar Firestore → desktop listener pakt dit op
-                const accessToken = await getAccessToken(env.SA_CLIENT_EMAIL, env.SA_PRIVATE_KEY);
-                await firestorePatch(env.FIREBASE_PROJECT_ID, 'loginRequests', nonce, {
-                    status:      { stringValue: 'approved' },
-                    customToken: { stringValue: customToken },
-                    approvedAt:  { integerValue: String(Date.now()) },
-                }, accessToken);
-
-                return json({ ok: true });
             }
 
             return json({ error: 'Niet gevonden' }, 404);
