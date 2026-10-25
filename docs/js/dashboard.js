@@ -601,6 +601,7 @@
                 var isChecked = this.classList.contains('checked');
                 toggleHabit(habitName, date, !isChecked);
                 this.classList.toggle('checked');
+                renderTodayCard();
             });
         });
 
@@ -621,6 +622,8 @@
                 moveHabit(this.dataset.name, parseInt(this.dataset.dir));
             });
         });
+
+        renderTodayCard();
     }
 
     function moveHabit(name, direction) {
@@ -640,11 +643,50 @@
     function toggleHabit(habitName, date, value) {
         if (!habitData[date]) habitData[date] = {};
         habitData[date][habitName] = value;
+        if (!allHabitData[date]) allHabitData[date] = {};
+        allHabitData[date][habitName] = value;
 
         var update = {};
         update[habitName] = value;
         db.collection('habitData').doc(date).set(update, { merge: true });
     }
+
+    // ─── HABITS: "VANDAAG"-KAART (grote tikknoppen, enkel op mobiel zichtbaar) ──
+    function renderTodayCard() {
+        var box = document.getElementById('habitToday');
+        if (!box) return;
+        var todayStr = getHabitDate(new Date());
+        var weekDays = getWeekDays(0).map(formatDate);
+        var list = habits.filter(function (h) {
+            return !h.archived && (!h.createdDate || h.createdDate <= todayStr);
+        });
+        saveDashCache('habitActive', list.length);
+        if (!list.length) { box.innerHTML = ''; return; }
+
+        var tiles = list.map(function (h) {
+            var done = !!(allHabitData[todayStr] && allHabitData[todayStr][h.name]);
+            var progress = '';
+            if (h.type === 'weekly') {
+                var target = h.target || 3;
+                var n = weekDays.filter(function (ds) { return allHabitData[ds] && allHabitData[ds][h.name]; }).length;
+                progress = '<span class="today-progress' + (n >= target ? ' met' : '') + '">' + n + '/' + target + '</span>';
+            }
+            return '<button type="button" class="today-habit' + (done ? ' done' : '') + '" data-habit="' + escapeHtml(h.name) + '">' +
+                '<span class="today-check"><i class="fas fa-check"></i></span>' +
+                '<span class="today-name">' + escapeHtml(h.name) + '</span>' + progress + '</button>';
+        }).join('');
+        box.innerHTML = '<div class="today-title">Vandaag</div><div class="today-grid">' + tiles + '</div>';
+    }
+
+    document.getElementById('habitToday').addEventListener('click', function (e) {
+        var tile = e.target.closest('.today-habit');
+        if (!tile) return;
+        var todayStr = getHabitDate(new Date());
+        var name = tile.dataset.habit;
+        var isDone = !!(allHabitData[todayStr] && allHabitData[todayStr][name]);
+        toggleHabit(name, todayStr, !isDone);
+        renderHabits();   // ververst ook de weektabel en deze kaart
+    });
 
     // Streaks
     function renderStreaks() {
@@ -1525,7 +1567,8 @@
             result.push({
                 summary: details.item.summary,
                 start: s.isDate ? { date: s.toString() } : { dateTime: s.toJSDate().toISOString() },
-                _t: s.toJSDate().getTime()
+                _t: s.toJSDate().getTime(),
+                _e: e.toJSDate().getTime()
             });
         }
 
@@ -1579,7 +1622,42 @@
             });
     }
 
+    // ─── VOLGENDE AFSPRAAK (aftelling in de agendastrook) ────────────
+    var calendarEvents = [];
+
+    function nextEventChip(events) {
+        var now = Date.now();
+        var DAY = 24 * 60 * 60 * 1000;
+        for (var i = 0; i < events.length; i++) {
+            var ev = events[i];
+            if (!ev.start || !ev.start.dateTime) continue;            // enkel afspraken met een tijd
+            var s = ev._t;
+            var e = ev._e || (s + 60 * 60 * 1000);
+            if (e <= now) continue;                                    // al voorbij
+            if (s - now > DAY) return '';                              // gesorteerd: de rest is nog later
+            var when;
+            if (s <= now) {
+                when = 'Nu bezig';
+            } else {
+                var mins = Math.ceil((s - now) / 60000);
+                if (mins <= 1) when = 'Zo meteen';
+                else if (mins < 60) when = 'Over ' + mins + 'm';
+                else when = 'Over ' + Math.floor(mins / 60) + 'u' + (mins % 60 ? ' ' + (mins % 60) + 'm' : '');
+            }
+            return '<span class="cal-next"><i class="fas fa-hourglass-half"></i>' +
+                '<span class="cal-next-when">' + when + '</span>' +
+                '<span class="cal-next-title">' + escapeHtml(ev.summary || 'Afspraak') + '</span></span>';
+        }
+        return '';
+    }
+
+    // Aftelling elke 30 s bijwerken zolang het dashboard zichtbaar is
+    setInterval(function () {
+        if (calendarEvents.length && !document.hidden) renderCalendarStrip(calendarEvents);
+    }, 30000);
+
     function renderCalendarStrip(events) {
+        calendarEvents = events;
         var el = document.getElementById('calendarStrip');
         if (!events.length) {
             el.innerHTML = '<i class="fas fa-calendar-days" style="color:var(--accent)"></i>' +
@@ -1589,6 +1667,7 @@
         var today = new Date(); today.setHours(0, 0, 0, 0);
         var tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
         var html = '<i class="fas fa-calendar-days" style="color:var(--accent);margin-right:0.4rem;flex-shrink:0"></i>';
+        html += nextEventChip(events);
         var shown = 0;
         var prevDay = null;
         events.forEach(function (ev) {

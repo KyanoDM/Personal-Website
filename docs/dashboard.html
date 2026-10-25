@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/dashboard.css?v=11">
+    <link rel="stylesheet" href="css/dashboard.css?v=12">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="img/logo.png" type="image/png">
 </head>
@@ -57,6 +57,7 @@
                         </div>
                     </div>
 
+                    <div class="habit-today" id="habitToday"></div>
                     <div class="habit-grid" id="habitGrid"></div>
 
                     <div class="habit-actions">
@@ -371,6 +372,12 @@
             el('weekLabel').textContent = days[0].getDate() + '/' + (days[0].getMonth() + 1) + ' - ' + days[6].getDate() + '/' + (days[6].getMonth() + 1);
             el('habitGrid').innerHTML = '<table><thead><tr>' + thead + '</tr></thead><tbody>' + rep(count('dash:habitRows', 3, 10), habitRow) + '</tbody></table>';
 
+            // "Vandaag"-kaart (enkel zichtbaar op mobiel): aantal tegels van de vorige keer
+            el('habitToday').innerHTML = '<div class="today-title">Vandaag</div><div class="today-grid">' +
+                rep(count('dash:habitActive', 3, 12), function () {
+                    return '<div class="today-habit sk-tile"><span class="today-check sk"></span><span class="today-name">' + line('70%') + '</span></div>';
+                }) + '</div>';
+
             // Tellers: aantal van de vorige keer (eerste keer: 4)
             var tints = ['129, 140, 248', '52, 211, 153', '251, 191, 36', '244, 114, 182'];
             if (count('dash:timerCount', 4, 4) >= 4) el('addTimerBtn').style.display = 'none';
@@ -393,8 +400,17 @@
 
             // Agenda: aantal placeholders van de vorige keer (eerste keer: 3)
             var calN = 3;
-            try { var calCached = JSON.parse(get('dash:calendar')); if (Array.isArray(calCached)) calN = Math.min(calCached.length, 4); } catch (e) { }
+            var nextSoon = false;
+            try {
+                var calCached = JSON.parse(get('dash:calendar'));
+                if (Array.isArray(calCached)) {
+                    calN = Math.min(calCached.length, 4);
+                    var nowMs = Date.now();
+                    nextSoon = calCached.some(function (e) { return e.start && e.start.dateTime && (e._e || e._t + 36e5) > nowMs && e._t - nowMs <= 864e5; });
+                }
+            } catch (e) { }
             el('calendarStrip').innerHTML = '<i class="fas fa-calendar-days" style="color:var(--accent);margin-right:0.4rem;flex-shrink:0"></i>' +
+                (nextSoon ? '<span class="cal-next sk"><i class="fas fa-hourglass-half" style="visibility:hidden"></i><span class="cal-next-when" style="visibility:hidden">Over 2u 15m</span><span class="cal-next-title" style="visibility:hidden">Afspraak titel</span></span>' : '') +
                 rep(calN, function () {
                     return '<span class="cal-event sk"><span class="cal-event-day" style="visibility:hidden">Morgen</span>' +
                         '<span class="cal-event-time" style="visibility:hidden">00:00</span>' +
@@ -421,7 +437,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
-    <script src="js/dashboard.js?v=19"></script>
+    <script src="js/dashboard.js?v=20"></script>
 </body>
 
 </html>

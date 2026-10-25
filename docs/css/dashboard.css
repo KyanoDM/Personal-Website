@@ -1837,3 +1837,153 @@ html {
         visibility: hidden;
     }
 }
+
+/* ─── VOLGENDE AFSPRAAK (aftelling) ───────────────────────────── */
+
+.cal-next {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+    max-width: 280px;
+    padding: 0.18rem 0.6rem;
+    border-radius: 6px;
+    background: var(--accent-glow);
+    border: 1px solid rgba(99, 102, 241, 0.45);
+    overflow: hidden;
+    font-size: 0.72rem;
+}
+
+.cal-next i {
+    color: var(--accent);
+    font-size: 0.65rem;
+}
+
+.cal-next-when {
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+.cal-next-title {
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cal-next.sk {
+    border-color: transparent;
+}
+
+/* ─── HABITS: "VANDAAG"-KAART (alleen mobiel) ─────────────────── */
+
+.habit-today {
+    display: none;
+    margin-bottom: 0.9rem;
+}
+
+.today-title {
+    margin-bottom: 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+
+.today-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.today-habit {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 46px;
+    padding: 0.5rem 0.65rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.today-habit:active {
+    transform: scale(0.97);
+}
+
+.today-habit:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+}
+
+.today-check {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    font-size: 0.65rem;
+    color: transparent;
+    transition: all 0.15s;
+}
+
+.today-habit.done {
+    background: var(--green-glow);
+    border-color: rgba(16, 185, 129, 0.45);
+}
+
+.today-habit.done .today-check {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+    box-shadow: 0 0 10px var(--green-glow);
+}
+
+.today-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.today-progress {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    color: var(--text-dim);
+}
+
+.today-progress.met {
+    color: var(--green);
+}
+
+.today-habit.sk-tile {
+    pointer-events: none;
+}
+
+.today-check.sk {
+    border-color: transparent;
+}
+
+@media (max-width: 640px) {
+    .habit-today {
+        display: block;
+    }
+
+    .cal-next {
+        max-width: none;
+        width: 100%;
+        padding: 0.35rem 0.6rem;
+    }
+}
