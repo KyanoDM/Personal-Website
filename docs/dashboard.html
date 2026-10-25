@@ -406,7 +406,7 @@
                 if (Array.isArray(calCached)) {
                     calN = Math.min(calCached.length, 4);
                     var nowMs = Date.now();
-                    nextSoon = calCached.some(function (e) { return e.start && e.start.dateTime && (e._e || e._t + 36e5) > nowMs && e._t - nowMs <= 864e5; });
+                    nextSoon = calCached.some(function (e) { return e.start && e.start.dateTime && (e._e || e._t + 36e5) > nowMs && e._t - nowMs <= 36e5; });
                 }
             } catch (e) { }
             el('calendarStrip').innerHTML = '<i class="fas fa-calendar-days" style="color:var(--accent);margin-right:0.4rem;flex-shrink:0"></i>' +
@@ -437,7 +437,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
-    <script src="js/dashboard.js?v=20"></script>
+    <script src="js/dashboard.js?v=21"></script>
 </body>
 
 </html>

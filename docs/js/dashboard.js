@@ -1627,14 +1627,14 @@
 
     function nextEventChip(events) {
         var now = Date.now();
-        var DAY = 24 * 60 * 60 * 1000;
+        var SOON = 60 * 60 * 1000;                                     // pas het laatste uur ervoor
         for (var i = 0; i < events.length; i++) {
             var ev = events[i];
             if (!ev.start || !ev.start.dateTime) continue;            // enkel afspraken met een tijd
             var s = ev._t;
             var e = ev._e || (s + 60 * 60 * 1000);
             if (e <= now) continue;                                    // al voorbij
-            if (s - now > DAY) return '';                              // gesorteerd: de rest is nog later
+            if (s - now > SOON) return '';                             // gesorteerd: de rest is nog later
             var when;
             if (s <= now) {
                 when = 'Nu bezig';
