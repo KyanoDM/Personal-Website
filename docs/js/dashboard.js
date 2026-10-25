@@ -248,7 +248,18 @@
 
     document.getElementById('wakePc').addEventListener('click', function () {
         var btn = this;
-        if (btn.style.color === 'rgb(16, 185, 129)') return;   // al groen/online
+        if (btn.disabled) return;
+        if (btn.style.color === 'rgb(16, 185, 129)') {
+            // Staat op groen, maar die status kan verouderd zijn: eerst controleren of de pc echt aan is
+            checkStatus()
+                .then(function (state) { if (state === 'off') startWake(btn); else setPcState(state); })
+                .catch(function () { setPcState('down'); });
+            return;
+        }
+        startWake(btn);
+    });
+
+    function startWake(btn) {
         setPcState('wait');
         btn.disabled = true;
         _wakePolling = true;
@@ -258,43 +269,92 @@
             .then(function (r) {
                 if (!r.ok) throw new Error('wake geweigerd (' + r.status + ')');
                 var tries = 0;
-                var iv = setInterval(function () {
+                var iv;
+                var finish = function (state) { clearInterval(iv); _wakePolling = false; btn.disabled = false; setPcState(state); };
+                iv = setInterval(function () {
                     tries++;
                     checkStatus()
                         .then(function (state) {
-                            if (state === 'on')   { clearInterval(iv); _wakePolling = false; btn.disabled = false; setPcState('on'); }
-                            else if (tries >= 20) { clearInterval(iv); _wakePolling = false; btn.disabled = false; setPcState('off'); }
+                            if (state === 'on') finish('on');
+                            else if (tries >= 20) finish('off');
                         })
-                        .catch(function () {});
+                        .catch(function () { if (tries >= 20) finish('down'); });
                 }, 3000);   // ~20 pogingen × 3s ≈ 60s
             })
             .catch(function (err) {
                 _wakePolling = false; btn.disabled = false; setPcState('down');
                 console.log('Wake fout:', err.message);
             });
+    }
+
+    // Status actueel houden: bij terugkeren naar het dashboard en elke 30 s terwijl het zichtbaar is
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden && auth.currentUser && !_wakePolling) refreshPcStatus();
     });
+    setInterval(function () {
+        if (!document.hidden && auth.currentUser && !_wakePolling) refreshPcStatus();
+    }, 30000);
 
     // ─── SHAKE MODE (schud gsm = pc wekken, enkel actief terwijl deze tab open/zichtbaar is) ──
-    var SHAKE_THRESHOLD = 18;   // m/s² gecombineerd verschil tussen 2 metingen
-    var SHAKE_COOLDOWN  = 4000; // ms tussen triggers
-    var _lastShakeTime  = 0;
-    var _lastAccel      = null;
-    var _shakeActive    = false;
+    // Een "slag" = lineaire versnelling (zonder zwaartekracht) boven SHAKE_PEAK. Drie slagen binnen
+    // SHAKE_WINDOW telt als schudden. Onafhankelijk van hoe vaak de sensor meet.
+    var SHAKE_PEAK     = 12;    // m/s²
+    var SHAKE_PEAKS    = 3;
+    var SHAKE_WINDOW   = 1200;  // ms
+    var SHAKE_MIN_GAP  = 90;    // ms tussen twee slagen
+    var SHAKE_COOLDOWN = 4000;  // ms tussen triggers
+    var _lastShakeTime = 0;
+    var _shakePeaks    = [];
+    var _shakeAbove    = false;
+    var _gravity       = null;
+    var _lastMotionAt  = 0;
+    var _shakeActive   = false;
+
+    // Versnelling zonder zwaartekracht: de sensor zelf, of anders de zwaartekracht eruit filteren
+    function linearAcceleration(e, now) {
+        var a = e.acceleration;
+        if (a && a.x !== null && a.x !== undefined) return a;
+        var g = e.accelerationIncludingGravity;
+        if (!g || g.x === null || g.x === undefined) return null;
+        if (!_gravity) {
+            _gravity = { x: g.x, y: g.y, z: g.z };
+        } else {
+            var k = Math.exp(-((now - _lastMotionAt) / 1000) / 0.5);
+            _gravity = { x: k * _gravity.x + (1 - k) * g.x, y: k * _gravity.y + (1 - k) * g.y, z: k * _gravity.z + (1 - k) * g.z };
+        }
+        return { x: g.x - _gravity.x, y: g.y - _gravity.y, z: g.z - _gravity.z };
+    }
 
     function handleMotion(e) {
-        var acc = e.accelerationIncludingGravity || e.acceleration;
-        if (!acc || acc.x === null || acc.x === undefined) return;
-        if (_lastAccel) {
-            var delta = Math.abs(acc.x - _lastAccel.x) + Math.abs(acc.y - _lastAccel.y) + Math.abs(acc.z - _lastAccel.z);
-            if (delta > SHAKE_THRESHOLD) {
-                var now = Date.now();
-                if (now - _lastShakeTime > SHAKE_COOLDOWN) {
-                    _lastShakeTime = now;
-                    document.getElementById('wakePc').click();
-                }
-            }
+        var now = Date.now();
+        var a = linearAcceleration(e, now);
+        _lastMotionAt = now;
+        if (!a) return;
+        var mag = Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
+
+        if (mag > SHAKE_PEAK && !_shakeAbove) {
+            _shakeAbove = true;
+            var last = _shakePeaks[_shakePeaks.length - 1];
+            if (!last || now - last >= SHAKE_MIN_GAP) _shakePeaks.push(now);
+        } else if (mag < SHAKE_PEAK * 0.5) {
+            _shakeAbove = false;
         }
-        _lastAccel = { x: acc.x, y: acc.y, z: acc.z };
+
+        _shakePeaks = _shakePeaks.filter(function (t) { return now - t <= SHAKE_WINDOW; });
+        if (_shakePeaks.length >= SHAKE_PEAKS && now - _lastShakeTime > SHAKE_COOLDOWN) {
+            _lastShakeTime = now;
+            _shakePeaks = [];
+            onShake();
+        }
+    }
+
+    function onShake() {
+        if (navigator.vibrate) navigator.vibrate(80);
+        setShakeStatus('Geschud, pc wordt gewekt...');
+        setTimeout(function () {
+            if (_shakeActive) setShakeStatus('Actief — schud je telefoon om je pc te wekken.');
+        }, 4000);
+        document.getElementById('wakePc').click();
     }
 
     function startShakeListener() {
@@ -306,7 +366,9 @@
     function stopShakeListener() {
         window.removeEventListener('devicemotion', handleMotion);
         _shakeActive = false;
-        _lastAccel = null;
+        _shakePeaks = [];
+        _shakeAbove = false;
+        _gravity = null;
     }
 
     function setShakeStatus(msg) {
@@ -376,13 +438,25 @@
                     setShakeStatus('Zet aan om opnieuw toestemming te geven.');
                 }
             }).catch(function () {
-                setShakeStatus('Zet aan om opnieuw toestemming te geven.');
+                armShakePermissionOnTap();
             });
         } else {
             startShakeListener();
             setShakeStatus('Actief — schud je telefoon om je pc te wekken.');
         }
     })();
+
+    // iOS vraagt toestemming voor bewegingssensoren alleen na een tik: bij de eerstvolgende tik alsnog vragen
+    function armShakePermissionOnTap() {
+        setShakeStatus('Tik ergens op het scherm om schudden te activeren.');
+        var arm = function () {
+            document.removeEventListener('click', arm, true);
+            document.removeEventListener('touchend', arm, true);
+            if (localStorage.getItem('shakeModeEnabled') === 'true') enableShakeMode(false);
+        };
+        document.addEventListener('click', arm, true);
+        document.addEventListener('touchend', arm, true);
+    }
 
     // ─── CONFIG (batch read: habits) ────
 
