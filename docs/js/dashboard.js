@@ -1391,73 +1391,90 @@
         el.innerHTML = html;
     }
 
-    // ─── CALENDAR ──────────────────────────────────────────────────
-    var gcalToken = null;
+    // ─── CALENDAR (geheim iCal-adres, via Cloudflare Worker) ─────────
+    var CAL_URL = 'https://notion-todo.kyanodemaertelaere.workers.dev/calendar';
+
+    function setCalendarMessage(msg) {
+        document.getElementById('calendarStrip').innerHTML =
+            '<i class="fas fa-calendar-days"></i>' +
+            '<span class="text-dim" style="font-size:0.72rem;margin-left:0.4rem">' + msg + '</span>';
+    }
 
     function initCalendar() {
-        var token = localStorage.getItem('gcalToken');
-        if (token) {
-            gcalToken = token;
-            loadCalendarEvents(token);
-        }
-        bindCalConnectBtn();
+        localStorage.removeItem('gcalToken');
+        loadCalendarEvents();
+        setInterval(loadCalendarEvents, 15 * 60 * 1000);
     }
 
-    function bindCalConnectBtn() {
-        var btn = document.getElementById('calConnectBtn');
-        if (btn) {
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                connectGoogleCalendar();
+    // Zet iCal-tekst om naar de komende afspraken (incl. terugkerende), vorm: {summary, start:{dateTime|date}}
+    function parseIcsEvents(ics, from, to) {
+        var root = new ICAL.Component(ICAL.parse(ics));
+        root.getAllSubcomponents('vtimezone').forEach(function (tz) {
+            ICAL.TimezoneService.register(tz);
+        });
+
+        var masters = {};
+        var exceptions = [];
+        root.getAllSubcomponents('vevent').forEach(function (c) {
+            var ev = new ICAL.Event(c);
+            if (ev.isRecurrenceException()) exceptions.push(ev);
+            else masters[ev.uid] = ev;
+        });
+        exceptions.forEach(function (ex) {
+            if (masters[ex.uid]) masters[ex.uid].relateException(ex);
+        });
+
+        var result = [];
+        function add(details) {
+            if (details.item.component.getFirstPropertyValue('status') === 'CANCELLED') return;
+            var s = details.startDate;
+            var e = details.endDate || s;
+            if (e.toJSDate() <= from || s.toJSDate() >= to) return;
+            result.push({
+                summary: details.item.summary,
+                start: s.isDate ? { date: s.toString() } : { dateTime: s.toJSDate().toISOString() },
+                _t: s.toJSDate().getTime()
             });
         }
-    }
 
-    function connectGoogleCalendar() {
-        var provider = new firebase.auth.GoogleAuthProvider();
-        provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
-        auth.signInWithPopup(provider).then(function (result) {
-            var token = result.credential ? result.credential.accessToken : null;
-            if (token) {
-                gcalToken = token;
-                localStorage.setItem('gcalToken', token);
-                loadCalendarEvents(token);
+        Object.keys(masters).forEach(function (uid) {
+            var ev = masters[uid];
+            if (!ev.isRecurring()) {
+                add({ item: ev, startDate: ev.startDate, endDate: ev.endDate });
+                return;
             }
-        }).catch(function (err) { console.log('Calendar auth error:', err); });
+            var it = ev.iterator();
+            var next;
+            var guard = 0;
+            while ((next = it.next()) && guard++ < 5000) {
+                if (next.toJSDate() >= to) break;
+                add(ev.getOccurrenceDetails(next));
+            }
+        });
+
+        result.sort(function (a, b) { return a._t - b._t; });
+        return result.slice(0, 20);
     }
 
-    function loadCalendarEvents(token) {
-        var now = new Date();
-        var end = new Date(now);
-        end.setDate(end.getDate() + 7);
-        fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?' +
-            'timeMin=' + encodeURIComponent(now.toISOString()) +
-            '&timeMax=' + encodeURIComponent(end.toISOString()) +
-            '&orderBy=startTime&singleEvents=true&maxResults=20',
-            { headers: { 'Authorization': 'Bearer ' + token } })
+    function loadCalendarEvents() {
+        pcToken()
+            .then(function (t) { return fetch(CAL_URL, { headers: { Authorization: 'Bearer ' + t } }); })
             .then(function (r) {
-                if (r.status === 401 || r.status === 403) {
-                    localStorage.removeItem('gcalToken');
-                    gcalToken = null;
-                    var el = document.getElementById('calendarStrip');
-                    if (r.status === 403) {
-                        el.innerHTML = '<i class="fas fa-calendar-days"></i>' +
-                            '<span class="text-dim" style="font-size:0.72rem;margin-left:0.4rem">Calendar API niet ingeschakeld</span>' +
-                            ' <a href="#" id="calConnectBtn" class="cal-connect-btn" style="font-size:0.72rem;margin-left:0.3rem">Opnieuw</a>';
-                    } else {
-                        el.innerHTML =
-                            '<i class="fas fa-calendar-days"></i> <a href="#" id="calConnectBtn" class="cal-connect-btn">Kalender verbinden</a>';
-                    }
-                    bindCalConnectBtn();
-                    return null;
-                }
-                return r.json();
+                if (r.status === 503) { setCalendarMessage('Kalender nog niet gekoppeld'); return null; }
+                if (!r.ok) throw new Error('kalender ' + r.status);
+                return r.text();
             })
-            .then(function (data) {
-                if (!data) return;
-                renderCalendarStrip(data.items || []);
+            .then(function (ics) {
+                if (!ics) return;
+                var now = new Date();
+                var end = new Date(now);
+                end.setDate(end.getDate() + 7);
+                renderCalendarStrip(parseIcsEvents(ics, now, end));
             })
-            .catch(function (err) { console.log('Calendar fetch error:', err); });
+            .catch(function (err) {
+                console.log('Calendar fetch error:', err);
+                setCalendarMessage('Kalender niet bereikbaar');
+            });
     }
 
     function renderCalendarStrip(events) {
