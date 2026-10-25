@@ -90,6 +90,23 @@
         });
     }
 
+    // Laatst geziene data bewaren, zodat het dashboard bij het openen meteen gevuld is
+    function saveDashCache(key, value) {
+        try { localStorage.setItem('dash:' + key, typeof value === 'string' ? value : JSON.stringify(value)); } catch (e) { }
+    }
+
+    function readDashCache(key) {
+        try { return JSON.parse(localStorage.getItem('dash:' + key)); } catch (e) { return null; }
+    }
+
+    function clearDashCache() {
+        try {
+            Object.keys(localStorage).forEach(function (k) {
+                if (k.indexOf('dash:') === 0) localStorage.removeItem(k);
+            });
+        } catch (e) { }
+    }
+
     function extractUrl(text) {
         if (!text) return null;
         var m = String(text).match(/https?:\/\/[^\s]+/i);
@@ -183,11 +200,13 @@
             refreshPcStatus();
         } else {
             if (user) auth.signOut();
+            clearDashCache();
             window.location.href = 'index.html';
         }
     });
 
     document.getElementById('signOut').addEventListener('click', function () {
+        clearDashCache();
         auth.signOut().then(function () {
             window.location.href = 'index.html';
         });
@@ -498,6 +517,7 @@
 
         html += '</tbody></table>';
         document.getElementById('habitGrid').innerHTML = html;
+        if (currentWeekOffset === 0) saveDashCache('habitRows', visibleHabits.length);
 
         // Click handlers
         document.querySelectorAll('.habit-check').forEach(function (el) {
@@ -586,6 +606,7 @@
     var MONTH_NAMES_SHORT = ['Jan', 'Feb', 'Mrt', 'Apr', 'Mei', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'];
 
     function renderHeatmap(allData, start, end) {
+        document.getElementById('heatmap').classList.remove('sk');
         var heatmapHabits = habits;
         if (heatmapHabits.length === 0) {
             document.getElementById('heatmap').innerHTML = '';
@@ -801,6 +822,7 @@
     }
 
     function renderWeightChart(scalePoints, trendPoints) {
+        document.getElementById('weightChartBox').classList.remove('sk');
         var ctx = document.getElementById('weightChart').getContext('2d');
 
         if (weightChart) weightChart.destroy();
@@ -980,13 +1002,20 @@
         return n.toString();
     }
 
+    var ytStatsSkeleton = document.getElementById('ytStats').innerHTML;
+    var ytVideosSkeleton = document.getElementById('ytVideos').innerHTML;
+
     function loadYouTubeStats() {
         var channelId = getActiveChannel().id;
         if (!channelId) return;
         fetch(YT_BASE + 'channels?part=statistics,contentDetails,snippet&id=' + channelId + '&key=' + YT_API_KEY)
             .then(function (r) { return r.json(); })
             .then(function (data) {
-                if (!data.items || !data.items.length) return;
+                if (!data.items || !data.items.length) {
+                    document.getElementById('ytStats').innerHTML = '';
+                    document.getElementById('ytVideos').innerHTML = '';
+                    return;
+                }
                 var ch = data.items[0];
                 var s = ch.statistics;
 
@@ -1005,6 +1034,7 @@
             })
             .catch(function () {
                 document.getElementById('ytStats').innerHTML = '<span style="color:#ef4444;font-size:0.8rem">Kon stats niet laden.</span>';
+                document.getElementById('ytVideos').innerHTML = '';
             });
     }
 
@@ -1012,7 +1042,7 @@
         fetch(YT_BASE + 'playlistItems?part=snippet&maxResults=5&playlistId=' + uploadsId + '&key=' + YT_API_KEY)
             .then(function (r) { return r.json(); })
             .then(function (data) {
-                if (!data.items) return;
+                if (!data.items) { document.getElementById('ytVideos').innerHTML = ''; return; }
                 var ids = data.items.map(function (i) { return i.snippet.resourceId.videoId; });
                 var items = data.items;
                 fetch(YT_BASE + 'videos?part=statistics,snippet&id=' + ids.join(',') + '&key=' + YT_API_KEY)
@@ -1074,8 +1104,8 @@
     }
 
     document.getElementById('refreshYT').addEventListener('click', function () {
-        document.getElementById('ytStats').innerHTML = '<span class="text-dim" style="font-size:0.8rem">Laden...</span>';
-        document.getElementById('ytVideos').innerHTML = '';
+        document.getElementById('ytStats').innerHTML = ytStatsSkeleton;
+        document.getElementById('ytVideos').innerHTML = ytVideosSkeleton;
         loadYouTubeStats();
     });
 
@@ -1311,8 +1341,6 @@
 
     function renderGreeting() {
         var now = new Date();
-        var hour = now.getHours();
-        var day = now.getDay();
         var month = now.getMonth() + 1;
         var date = now.getDate();
         var el = document.getElementById('greetingText');
@@ -1323,18 +1351,7 @@
             return;
         }
 
-        var prefix;
-        if (hour >= 5 && hour < 12) prefix = 'Goedemorgen';
-        else if (hour >= 12 && hour < 18) prefix = 'Goedemiddag';
-        else if (hour >= 18 && hour < 23) prefix = 'Goedenavond';
-        else prefix = 'Goede nacht';
-
-        var extra = '';
-        if (day === 5) extra = ' Fijne vrijdag! 🎉';
-        else if (day === 6) extra = ' Geniet van je zaterdag! 😎';
-        else if (day === 0) extra = ' Geniet van je zondag! ☀️';
-
-        el.textContent = prefix + ', Kyano.' + extra;
+        el.textContent = window.dashGreeting(now);
     }
 
     // ─── WEATHER ──────────────────────────────────────────────────
@@ -1402,6 +1419,7 @@
 
     function initCalendar() {
         localStorage.removeItem('gcalToken');
+        showCachedCalendar();
         loadCalendarEvents();
         setInterval(loadCalendarEvents, 15 * 60 * 1000);
     }
@@ -1456,6 +1474,14 @@
         return result.slice(0, 20);
     }
 
+    function showCachedCalendar() {
+        var cached = readDashCache('calendar');
+        if (!Array.isArray(cached)) return;
+        var cutoff = Date.now() - 3 * 60 * 60 * 1000;
+        var upcoming = cached.filter(function (e) { return e._t >= cutoff; });
+        if (upcoming.length) renderCalendarStrip(upcoming);
+    }
+
     function loadCalendarEvents() {
         pcToken()
             .then(function (t) { return fetch(CAL_URL, { headers: { Authorization: 'Bearer ' + t } }); })
@@ -1469,7 +1495,9 @@
                 var now = new Date();
                 var end = new Date(now);
                 end.setDate(end.getDate() + 7);
-                renderCalendarStrip(parseIcsEvents(ics, now, end));
+                var events = parseIcsEvents(ics, now, end);
+                saveDashCache('calendar', events);
+                renderCalendarStrip(events);
             })
             .catch(function (err) {
                 console.log('Calendar fetch error:', err);
@@ -1572,10 +1600,12 @@
         if (!grid) return;
         _timerRenderedDay = formatDate(new Date());
         document.getElementById('addTimerBtn').style.display = timers.length >= TIMER_MAX ? 'none' : '';
+        saveDashCache('timerCount', timers.length);
 
         if (!timers.length) {
             grid.innerHTML = '<button type="button" class="timer-empty" id="timerEmpty">' +
                 '<i class="fas fa-plus"></i>Voeg je eerste teller toe</button>';
+            rememberTimerHeight(grid);
             return;
         }
 
@@ -1605,6 +1635,14 @@
                 breakdown +
                 '</button>';
         }).join('');
+        rememberTimerHeight(grid);
+    }
+
+    // Hoogte onthouden: het skelet reserveert de volgende keer precies evenveel ruimte
+    function rememberTimerHeight(grid) {
+        grid.style.height = '';
+        grid.style.overflow = '';
+        saveDashCache('timerH', Math.round(grid.getBoundingClientRect().height));
     }
 
     function openTimerModal(id) {
@@ -1668,8 +1706,15 @@
             .then(function (t) {
                 return fetch(TODO_BASE + '/todos', { headers: { Authorization: 'Bearer ' + t } });
             })
-            .then(function (r) { return r.json(); })
-            .then(function (data) { renderTodos(data.todos || []); })
+            .then(function (r) {
+                if (!r.ok) throw new Error('todos ' + r.status);
+                return r.json();
+            })
+            .then(function (data) {
+                var todos = data.todos || [];
+                saveDashCache('todos', todos.map(function (t) { return { id: t.id, title: t.title }; }));
+                renderTodos(todos);
+            })
             .catch(function (err) { console.log('Todo laden mislukt:', err); });
 
         if (!_todoPollTimer) {
@@ -1734,6 +1779,9 @@
     document.getElementById('clearDoneTodos').addEventListener('click', function () {
         loadTodos();
     });
+
+    var cachedTodos = readDashCache('todos');
+    if (Array.isArray(cachedTodos)) renderTodos(cachedTodos);
 
     // ─── GYM PROGRESS (from Gym-Progress-App Firebase) ────────────
     var IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);

@@ -499,6 +499,7 @@ tr:hover .habit-move-group { opacity: 0.7; }
     display: grid;
     grid-template-rows: 1fr;
     margin-bottom: 0.35rem;
+    min-height: 14.9px;
 }
 
 .heatmap-months span {
@@ -956,8 +957,9 @@ input::placeholder,
     border: 2px solid var(--border);
     flex-shrink: 0;
 }
-.channel-avatar[src=""] {
-    display: none;
+.channel-avatar[src^="data:"] {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: transparent;
 }
 .channel-header-info {
     min-width: 0;
@@ -987,6 +989,7 @@ input::placeholder,
     outline: none;
     cursor: pointer;
     max-width: 130px;
+    min-width: 100px;
 }
 .channel-select:focus {
     border-color: var(--accent);
@@ -1721,4 +1724,61 @@ input::placeholder,
 .timer-delete:hover {
     color: #ef4444;
     border-color: #ef4444;
+}
+
+/* ─── SKELETONS (laad-placeholders met dezelfde afmetingen als de echte inhoud) ─── */
+
+html {
+    scrollbar-gutter: stable;
+}
+
+@keyframes sk-shimmer {
+    to { transform: translateX(100%); }
+}
+
+.sk {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+}
+
+.sk::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+    animation: sk-shimmer 1.4s ease-in-out infinite;
+}
+
+/* Tekstregel: neemt de regelhoogte van de omliggende tekst over (via &nbsp;) */
+.sk-text {
+    display: inline-block;
+    vertical-align: top;
+    max-width: 100%;
+    color: transparent;
+    user-select: none;
+}
+
+.habit-grid table .sk {
+    background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.habit-check.sk {
+    display: flex;
+}
+
+.weather-day.sk,
+.cal-event.sk {
+    border-color: transparent;
+}
+
+.timer-skel {
+    pointer-events: none;
+    cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sk::after { animation: none; }
 }

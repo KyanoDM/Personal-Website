@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/dashboard.css?v=8">
+    <link rel="stylesheet" href="css/dashboard.css?v=10">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="img/logo.png" type="image/png">
 </head>
@@ -36,12 +36,9 @@
         <div class="info-bar">
             <span id="greetingText" class="greeting-text">Welkom, Kyano.</span>
             <div class="info-widgets">
-                <div class="weather-strip" id="weatherStrip">
-                    <span class="text-dim" style="font-size:0.72rem">⛅ Laden...</span>
-                </div>
+                <div class="weather-strip" id="weatherStrip"><div class="weather-day sk"><span class="weather-day-name" style="visibility:hidden">Vandaag</span><span class="weather-emoji" style="visibility:hidden">⛅</span><span class="weather-temp" style="visibility:hidden">00°</span></div><div class="weather-day sk"><span class="weather-day-name" style="visibility:hidden">Morgen</span><span class="weather-emoji" style="visibility:hidden">⛅</span><span class="weather-temp" style="visibility:hidden">00°</span></div><div class="weather-day sk"><span class="weather-day-name" style="visibility:hidden">Ma</span><span class="weather-emoji" style="visibility:hidden">⛅</span><span class="weather-temp" style="visibility:hidden">00°</span></div><div class="weather-day sk"><span class="weather-day-name" style="visibility:hidden">Ma</span><span class="weather-emoji" style="visibility:hidden">⛅</span><span class="weather-temp" style="visibility:hidden">00°</span></div><div class="weather-day sk"><span class="weather-day-name" style="visibility:hidden">Ma</span><span class="weather-emoji" style="visibility:hidden">⛅</span><span class="weather-temp" style="visibility:hidden">00°</span></div><div class="weather-day sk"><span class="weather-day-name" style="visibility:hidden">Ma</span><span class="weather-emoji" style="visibility:hidden">⛅</span><span class="weather-temp" style="visibility:hidden">00°</span></div><div class="weather-day sk"><span class="weather-day-name" style="visibility:hidden">Ma</span><span class="weather-emoji" style="visibility:hidden">⛅</span><span class="weather-temp" style="visibility:hidden">00°</span></div></div>
                 <div class="calendar-strip" id="calendarStrip">
-                    <i class="fas fa-calendar-days"></i>
-                    <span class="text-dim" style="font-size:0.72rem;margin-left:0.4rem">Kalender laden...</span>
+                    <i class="fas fa-calendar-days" style="color:var(--accent);margin-right:0.4rem;flex-shrink:0"></i><span class="cal-event sk"><span class="cal-event-day" style="visibility:hidden">Morgen</span><span class="cal-event-time" style="visibility:hidden">00:00</span><span class="cal-event-title" style="visibility:hidden">Afspraak titel</span></span><span class="cal-event sk"><span class="cal-event-day" style="visibility:hidden">Morgen</span><span class="cal-event-time" style="visibility:hidden">00:00</span><span class="cal-event-title" style="visibility:hidden">Afspraak titel</span></span><span class="cal-event sk"><span class="cal-event-day" style="visibility:hidden">Morgen</span><span class="cal-event-time" style="visibility:hidden">00:00</span><span class="cal-event-title" style="visibility:hidden">Afspraak titel</span></span>
                 </div>
             </div>
         </div>
@@ -69,7 +66,7 @@
                     <div class="heatmap-wrapper">
                         <h3>Laatste 3 maanden</h3>
                         <div class="heatmap-months" id="heatmapMonths"></div>
-                        <div class="heatmap" id="heatmap"></div>
+                        <div class="heatmap sk" id="heatmap"></div>
                         <div class="heatmap-legend">
                             <span>Minder</span>
                             <div class="heatmap-cell" style="background: var(--heat-0)"></div>
@@ -98,9 +95,13 @@
                         <button id="saveWeight" class="btn-accent">Opslaan</button>
                     </div>
 
-                    <div class="weight-stats" id="weightStats"></div>
+                    <div class="weight-stats" id="weightStats">
+                        <div class="weight-stat"><span class="stat-label">Vandaag</span><span class="stat-value"><span class="sk sk-text" style="width:64px">&nbsp;</span></span></div>
+                        <div class="weight-stat"><span class="stat-label">Trend</span><span class="stat-value"><span class="sk sk-text" style="width:64px">&nbsp;</span></span></div>
+                        <div class="weight-stat"><span class="stat-label">7d verschil</span><span class="stat-value"><span class="sk sk-text" style="width:72px">&nbsp;</span></span></div>
+                    </div>
 
-                    <div class="chart-container">
+                    <div class="chart-container sk" id="weightChartBox">
                         <canvas id="weightChart"></canvas>
                     </div>
                 </section>
@@ -123,9 +124,9 @@
             <section class="dash-section" id="youtubeSection">
                 <div class="section-head">
                     <div class="channel-header">
-                        <img id="channelAvatar" class="channel-avatar" src="" alt="">
+                        <img id="channelAvatar" class="channel-avatar" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
                         <div class="channel-header-info">
-                            <h2><a id="ytStudioLink" href="https://studio.youtube.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">Laden...</a></h2>
+                            <h2><a id="ytStudioLink" href="https://studio.youtube.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span class="sk sk-text" style="width:90px">&nbsp;</span></a></h2>
                         </div>
                     </div>
                     <div class="channel-switcher">
@@ -135,12 +136,13 @@
                 </div>
 
                 <div class="yt-stats-bar" id="ytStats">
-                    <span class="text-dim" style="font-size:0.8rem">Laden...</span>
+                    <div class="yt-stat"><span class="stat-label">Abonnees</span><span class="stat-value"><span class="sk sk-text" style="width:48px">&nbsp;</span></span></div>
+                    <div class="yt-stat"><span class="stat-label">Totaal views</span><span class="stat-value"><span class="sk sk-text" style="width:56px">&nbsp;</span></span></div>
                 </div>
 
                 <div class="yt-subsection">
                     <h3 class="yt-sub-title">Laatste video's</h3>
-                    <div id="ytVideos"></div>
+                    <div id="ytVideos"><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:82%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:66%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:90%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:74%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:58%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div></div>
                 </div>
 
                 <div class="yt-collapsible">
@@ -184,11 +186,7 @@
                     <h2><i class="fas fa-dumbbell me-2"></i>Gym Progress</h2>
                     <a href="https://gym.kyanodm.be" target="_blank" rel="noopener" class="btn-icon" title="Gym App openen"><i class="fas fa-plus"></i></a>
                 </div>
-                <div id="gymProgressContent">
-                    <button id="connectGymBtn" class="btn-ghost" style="width:100%">
-                        <i class="fas fa-link me-1"></i>Gym App verbinden
-                    </button>
-                </div>
+                <div id="gymProgressContent"><div class="gym-layout"><div class="gym-cover sk"></div><div class="gym-progress-info"><div class="gym-progress-title"><span class="sk sk-text" style="width:130px">&nbsp;</span></div><div class="gym-progress-stats"><span class="gym-stat"><span class="sk sk-text" style="width:56px">&nbsp;</span></span><span class="gym-stat"><span class="sk sk-text" style="width:76px">&nbsp;</span></span><span class="gym-stat"><span class="sk sk-text" style="width:60px">&nbsp;</span></span></div><div class="gym-progress-desc"><span class="sk sk-text" style="width:92%">&nbsp;</span><br><span class="sk sk-text" style="width:70%">&nbsp;</span></div></div></div></div>
             </section>
 
             <!-- Todo List -->
@@ -326,6 +324,85 @@
         </div>
     </div>
 
+    <script>
+        // Laad-skeletons: draait al tijdens het parsen (voor de grote scripts binnen zijn), zodat
+        // de pagina vanaf het eerste beeld de juiste vorm heeft en er niets meer verspringt.
+        (function () {
+            function el(id) { return document.getElementById(id); }
+            function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+            function count(k, def, max) { var n = parseInt(get(k), 10); return isFinite(n) && n >= 0 ? Math.min(n, max) : def; }
+            function line(w) { return '<span class="sk sk-text" style="width:' + w + '">&nbsp;</span>'; }
+            function rep(n, fn) { var h = ''; for (var i = 0; i < n; i++) h += fn(i); return h; }
+
+            // Begroeting (ook gebruikt door dashboard.js)
+            window.dashGreeting = function (now) {
+                var hour = now.getHours();
+                var day = now.getDay();
+                var prefix;
+                if (hour >= 5 && hour < 12) prefix = 'Goedemorgen';
+                else if (hour >= 12 && hour < 18) prefix = 'Goedemiddag';
+                else if (hour >= 18 && hour < 23) prefix = 'Goedenavond';
+                else prefix = 'Goede nacht';
+                var extra = '';
+                if (day === 5) extra = ' Fijne vrijdag! 🎉';
+                else if (day === 6) extra = ' Geniet van je zaterdag! 😎';
+                else if (day === 0) extra = ' Geniet van je zondag! ☀️';
+                return prefix + ', Kyano.' + extra;
+            };
+            el('greetingText').textContent = window.dashGreeting(new Date());
+
+            // Habits: kop van de week + placeholder-rijen (aantal van de vorige keer)
+            var now = new Date();
+            var mon = new Date(now);
+            mon.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
+            mon.setHours(0, 0, 0, 0);
+            var habitDay = new Date(now);
+            if (habitDay.getHours() < 2) habitDay.setDate(habitDay.getDate() - 1);
+            var names = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
+            var days = [];
+            for (var i = 0; i < 7; i++) { var d = new Date(mon); d.setDate(mon.getDate() + i); days.push(d); }
+            var thead = '<th></th>' + days.map(function (d, i) {
+                return '<th class="' + (d.toDateString() === habitDay.toDateString() ? 'today' : '') + '">' + names[i] + '<br>' + d.getDate() + '</th>';
+            }).join('') + '<th></th>';
+            var habitRow = function (i) {
+                return '<tr><td><div class="habit-name-cell">' + line([84, 64, 76, 70][i % 4] + 'px') + '</div></td>' +
+                    rep(7, function () { return '<td><div class="habit-check sk"></div></td>'; }) + '<td></td></tr>';
+            };
+            el('weekLabel').textContent = days[0].getDate() + '/' + (days[0].getMonth() + 1) + ' - ' + days[6].getDate() + '/' + (days[6].getMonth() + 1);
+            el('habitGrid').innerHTML = '<table><thead><tr>' + thead + '</tr></thead><tbody>' + rep(count('dash:habitRows', 3, 10), habitRow) + '</tbody></table>';
+
+            // Tellers: aantal van de vorige keer (eerste keer: 4)
+            var tints = ['129, 140, 248', '52, 211, 153', '251, 191, 36', '244, 114, 182'];
+            var timerH = count('dash:timerH', 0, 600);
+            if (timerH) { el('timerGrid').style.height = timerH + 'px'; el('timerGrid').style.overflow = 'hidden'; }
+            el('timerGrid').innerHTML = rep(count('dash:timerCount', 4, 4), function (i) {
+                return '<div class="timer-card timer-skel" style="--tc:' + tints[i % 4] + '">' +
+                    '<span class="timer-head"><span class="timer-number">' + line('46px') + '</span></span>' +
+                    '<span class="timer-text">' + line('88%') + '<br>' + line('52%') + '</span>' +
+                    '<span class="timer-meta">' + line('64%') + '</span>' +
+                    '<span class="timer-meta">' + line('52%') + '</span></div>';
+            });
+
+            // To-do: aantal van de vorige keer (dashboard.js toont de bewaarde lijst meteen)
+            var todoN = 4;
+            try { var cached = JSON.parse(get('dash:todos')); if (Array.isArray(cached)) todoN = Math.min(cached.length, 8); } catch (e) { }
+            el('todoList').innerHTML = rep(todoN, function (i) {
+                return '<div class="todo-item"><div class="todo-check sk"></div><span class="todo-text">' + line([72, 55, 84, 63][i % 4] + '%') + '</span></div>';
+            });
+
+            // Eerder ingelogd? Toon het skelet meteen i.p.v. eerst een spinner
+            try {
+                var known = false;
+                for (var k = 0; k < localStorage.length; k++) {
+                    if (localStorage.key(k).indexOf('firebase:authUser:') === 0) known = true;
+                }
+                if (known) {
+                    el('loading').style.display = 'none';
+                    el('dashboard').style.display = 'block';
+                }
+            } catch (e) { }
+        })();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -333,7 +410,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
-    <script src="js/dashboard.js?v=14"></script>
+    <script src="js/dashboard.js?v=16"></script>
 </body>
 
 </html>
