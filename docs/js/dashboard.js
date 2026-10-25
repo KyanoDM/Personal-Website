@@ -1700,6 +1700,12 @@
     // ─── TODO (gesynct met Notion via Cloudflare Worker) ────────────
     var TODO_BASE = 'https://notion-todo.kyanodemaertelaere.workers.dev';
     var _todoPollTimer = null;
+    var currentTodos = [];
+    var pendingDone = {};
+
+    function cacheTodos(todos) {
+        saveDashCache('todos', todos.map(function (t) { return { id: t.id, title: t.title }; }));
+    }
 
     function loadTodos() {
         pcToken()
@@ -1711,8 +1717,9 @@
                 return r.json();
             })
             .then(function (data) {
-                var todos = data.todos || [];
-                saveDashCache('todos', todos.map(function (t) { return { id: t.id, title: t.title }; }));
+                // Taken die net zijn afgevinkt maar nog niet bevestigd zijn, blijven weg
+                var todos = (data.todos || []).filter(function (t) { return !pendingDone[t.id]; });
+                cacheTodos(todos);
                 renderTodos(todos);
             })
             .catch(function (err) { console.log('Todo laden mislukt:', err); });
@@ -1722,7 +1729,13 @@
         }
     }
 
+    // Optimistisch: de taak verdwijnt meteen; mislukt het opslaan, dan komt hij bij het herladen terug
     function setTodoStatus(id, status) {
+        pendingDone[id] = true;
+        var rest = currentTodos.filter(function (t) { return t.id !== id; });
+        cacheTodos(rest);
+        renderTodos(rest);
+
         pcToken()
             .then(function (t) {
                 return fetch(TODO_BASE + '/todos/' + id + '/status', {
@@ -1731,11 +1744,18 @@
                     body: JSON.stringify({ status: status })
                 });
             })
-            .then(function () { loadTodos(); })
-            .catch(function (err) { console.log('Taak bijwerken mislukt:', err); });
+            .then(function (r) {
+                if (!r.ok) throw new Error('status ' + r.status);
+            })
+            .catch(function (err) { console.log('Taak bijwerken mislukt:', err); })
+            .then(function () {
+                delete pendingDone[id];
+                loadTodos();
+            });
     }
 
     function renderTodos(todos) {
+        currentTodos = todos;
         var list = document.getElementById('todoList');
         if (!list) return;
         if (!todos.length) {
