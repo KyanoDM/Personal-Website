@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/dashboard.css?v=10">
+    <link rel="stylesheet" href="css/dashboard.css?v=11">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="img/logo.png" type="image/png">
 </head>
@@ -391,6 +391,16 @@
                 return '<div class="todo-item"><div class="todo-check sk"></div><span class="todo-text">' + line([72, 55, 84, 63][i % 4] + '%') + '</span></div>';
             });
 
+            // Agenda: aantal placeholders van de vorige keer (eerste keer: 3)
+            var calN = 3;
+            try { var calCached = JSON.parse(get('dash:calendar')); if (Array.isArray(calCached)) calN = Math.min(calCached.length, 4); } catch (e) { }
+            el('calendarStrip').innerHTML = '<i class="fas fa-calendar-days" style="color:var(--accent);margin-right:0.4rem;flex-shrink:0"></i>' +
+                rep(calN, function () {
+                    return '<span class="cal-event sk"><span class="cal-event-day" style="visibility:hidden">Morgen</span>' +
+                        '<span class="cal-event-time" style="visibility:hidden">00:00</span>' +
+                        '<span class="cal-event-title" style="visibility:hidden">Afspraak titel</span></span>';
+                });
+
             // Eerder ingelogd? Toon het skelet meteen i.p.v. eerst een spinner
             try {
                 var known = false;
@@ -411,7 +421,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
-    <script src="js/dashboard.js?v=17"></script>
+    <script src="js/dashboard.js?v=18"></script>
 </body>
 
 </html>

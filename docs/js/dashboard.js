@@ -1516,6 +1516,7 @@
         var tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
         var html = '<i class="fas fa-calendar-days" style="color:var(--accent);margin-right:0.4rem;flex-shrink:0"></i>';
         var shown = 0;
+        var prevDay = null;
         events.forEach(function (ev) {
             if (shown >= 4) return;
             if (!ev.start) return;
@@ -1529,11 +1530,13 @@
                     DUTCH_SHORT_DAYS[startDay.getDay()] + ' ' + startDay.getDate() + '/' + (startDay.getMonth() + 1);
             var timeStr = ev.start.dateTime ?
                 new Date(ev.start.dateTime).toLocaleTimeString('nl', { hour: '2-digit', minute: '2-digit' }) : '';
-            html += '<span class="cal-event">' +
+            // Op mobiel staat de dag maar één keer per groep afspraken (zie .cal-event-repeat)
+            html += '<span class="cal-event' + (dayLabel === prevDay ? ' cal-event-repeat' : '') + '">' +
                 '<span class="cal-event-day">' + dayLabel + '</span>' +
-                (timeStr ? '<span class="cal-event-time">' + timeStr + '</span>' : '') +
+                '<span class="cal-event-time">' + timeStr + '</span>' +
                 '<span class="cal-event-title">' + escapeHtml(ev.summary || 'Afspraak') + '</span>' +
                 '</span>';
+            prevDay = dayLabel;
             shown++;
         });
         el.innerHTML = html;

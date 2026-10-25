@@ -1782,3 +1782,58 @@ html {
 @media (prefers-reduced-motion: reduce) {
     .sk::after { animation: none; }
 }
+
+/* ─── AGENDA & WEER OP MOBIEL ─────────────────────────────────── */
+
+.cal-event-time:empty {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    .weather-strip {
+        scrollbar-width: none;
+    }
+
+    .weather-strip::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Afspraken als nette lijst: dag | tijd | titel, dag maar één keer per groep */
+    .calendar-strip {
+        flex-direction: column;
+        align-items: stretch;
+        flex-wrap: nowrap;
+        gap: 0.3rem;
+        overflow: visible;
+    }
+
+    .calendar-strip > i {
+        display: none;
+    }
+
+    .cal-event {
+        display: grid;
+        grid-template-columns: 4.2rem 3.1rem minmax(0, 1fr);
+        align-items: center;
+        column-gap: 0.4rem;
+        width: 100%;
+        max-width: none;
+        padding: 0.3rem 0.6rem;
+    }
+
+    .cal-event-time {
+        white-space: nowrap;
+    }
+
+    .cal-event-time:empty {
+        display: block;
+    }
+
+    .cal-event-time:empty::before {
+        content: 'hele dag';
+    }
+
+    .cal-event-repeat .cal-event-day {
+        visibility: hidden;
+    }
+}
