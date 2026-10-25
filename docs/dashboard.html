@@ -373,6 +373,7 @@
 
             // Tellers: aantal van de vorige keer (eerste keer: 4)
             var tints = ['129, 140, 248', '52, 211, 153', '251, 191, 36', '244, 114, 182'];
+            if (count('dash:timerCount', 4, 4) >= 4) el('addTimerBtn').style.display = 'none';
             var timerH = count('dash:timerH', 0, 600);
             if (timerH) { el('timerGrid').style.height = timerH + 'px'; el('timerGrid').style.overflow = 'hidden'; }
             el('timerGrid').innerHTML = rep(count('dash:timerCount', 4, 4), function (i) {
