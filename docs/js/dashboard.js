@@ -1195,6 +1195,37 @@
             });
     }
 
+    // Shorts staan als smalle strook midden in een 16:9-thumbnail met zwarte balken ernaast; die zie je
+    // in de lichte modus als zwart blok. Is een thumbnail zo, dan snijden we het midden eruit.
+    function trimThumbBars(img) {
+        try {
+            var w = img.naturalWidth, h = img.naturalHeight;
+            if (!w || !h) return;
+            var c = document.createElement('canvas');
+            c.width = w; c.height = h;
+            var g = c.getContext('2d');
+            g.drawImage(img, 0, 0);
+            var bar = Math.round(w * 0.28), sum = 0, n = 0;
+            [0, w - bar].forEach(function (x0) {
+                var d = g.getImageData(x0, 0, bar, h).data;
+                for (var i = 0; i < d.length; i += 16) { sum += Math.max(d[i], d[i + 1], d[i + 2]); n++; }
+            });
+            if (sum / n > 14) return;
+            var sw = Math.round(w * 0.3), sh = Math.round(sw * 9 / 16);
+            var o = document.createElement('canvas');
+            o.width = 160; o.height = 90;
+            o.getContext('2d').drawImage(img, Math.round((w - sw) / 2), Math.round((h - sh) / 2), sw, sh, 0, 0, 160, 90);
+            img.src = o.toDataURL('image/jpeg', 0.9);
+        } catch (e) { /* geen toegang tot de pixels: laat het beeld zoals het is */ }
+    }
+
+    function trimThumbs(root) {
+        root.querySelectorAll('.yt-thumb').forEach(function (img) {
+            if (img.complete && img.naturalWidth) trimThumbBars(img);
+            else img.addEventListener('load', function () { trimThumbBars(img); }, { once: true });
+        });
+    }
+
     function loadLatestVideos(uploadsId) {
         fetch(YT_BASE + 'playlistItems?part=snippet&maxResults=5&playlistId=' + uploadsId + '&key=' + YT_API_KEY)
             .then(function (r) { return r.json(); })
@@ -1225,7 +1256,7 @@
 
                             var timeAgo = formatTimeAgo(info.published);
                             html += '<a href="https://youtube.com/watch?v=' + vid + '" target="_blank" class="yt-video-row">' +
-                                '<img src="' + thumb + '" class="yt-thumb" alt="">' +
+                                '<img src="' + thumb + '" class="yt-thumb" crossorigin="anonymous" alt="">' +
                                 '<div class="yt-video-info">' +
                                 '<div class="yt-video-title">' + sn.title + '</div>' +
                                 '<div class="yt-video-stats">' +
@@ -1237,6 +1268,7 @@
                                 '</a>';
                         });
                         document.getElementById('ytVideos').innerHTML = html;
+                        trimThumbs(document.getElementById('ytVideos'));
 
                         // Add 48h views to stats bar
                         var statsBar = document.getElementById('ytStats');
