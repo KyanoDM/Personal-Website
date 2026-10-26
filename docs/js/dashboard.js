@@ -937,6 +937,46 @@
         renderWeightChart(scalePoints, trendPoints);
     }
 
+    // ─── THEMA (donker/licht) ─────────────
+    // Het gekozen thema staat lokaal in localStorage ('theme'); de <head> zet het al vóór het eerste beeld.
+    function currentTheme() {
+        return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    }
+
+    function chartTheme() {
+        if (currentTheme() === 'light') {
+            return { grid: 'rgba(15,23,42,0.08)', tick: '#6b7288', legend: '#1a1d2b', tipBg: '#ffffff', tipBorder: 'rgba(15,23,42,0.15)', tipText: '#1a1d2b' };
+        }
+        return { grid: 'rgba(255,255,255,0.05)', tick: '#71717a', legend: '#e4e4e7', tipBg: '#1a1d27', tipBorder: 'rgba(255,255,255,0.1)', tipText: '#e4e4e7' };
+    }
+
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        try { localStorage.setItem('theme', theme); } catch (e) {}
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', theme === 'light' ? '#f2f3f8' : '#0a0b10');
+        var btn = document.getElementById('themeToggle');
+        if (btn) {
+            btn.querySelector('i').className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            btn.title = theme === 'light' ? 'Donkere modus' : 'Lichte modus';
+        }
+        if (weightChart) {
+            var c = chartTheme(), o = weightChart.options;
+            o.scales.x.grid.color = o.scales.y.grid.color = c.grid;
+            o.scales.x.ticks.color = o.scales.y.ticks.color = c.tick;
+            o.plugins.legend.labels.color = c.legend;
+            o.plugins.tooltip.backgroundColor = c.tipBg;
+            o.plugins.tooltip.borderColor = c.tipBorder;
+            o.plugins.tooltip.titleColor = o.plugins.tooltip.bodyColor = c.tipText;
+            weightChart.update();
+        }
+    }
+
+    document.getElementById('themeToggle').addEventListener('click', function () {
+        applyTheme(currentTheme() === 'light' ? 'dark' : 'light');
+    });
+    applyTheme(currentTheme());
+
     function renderWeightChart(scalePoints, trendPoints) {
         document.getElementById('weightChartBox').classList.remove('sk');
         var ctx = document.getElementById('weightChart').getContext('2d');
@@ -981,6 +1021,7 @@
             });
         }
 
+        var ct = chartTheme();
         weightChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -997,24 +1038,24 @@
                     x: {
                         type: 'time',
                         time: { unit: 'week', displayFormats: { week: 'd MMM' } },
-                        grid: { color: 'rgba(255,255,255,0.05)' },
-                        ticks: { color: '#71717a', maxTicksLimit: 8 }
+                        grid: { color: ct.grid },
+                        ticks: { color: ct.tick, maxTicksLimit: 8 }
                     },
                     y: {
-                        grid: { color: 'rgba(255,255,255,0.05)' },
-                        ticks: { color: '#71717a', callback: function (v) { return v + ' kg'; } }
+                        grid: { color: ct.grid },
+                        ticks: { color: ct.tick, callback: function (v) { return v + ' kg'; } }
                     }
                 },
                 plugins: {
                     legend: {
-                        labels: { color: '#e4e4e7', usePointStyle: true, pointStyle: 'circle' }
+                        labels: { color: ct.legend, usePointStyle: true, pointStyle: 'circle' }
                     },
                     tooltip: {
-                        backgroundColor: '#1a1d27',
-                        borderColor: 'rgba(255,255,255,0.1)',
+                        backgroundColor: ct.tipBg,
+                        borderColor: ct.tipBorder,
                         borderWidth: 1,
-                        titleColor: '#e4e4e7',
-                        bodyColor: '#e4e4e7',
+                        titleColor: ct.tipText,
+                        bodyColor: ct.tipText,
                         callbacks: {
                             label: function (ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + ' kg'; }
                         }

@@ -6,14 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/dashboard.css?v=12">
+    <link rel="stylesheet" href="css/dashboard.css?v=13">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="img/logo.png" type="image/png">
+    <meta name="theme-color" content="#0a0b10">
+    <script>
+        // Thema (donker = standaard) vóór het eerste beeld zetten, anders flitst de pagina eerst donker
+        (function () {
+            var t = 'dark';
+            try { if (localStorage.getItem('theme') === 'light') t = 'light'; } catch (e) {}
+            document.documentElement.setAttribute('data-theme', t);
+            var m = document.querySelector('meta[name="theme-color"]');
+            if (m) m.setAttribute('content', t === 'light' ? '#f2f3f8' : '#0a0b10');
+        })();
+    </script>
 </head>
 
 <body class="dashboard-body">
     <div id="loading" class="dashboard-loading">
-        <div class="spinner-border text-light" role="status"></div>
+        <div class="spinner-border" role="status"></div>
     </div>
 
     <div id="dashboard" class="dashboard-container" style="display: none;">
@@ -25,6 +36,7 @@
                 <a href="https://sam.kyanodm.be/#p/76561199061820907" target="_blank" rel="noopener" class="btn-icon" title="Achievement Manager"><i class="fas fa-trophy"></i></a>
                 <button id="wakePc" class="btn-icon" title="PC aanzetten"><i class="fas fa-power-off"></i></button>
                 <a href="https://remotedesktop.google.com/access" target="_blank" rel="noopener" class="btn-icon" title="Remote Desktop"><i class="fas fa-desktop"></i></a>
+                <button id="themeToggle" class="btn-icon" title="Licht/donker thema"><i class="fas fa-sun"></i></button>
                 <button id="openSettings" class="btn-icon" title="Instellingen"><i class="fas fa-gear"></i></button>
                 <button id="signOut" class="btn btn-outline-light btn-sm">
                     <i class="fas fa-sign-out-alt me-1"></i>Uitloggen
@@ -437,7 +449,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
-    <script src="js/dashboard.js?v=21"></script>
+    <script src="js/dashboard.js?v=22"></script>
 </body>
 
 </html>
