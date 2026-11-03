@@ -1983,6 +1983,15 @@
             });
     }
 
+    // Maakt van http(s)-adressen in een taak klikbare links (eerst escapen, dan pas linkjes toevoegen)
+    function linkify(text) {
+        return escapeHtml(text).replace(/https?:\/\/[^\s<]+/g, function (url) {
+            var tail = (url.match(/[.,;:!?)\]]+$/) || [''])[0];
+            var href = url.slice(0, url.length - tail.length);
+            return '<a href="' + href + '" target="_blank" rel="noopener noreferrer">' + href + '</a>' + tail;
+        });
+    }
+
     function renderTodos(todos) {
         currentTodos = todos;
         var list = document.getElementById('todoList');
@@ -1995,7 +2004,7 @@
             return '<div class="todo-item">' +
                 '<div class="todo-check" data-id="' + todo.id + '" title="Afronden">' +
                 '<i class="fas fa-check"></i></div>' +
-                '<span class="todo-text">' + escapeHtml(todo.title) + '</span>' +
+                '<span class="todo-text">' + linkify(todo.title) + '</span>' +
                 '</div>';
         }).join('');
         list.innerHTML = html;

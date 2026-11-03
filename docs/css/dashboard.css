@@ -1509,6 +1509,13 @@ input::placeholder,
     font-size: 0.82rem;
     color: var(--text);
     min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.todo-text a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 
 .todo-text.done {
