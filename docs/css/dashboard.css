@@ -1540,6 +1540,19 @@ input::placeholder,
 
 /* ─── GYM PROGRESS ─────────────────────────────────────────────── */
 
+#gymProgressContent {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.gym-month {
+    flex: 1 1 260px;
+    min-width: 0;
+    margin-bottom: 0 !important;
+    /* overschrijft de inline margin uit de JS */
+}
+
 .gym-layout {
     display: flex;
     gap: 1rem;

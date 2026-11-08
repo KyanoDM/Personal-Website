@@ -213,7 +213,7 @@
     });
 
     // ─── PC WAKE + STATUS (groen=aan, rood=uit, grijs=server onbereikbaar) ──
-    var WAKE_BASE    = 'https://wake.kyanodm.be';
+    var WAKE_BASE = 'https://wake.kyanodm.be';
     var _wakePolling = false;
 
     function pcToken() {
@@ -222,11 +222,11 @@
     }
 
     function setPcState(state) {
-        var btn  = document.getElementById('wakePc');
+        var btn = document.getElementById('wakePc');
         var icon = btn.querySelector('i');
-        if (state === 'on')        { btn.style.color = '#10b981'; icon.className = 'fas fa-power-off';         btn.title = 'PC is online'; }
-        else if (state === 'off')  { btn.style.color = '#ef4444'; icon.className = 'fas fa-power-off';         btn.title = 'PC aanzetten'; }
-        else if (state === 'wait') { btn.style.color = '#f59e0b'; icon.className = 'fas fa-spinner fa-spin';   btn.title = 'Bezig...'; }
+        if (state === 'on') { btn.style.color = '#10b981'; icon.className = 'fas fa-power-off'; btn.title = 'PC is online'; }
+        else if (state === 'off') { btn.style.color = '#ef4444'; icon.className = 'fas fa-power-off'; btn.title = 'PC aanzetten'; }
+        else if (state === 'wait') { btn.style.color = '#f59e0b'; icon.className = 'fas fa-spinner fa-spin'; btn.title = 'Bezig...'; }
         else if (state === 'down') { btn.style.color = '#6b7280'; icon.className = 'fas fa-plug-circle-xmark'; btn.title = 'Server niet bereikbaar'; }
     }
 
@@ -243,7 +243,7 @@
     function refreshPcStatus() {
         checkStatus()
             .then(function (state) { if (!_wakePolling) setPcState(state); })
-            .catch(function ()      { if (!_wakePolling) setPcState('down'); });
+            .catch(function () { if (!_wakePolling) setPcState('down'); });
     }
 
     document.getElementById('wakePc').addEventListener('click', function () {
@@ -298,17 +298,17 @@
     // ─── SHAKE MODE (schud gsm = pc wekken, enkel actief terwijl deze tab open/zichtbaar is) ──
     // Een "slag" = lineaire versnelling (zonder zwaartekracht) boven SHAKE_PEAK. Drie slagen binnen
     // SHAKE_WINDOW telt als schudden. Onafhankelijk van hoe vaak de sensor meet.
-    var SHAKE_PEAK     = 12;    // m/s²
-    var SHAKE_PEAKS    = 3;
-    var SHAKE_WINDOW   = 1200;  // ms
-    var SHAKE_MIN_GAP  = 90;    // ms tussen twee slagen
+    var SHAKE_PEAK = 12;    // m/s²
+    var SHAKE_PEAKS = 3;
+    var SHAKE_WINDOW = 1200;  // ms
+    var SHAKE_MIN_GAP = 90;    // ms tussen twee slagen
     var SHAKE_COOLDOWN = 4000;  // ms tussen triggers
     var _lastShakeTime = 0;
-    var _shakePeaks    = [];
-    var _shakeAbove    = false;
-    var _gravity       = null;
-    var _lastMotionAt  = 0;
-    var _shakeActive   = false;
+    var _shakePeaks = [];
+    var _shakeAbove = false;
+    var _gravity = null;
+    var _lastMotionAt = 0;
+    var _shakeActive = false;
 
     // Versnelling zonder zwaartekracht: de sensor zelf, of anders de zwaartekracht eruit filteren
     function linearAcceleration(e, now) {
@@ -952,7 +952,7 @@
 
     function applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
-        try { localStorage.setItem('theme', theme); } catch (e) {}
+        try { localStorage.setItem('theme', theme); } catch (e) { }
         var meta = document.querySelector('meta[name="theme-color"]');
         if (meta) meta.setAttribute('content', theme === 'light' ? '#f2f3f8' : '#0a0b10');
         var btn = document.getElementById('themeToggle');
@@ -2094,7 +2094,7 @@
     function fetchLatestGymMonth(uid) {
         gymDb.collection('users').doc(uid).collection('months')
             .orderBy('createdAt', 'desc')
-            .limit(1)
+            .limit(2)
             .get()
             .then(function (snapshot) {
                 if (snapshot.empty) {
@@ -2102,7 +2102,7 @@
                         '<div class="text-dim" style="font-size:0.78rem">Geen maanden gevonden.</div>';
                     return;
                 }
-                renderGymProgress(snapshot.docs[0].data());
+                renderGymProgress(snapshot.docs.map(function (d) { return d.data(); }));
             })
             .catch(function () {
                 document.getElementById('gymProgressContent').innerHTML =
@@ -2117,8 +2117,14 @@
         'october': 'Oktober', 'november': 'November', 'december': 'December'
     };
 
-    function renderGymProgress(month) {
+    function renderGymProgress(months) {
         var el = document.getElementById('gymProgressContent');
+        el.innerHTML = months.map(function (m) {
+            return '<div class="gym-month" style="margin-bottom:0.75rem">' + renderGymMonth(m) + '</div>';
+        }).join('');
+    }
+
+    function renderGymMonth(month) {
         var monthName = GYM_MONTH_NAMES[(month.month || '').toLowerCase()] || month.month || '';
 
         var html = '<div class="gym-layout">';
@@ -2143,7 +2149,7 @@
         }
         html += '</div>';
         html += '</div>';
-        el.innerHTML = html;
+        return html;
     }
 
 })();
