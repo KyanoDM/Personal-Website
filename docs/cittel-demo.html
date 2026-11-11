@@ -2,6 +2,13 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
+<script>
+    // Adres zonder ".html" tonen (de pagina zelf blijft gewoon werken)
+    (function () {
+        var p = location.pathname;
+        if (/\.html$/.test(p)) history.replaceState(null, '', p.replace(/index\.html$/, '').replace(/\.html$/, '') + location.search + location.hash);
+    })();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cittel,Systeemarchitectuur</title>
 

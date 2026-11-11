@@ -3,6 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
+    <script>
+        // Adres zonder ".html" tonen (de pagina zelf blijft gewoon werken)
+        (function () {
+            var p = location.pathname;
+            if (/\.html$/.test(p)) history.replaceState(null, '', p.replace(/index\.html$/, '').replace(/\.html$/, '') + location.search + location.hash);
+        })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kyano De Maertelaere | Web Developer &amp; IT-generalist</title>
     <meta name="description" content="Portfolio van Kyano De Maertelaere: web developer en IT-generalist. Webapplicaties bouwen, workflows automatiseren en systemen (ERP, Odoo, SharePoint) inrichten voor klanten. Afgestudeerd Graduaat Programmeren aan Howest Brugge.">

@@ -201,14 +201,14 @@
         } else {
             if (user) auth.signOut();
             clearDashCache();
-            window.location.href = 'index.html';
+            window.location.href = '/';
         }
     });
 
     document.getElementById('signOut').addEventListener('click', function () {
         clearDashCache();
         auth.signOut().then(function () {
-            window.location.href = 'index.html';
+            window.location.href = '/';
         });
     });
 

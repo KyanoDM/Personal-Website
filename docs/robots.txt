@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /dashboard
 Disallow: /dashboard.html
 Disallow: /qr-auth.html
 

@@ -24,7 +24,7 @@
     // Al ingelogd → meteen door
     auth.onAuthStateChanged(function (user) {
         if (user && (user.email === ALLOWED_EMAIL || user.uid === TOTP_UID)) {
-            window.location.href = 'dashboard.html';
+            window.location.href = 'dashboard';
         }
     });
 
@@ -68,7 +68,7 @@
         auth.signInWithPopup(provider)
             .then(function (result) {
                 if (result.user.email === ALLOWED_EMAIL) {
-                    window.location.href = 'dashboard.html';
+                    window.location.href = 'dashboard';
                 } else {
                     auth.signOut();
                     setHint('Geen toegang met dit account.');
@@ -103,7 +103,7 @@
             return auth.signInWithCustomToken(data.customToken);
         })
         .then(function () {
-            window.location.href = 'dashboard.html';
+            window.location.href = 'dashboard';
         })
         .catch(function (err) {
             setHint(err.message === 'Verkeerde code' ? 'Verkeerde code, probeer opnieuw.' : err.message);
