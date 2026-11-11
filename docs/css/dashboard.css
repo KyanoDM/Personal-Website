@@ -2027,7 +2027,7 @@ html {
     }
 }
 
-/* ─── VOOR HAAR: foto + vaste tellers ─────────────────── */
+/* ─── VOOR HAAR: foto('s) + tellers ─────────────────── */
 
 .her-section {
     flex-shrink: 0;
@@ -2046,8 +2046,11 @@ html {
     border-radius: 12px;
     overflow: hidden;
     display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
     background:
         radial-gradient(120% 100% at 0% 0%, rgba(244, 114, 182, 0.35) 0%, rgba(244, 114, 182, 0) 70%),
         var(--bg-input);
@@ -2059,35 +2062,88 @@ html {
     color: rgba(244, 114, 182, 0.7);
 }
 
-.her-photo img {
+.her-photo-hint {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.her-slide {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    display: none;
+    opacity: 0;
+    transition: opacity 0.8s ease;
 }
 
-.her-photo.has-photo img {
-    display: block;
+.her-slide.active {
+    opacity: 1;
 }
 
-.her-photo.has-photo > i {
-    display: none;
+.her-dots {
+    position: absolute;
+    bottom: 0.45rem;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 0.3rem;
+}
+
+.her-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.45);
+    transition: background 0.3s;
+}
+
+.her-dots span.active {
+    background: #fff;
 }
 
 .her-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.timer-card.is-fixed {
-    cursor: default;
+.her-thumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
 }
 
-.timer-card.is-fixed:hover {
-    transform: none;
-    border-color: rgba(var(--tc), 0.25);
-    box-shadow: none;
+.her-thumb {
+    position: relative;
+    width: 4.2rem;
+    height: 4.2rem;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.her-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.her-thumb-del {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 1.2rem;
+    height: 1.2rem;
+    line-height: 1;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    font-size: 0.9rem;
+    cursor: pointer;
 }
 
 @media (max-width: 640px) {

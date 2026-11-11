@@ -186,7 +186,7 @@
             document.getElementById('dashboard').style.display = 'block';
             loadConfig();
             loadWeight();
-            loadTimers();
+            loadTimers().then(loadHer);
             loadChannels();
             loadKanban();
             loadSources();
@@ -1797,10 +1797,11 @@
     var TIMER_COLORS = ['129, 140, 248', '52, 211, 153', '251, 191, 36', '244, 114, 182'];
     var TIMER_MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
     var editingTimerId = null;
+    var editingScope = 'own';   // 'own' = gewone tellers, 'her' = tellers bij "Voor haar"
     var _timerRenderedDay = null;
 
     function loadTimers() {
-        db.collection('config').doc('timers').get().then(function (doc) {
+        return db.collection('config').doc('timers').get().then(function (doc) {
             timers = doc.exists ? (doc.data().list || []) : [];
             renderTimers();
         }).catch(function (err) { console.log('Tellers laden mislukt:', err); });
@@ -1836,8 +1837,8 @@
         return parts.join(' · ');
     }
 
-    // Eén tellerkaart; 'fixed' = vaste teller (geen knop, niet bewerkbaar)
-    function timerCardHtml(t, i, fixed, today) {
+    // Eén tellerkaart (klik = bewerken)
+    function timerCardHtml(t, i, today) {
         var target = parseDate(t.date);
         var diff = Math.round((today - target) / 86400000);
         var abs = Math.abs(diff);
@@ -1854,42 +1855,199 @@
             var txt = diff > 0 ? timerBreakdown(target, today) : timerBreakdown(today, target);
             breakdown = '<span class="timer-meta">' + escapeHtml(txt) + '</span>';
         }
-        var tag = fixed ? 'div' : 'button type="button"';
-        return '<' + tag + ' class="timer-card' + (fixed ? ' is-fixed' : '') + '"' +
-            (fixed ? '' : ' data-id="' + escapeHtml(t.id) + '" title="Bewerken"') +
+        return '<button type="button" class="timer-card" data-id="' + escapeHtml(t.id) + '" title="Bewerken"' +
             ' style="--tc:' + TIMER_COLORS[i % TIMER_COLORS.length] + '">' +
             '<span class="timer-head">' + number + emoji + '</span>' +
             text +
             '<span class="timer-meta">' + unit + escapeHtml(dateLabel) + '</span>' +
             breakdown +
-            '</' + (fixed ? 'div' : 'button') + '>';
+            '</button>';
     }
 
-    // ─── VOOR HAAR: vaste tellers + foto (niet bewerkbaar, staat gewoon in de code) ───
-    // Pas hier de naam, foto en tellers aan. De foto zet je in docs/img/ (bv. img/her.jpg).
-    var HER_NAME = 'Voor haar';
-    var HER_PHOTO = 'img/her.jpg';
-    var HER_TIMERS = [
-        { emoji: '\u2764\uFE0F', text: 'Samen sinds', date: '2024-02-14' },
-        { emoji: '\uD83C\uDF82', text: 'Verjaardag', date: '2026-12-25' },
-        { emoji: '\u2708\uFE0F', text: 'Vakantie', date: '2027-07-01' }
-    ];
+    // ─── VOOR HAAR: naam, foto's en eigen tellers (staat in Firestore: config/her en config/herPhotos) ───
+    var her = readDashCache('her') || { name: 'Tatjana', timers: [] };
+    var herPhotos = [];
+    var HER_MAX_PHOTOS = 5;
+    var HER_PHOTO_BUDGET = 900000;  // tekens; een Firestore-document mag zo'n 1 MB groot zijn
     var _herRenderedDay = null;
+    var _herSlideTimer = null;
+
+    function loadHer() {
+        return Promise.all([
+            db.collection('config').doc('her').get(),
+            db.collection('config').doc('herPhotos').get()
+        ]).then(function (r) {
+            herPhotos = (r[1].exists ? (r[1].data().list || []) : []).filter(function (src) {
+                return typeof src === 'string' && src.indexOf('data:image/') === 0;
+            });
+            if (r[0].exists) {
+                var d = r[0].data();
+                her = { name: d.name || 'Tatjana', timers: d.timers || [] };
+                renderHer();
+                renderHerPhotos();
+                return;
+            }
+            // Eerste keer: de tellers die al bij "Tatjana" in je gewone lijst staan, nemen we over
+            her = { name: 'Tatjana', timers: [] };
+            renderHer();
+            renderHerPhotos();
+            var moved = timers.filter(function (t) { return /tatjana/i.test(t.text || ''); }).slice(0, TIMER_MAX);
+            if (!moved.length) return;
+            return db.collection('config').doc('her').set({ name: her.name, timers: moved }).then(function () {
+                her.timers = moved;
+                var ids = moved.map(function (t) { return t.id; });
+                timers = timers.filter(function (t) { return ids.indexOf(t.id) === -1; });
+                saveTimers();
+                renderTimers();
+                renderHer();
+            });
+        }).catch(function (err) { console.log('Voor haar laden mislukt:', err); });
+    }
+
+    function saveHer() {
+        saveDashCache('her', her);
+        return db.collection('config').doc('her').set({ name: her.name, timers: her.timers })
+            .catch(function (err) { alert('Opslaan mislukt: ' + err.message); throw err; });
+    }
 
     function renderHer() {
         var grid = document.getElementById('herGrid');
         if (!grid) return;
         _herRenderedDay = formatDate(new Date());
-        document.getElementById('herTitle').textContent = HER_NAME;
-        var photo = document.getElementById('herPhoto');
-        if (!photo.getAttribute('src')) {
-            photo.addEventListener('load', function () { photo.parentNode.classList.add('has-photo'); });
-            photo.addEventListener('error', function () { photo.parentNode.classList.remove('has-photo'); });
-            photo.src = HER_PHOTO;
+        document.getElementById('herTitle').textContent = her.name || 'Tatjana';
+        document.getElementById('addHerTimerBtn').style.display = her.timers.length >= TIMER_MAX ? 'none' : '';
+        saveDashCache('her', her);
+        if (!her.timers.length) {
+            grid.innerHTML = '<button type="button" class="timer-empty" id="herEmpty">' +
+                '<i class="fas fa-plus"></i>Voeg een teller toe</button>';
+            return;
         }
         var today = todayMidnight();
-        grid.innerHTML = HER_TIMERS.map(function (t, i) { return timerCardHtml(t, i + 1, true, today); }).join('');
+        grid.innerHTML = her.timers.map(function (t, i) { return timerCardHtml(t, i + 1, today); }).join('');
     }
+
+    function renderHerPhotos() {
+        var box = document.getElementById('herPhotoBox');
+        if (!box) return;
+        clearInterval(_herSlideTimer);
+        if (!herPhotos.length) {
+            box.className = 'her-photo';
+            box.innerHTML = '<i class="fas fa-heart"></i><span class="her-photo-hint">Foto\'s toevoegen</span>';
+            return;
+        }
+        box.className = 'her-photo has-photo';
+        box.innerHTML = herPhotos.map(function (src, i) {
+            return '<img class="her-slide' + (i === 0 ? ' active' : '') + '" src="' + src + '" alt="">';
+        }).join('') + (herPhotos.length > 1 ? '<div class="her-dots">' + herPhotos.map(function (_, i) {
+            return '<span' + (i === 0 ? ' class="active"' : '') + '></span>';
+        }).join('') + '</div>' : '');
+        if (herPhotos.length < 2) return;
+        var idx = 0;
+        _herSlideTimer = setInterval(function () {
+            var slides = box.querySelectorAll('.her-slide'), dots = box.querySelectorAll('.her-dots span');
+            if (slides.length < 2) return;
+            slides[idx].classList.remove('active');
+            dots[idx].classList.remove('active');
+            idx = (idx + 1) % slides.length;
+            slides[idx].classList.add('active');
+            dots[idx].classList.add('active');
+        }, 6000);
+    }
+
+    // Foto verkleinen en als JPEG-tekst bewaren (geen aparte opslag nodig)
+    function shrinkPhoto(file, maxW, quality) {
+        return new Promise(function (resolve, reject) {
+            var url = URL.createObjectURL(file), img = new Image();
+            img.onload = function () {
+                var scale = Math.min(1, maxW / img.naturalWidth);
+                var cv = document.createElement('canvas');
+                cv.width = Math.round(img.naturalWidth * scale);
+                cv.height = Math.round(img.naturalHeight * scale);
+                cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+                URL.revokeObjectURL(url);
+                resolve(cv.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('geen afbeelding')); };
+            img.src = url;
+        });
+    }
+
+    var editHerPhotos = [];
+
+    function photosSize(list) {
+        return list.reduce(function (n, src) { return n + src.length; }, 0);
+    }
+
+    function renderHerThumbs() {
+        document.getElementById('herThumbs').innerHTML = editHerPhotos.map(function (src, i) {
+            return '<div class="her-thumb"><img src="' + src + '" alt="">' +
+                '<button type="button" class="her-thumb-del" data-i="' + i + '" title="Verwijder">&times;</button></div>';
+        }).join('');
+        document.getElementById('herAddPhotoBtn').style.display = editHerPhotos.length >= HER_MAX_PHOTOS ? 'none' : '';
+    }
+
+    function openHerModal() {
+        editHerPhotos = herPhotos.slice();
+        document.getElementById('herNameInput').value = her.name || '';
+        document.getElementById('herPhotoMsg').textContent = '';
+        renderHerThumbs();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('herModal')).show();
+    }
+
+    document.getElementById('herEditBtn').addEventListener('click', openHerModal);
+    document.getElementById('herPhotoBox').addEventListener('click', openHerModal);
+    document.getElementById('herAddPhotoBtn').addEventListener('click', function () {
+        document.getElementById('herFileInput').click();
+    });
+
+    document.getElementById('herThumbs').addEventListener('click', function (e) {
+        var del = e.target.closest('.her-thumb-del');
+        if (!del) return;
+        editHerPhotos.splice(parseInt(del.dataset.i, 10), 1);
+        document.getElementById('herPhotoMsg').textContent = '';
+        renderHerThumbs();
+    });
+
+    document.getElementById('herFileInput').addEventListener('change', function () {
+        var files = Array.prototype.slice.call(this.files, 0, HER_MAX_PHOTOS - editHerPhotos.length);
+        var input = this, msg = document.getElementById('herPhotoMsg');
+        msg.textContent = files.length ? 'Foto\'s verwerken...' : '';
+        files.reduce(function (chain, file) {
+            return chain.then(function () {
+                return shrinkPhoto(file, 1000, 0.8).then(function (src) {
+                    if (photosSize(editHerPhotos) + src.length > HER_PHOTO_BUDGET) {
+                        return shrinkPhoto(file, 760, 0.7);
+                    }
+                    return src;
+                }).then(function (src) {
+                    if (photosSize(editHerPhotos) + src.length > HER_PHOTO_BUDGET) {
+                        msg.textContent = 'Past er niet meer bij: verwijder eerst een foto.';
+                        return;
+                    }
+                    editHerPhotos.push(src);
+                    renderHerThumbs();
+                    msg.textContent = '';
+                }).catch(function () { msg.textContent = 'Die foto kon niet gelezen worden.'; });
+            });
+        }, Promise.resolve()).then(function () { input.value = ''; });
+    });
+
+    document.getElementById('saveHer').addEventListener('click', function () {
+        var btn = this;
+        her.name = document.getElementById('herNameInput').value.trim() || 'Tatjana';
+        btn.disabled = true;
+        var saves = [saveHer()];
+        if (JSON.stringify(editHerPhotos) !== JSON.stringify(herPhotos)) {
+            saves.push(db.collection('config').doc('herPhotos').set({ list: editHerPhotos }).then(function () {
+                herPhotos = editHerPhotos.slice();
+            }).catch(function (err) { alert('Foto\'s opslaan mislukt: ' + err.message); throw err; }));
+        }
+        Promise.all(saves).then(function () {
+            renderHer();
+            renderHerPhotos();
+            bootstrap.Modal.getInstance(document.getElementById('herModal')).hide();
+        }).catch(function () { }).then(function () { btn.disabled = false; });
+    });
 
     function renderTimers() {
         var grid = document.getElementById('timerGrid');
@@ -1906,7 +2064,7 @@
         }
 
         var today = todayMidnight();
-        grid.innerHTML = timers.map(function (t, i) { return timerCardHtml(t, i, false, today); }).join('');
+        grid.innerHTML = timers.map(function (t, i) { return timerCardHtml(t, i, today); }).join('');
         rememberTimerHeight(grid);
     }
 
@@ -1917,9 +2075,19 @@
         saveDashCache('timerH', Math.round(grid.getBoundingClientRect().height));
     }
 
-    function openTimerModal(id) {
-        var t = id ? timers.filter(function (x) { return x.id === id; })[0] : null;
-        if (!t && timers.length >= TIMER_MAX) return;
+    function timerList() {
+        return editingScope === 'her' ? her.timers : timers;
+    }
+
+    function commitTimers() {
+        if (editingScope === 'her') { renderHer(); saveHer().catch(function () { }); }
+        else { saveTimers(); renderTimers(); }
+    }
+
+    function openTimerModal(id, scope) {
+        editingScope = scope === 'her' ? 'her' : 'own';
+        var t = id ? timerList().filter(function (x) { return x.id === id; })[0] : null;
+        if (!t && timerList().length >= TIMER_MAX) return;
         editingTimerId = t ? t.id : null;
         document.getElementById('timerModalTitle').textContent = t ? 'Teller bewerken' : 'Nieuwe teller';
         document.getElementById('timerEmojiInput').value = t ? (t.emoji || '') : '';
@@ -1929,12 +2097,19 @@
         bootstrap.Modal.getOrCreateInstance(document.getElementById('timerModal')).show();
     }
 
-    document.getElementById('addTimerBtn').addEventListener('click', function () { openTimerModal(null); });
+    document.getElementById('addTimerBtn').addEventListener('click', function () { openTimerModal(null, 'own'); });
+    document.getElementById('addHerTimerBtn').addEventListener('click', function () { openTimerModal(null, 'her'); });
 
     document.getElementById('timerGrid').addEventListener('click', function (e) {
         var card = e.target.closest('.timer-card');
-        if (card) { openTimerModal(card.dataset.id); return; }
-        if (e.target.closest('#timerEmpty')) openTimerModal(null);
+        if (card) { openTimerModal(card.dataset.id, 'own'); return; }
+        if (e.target.closest('#timerEmpty')) openTimerModal(null, 'own');
+    });
+
+    document.getElementById('herGrid').addEventListener('click', function (e) {
+        var card = e.target.closest('.timer-card');
+        if (card) { openTimerModal(card.dataset.id, 'her'); return; }
+        if (e.target.closest('#herEmpty')) openTimerModal(null, 'her');
     });
 
     document.getElementById('confirmTimer').addEventListener('click', function () {
@@ -1944,23 +2119,22 @@
         if (!date) { document.getElementById('timerDateInput').focus(); return; }
 
         if (editingTimerId) {
-            timers.forEach(function (t) {
+            timerList().forEach(function (t) {
                 if (t.id === editingTimerId) { t.text = text; t.date = date; t.emoji = emoji; }
             });
         } else {
-            if (timers.length >= TIMER_MAX) return;
-            timers.push({ id: Date.now().toString(36), text: text, date: date, emoji: emoji });
+            if (timerList().length >= TIMER_MAX) return;
+            timerList().push({ id: Date.now().toString(36), text: text, date: date, emoji: emoji });
         }
-        saveTimers();
-        renderTimers();
+        commitTimers();
         bootstrap.Modal.getInstance(document.getElementById('timerModal')).hide();
     });
 
     document.getElementById('deleteTimer').addEventListener('click', function () {
         if (!editingTimerId) return;
-        timers = timers.filter(function (t) { return t.id !== editingTimerId; });
-        saveTimers();
-        renderTimers();
+        var keep = timerList().filter(function (t) { return t.id !== editingTimerId; });
+        if (editingScope === 'her') her.timers = keep; else timers = keep;
+        commitTimers();
         bootstrap.Modal.getInstance(document.getElementById('timerModal')).hide();
     });
 
