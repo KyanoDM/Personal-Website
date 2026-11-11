@@ -2092,7 +2092,6 @@ html {
     background:
         radial-gradient(120% 100% at 0% 0%, rgba(244, 114, 182, 0.35) 0%, rgba(244, 114, 182, 0) 70%),
         var(--bg-input);
-    border: 1px solid rgba(244, 114, 182, 0.25);
 }
 
 .her-photo > i {
