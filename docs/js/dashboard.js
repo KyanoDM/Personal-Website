@@ -1946,7 +1946,7 @@
         return d.getDate() + ' ' + TIMER_MONTHS[d.getMonth()];
     }
 
-    // Verjaardag (komende) en bloemen (laatste keer) als twee kleine tegels
+    // Verjaardag (komende) en bloemen (laatste keer): twee subtiele chips op één regel
     function renderHerMini() {
         var box = document.getElementById('herMini');
         if (!box) return;
@@ -1956,28 +1956,20 @@
         var next = new Date(today.getFullYear(), bm, bd);
         if (next < today) next = new Date(today.getFullYear() + 1, bm, bd);
         var left = Math.round((next - today) / 86400000);
-        var birthday = '<button type="button" class="timer-card" id="herBirthday" style="--tc:244, 114, 182" title="Datum aanpassen">' +
-            '<span class="timer-head">' +
-            (left === 0 ? '<span class="timer-number is-today">Vandaag jarig!</span>' : '<span class="timer-number">' + left + '</span>') +
-            '<span class="timer-emoji">\uD83C\uDF82</span></span>' +
-            '<span class="timer-text">Verjaardag</span>' +
-            '<span class="timer-meta">' + (left === 0 ? '' : '<span class="timer-unit">' + (left === 1 ? 'dag' : 'dagen') + ' te gaan</span> · ') +
-            shortDate(next) + '</span></button>';
+        var birthday = '<button type="button" class="her-chip" id="herBirthday" style="--tc:244, 114, 182" title="Datum aanpassen">' +
+            '<span class="her-chip-emoji">\uD83C\uDF82</span>' +
+            '<span>' + (left === 0 ? '<b>Vandaag jarig!</b>' : 'Jarig over <b>' + left + '</b> ' + (left === 1 ? 'dag' : 'dagen')) +
+            ' <span class="her-chip-dim">' + shortDate(next) + '</span></span></button>';
 
         var last = her.flowers.length ? her.flowers.slice().sort().pop() : null;
         var ago = last ? Math.round((today - parseDate(last)) / 86400000) : null;
         var nudge = ago === null || ago >= FLOWERS_NUDGE_DAYS;
-        var flowers = '<button type="button" class="timer-card' + (nudge ? ' is-nudge' : '') + '" id="herFlowers" style="--tc:' +
+        var flowers = '<button type="button" class="her-chip' + (nudge ? ' is-nudge' : '') + '" id="herFlowers" style="--tc:' +
             (nudge ? '251, 191, 36' : '52, 211, 153') + '" title="Bloemen invullen">' +
-            '<span class="timer-head">' +
-            (ago === null ? '<span class="timer-number is-today">Nog niet</span>' :
-                ago === 0 ? '<span class="timer-number is-today">Vandaag</span>' : '<span class="timer-number">' + ago + '</span>') +
-            '<span class="timer-emoji">\uD83D\uDC90</span></span>' +
-            '<span class="timer-text">Laatste bloemen</span>' +
-            '<span class="timer-meta">' + (ago === null ? 'Tik om in te vullen' :
-                (ago === 0 ? '' : '<span class="timer-unit">' + (ago === 1 ? 'dag' : 'dagen') + ' geleden</span> · ') + shortDate(parseDate(last))) + '</span>' +
-            (nudge ? '<span class="timer-nudge">Tijd voor nieuwe!</span>' : '') +
-            '</button>';
+            '<span class="her-chip-emoji">\uD83D\uDC90</span>' +
+            '<span>' + (ago === null ? 'Bloemen invullen' :
+                ago === 0 ? 'Vandaag bloemen gegeven' : '<b>' + ago + '</b> ' + (ago === 1 ? 'dag' : 'dagen') + ' geleden') +
+            (nudge ? ' <span class="her-chip-nudge">\u00B7 tijd voor nieuwe</span>' : '') + '</span></button>';
         box.innerHTML = birthday + flowers;
     }
 
