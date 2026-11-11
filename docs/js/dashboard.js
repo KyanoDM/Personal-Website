@@ -350,10 +350,10 @@
 
     function onShake() {
         if (navigator.vibrate) navigator.vibrate(80);
-        setShakeStatus('Geschud, pc wordt gewekt...');
-        setTimeout(function () {
-            if (_shakeActive) setShakeStatus('Actief — schud je telefoon om je pc te wekken.');
-        }, 4000);
+        // Schudmodus gaat na één keer schudden vanzelf uit; opnieuw aanzetten kan in de instellingen
+        disableShakeMode();
+        document.getElementById('shakeModeToggle').checked = false;
+        setShakeStatus('Geschud, pc wordt gewekt. Schudmodus staat nu uit.');
         document.getElementById('wakePc').click();
     }
 
@@ -1469,6 +1469,18 @@
     }
 
     document.getElementById('openSettings').addEventListener('click', openSettings);
+
+    // Menu in de header (mobiel): open/dicht met de knop, dicht bij tikken ernaast of kiezen van een item
+    (function () {
+        var menu = document.getElementById('headerMenu'), btn = document.getElementById('menuToggle');
+        function setOpen(open) {
+            menu.classList.toggle('open', open);
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+        btn.addEventListener('click', function (e) { e.stopPropagation(); setOpen(!menu.classList.contains('open')); });
+        menu.addEventListener('click', function () { setOpen(false); });
+        document.addEventListener('click', function (e) { if (!menu.contains(e.target)) setOpen(false); });
+    })();
     document.getElementById('closeSettings').addEventListener('click', closeSettingsPanel);
     document.getElementById('settingsOverlay').addEventListener('click', closeSettingsPanel);
 

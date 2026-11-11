@@ -2026,3 +2026,86 @@ html {
         padding: 0.35rem 0.6rem;
     }
 }
+
+/* ─── HEADER-MENU ─────────────────────
+   Desktop: alle knoppen op een rij. Mobiel: alleen pc-aan, thema en een menu-knop; de rest zit in het menu. */
+.header-menu {
+    display: contents;
+}
+
+.header-menu-btn,
+.menu-label {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    .dashboard-header {
+        position: relative;
+    }
+
+    .header-menu-btn {
+        display: flex;
+    }
+
+    .header-menu {
+        display: none;
+        position: absolute;
+        top: calc(100% - 0.25rem);
+        right: 0;
+        z-index: 50;
+        min-width: 13rem;
+        flex-direction: column;
+        gap: 0.15rem;
+        padding: 0.4rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .header-menu.open {
+        display: flex;
+    }
+
+    .header-menu .btn-icon,
+    .header-menu .btn-outline-light {
+        width: 100%;
+        height: auto;
+        justify-content: flex-start;
+        gap: 0.7rem;
+        padding: 0.65rem 0.75rem;
+        border: none;
+        background: transparent;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 500;
+        line-height: 1.2;
+        text-align: left;
+        color: var(--text);
+        text-decoration: none;
+    }
+
+    .header-menu .btn-outline-light {
+        display: flex;
+        align-items: center;
+    }
+
+    .header-menu .btn-icon i,
+    .header-menu .btn-outline-light i {
+        width: 1.1rem;
+        margin: 0 !important;
+        text-align: center;
+        color: var(--text-dim);
+    }
+
+    .header-menu .menu-label {
+        display: inline;
+    }
+
+    .header-menu .btn-icon:hover,
+    .header-menu .btn-outline-light:hover {
+        background: var(--bg-hover);
+        color: var(--text);
+    }
+}
