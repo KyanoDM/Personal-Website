@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/dashboard.css?v=26">
+    <link rel="stylesheet" href="css/dashboard.css?v=27">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="img/logo.png" type="image/png">
     <meta name="theme-color" content="#0a0b10">
@@ -77,7 +77,7 @@
                     <div class="habit-grid" id="habitGrid"></div>
 
                     <div class="habit-actions">
-                        <button id="addHabit" class="btn-ghost"><i class="fas fa-plus me-1"></i>Habit toevoegen</button>
+                        <button id="addHabit" class="btn-icon" title="Habit toevoegen" aria-label="Habit toevoegen"><i class="fas fa-plus"></i></button>
                     </div>
 
                     <div class="heatmap-wrapper">
@@ -127,9 +127,7 @@
                 <section class="dash-section timers-section" id="timersSection">
                     <div class="section-head">
                         <h2><i class="fas fa-hourglass-half me-2"></i>Tellers</h2>
-                        <button id="addTimerBtn" class="btn-ghost btn-ghost-sm" title="Nieuwe teller">
-                            <i class="fas fa-plus me-1"></i>Nieuw
-                        </button>
+                        <button id="addTimerBtn" class="btn-icon" title="Nieuwe teller" aria-label="Nieuwe teller"><i class="fas fa-plus"></i></button>
                     </div>
                     <div class="timer-grid" id="timerGrid"></div>
                 </section>
@@ -172,7 +170,7 @@
                             <div class="yt-subsection">
                                 <div class="yt-sub-head">
                                     <h3 class="yt-sub-title">Channel Ideas</h3>
-                                    <button id="addIdea" class="btn-ghost btn-ghost-sm"><i class="fas fa-plus me-1"></i>Idee</button>
+                                    <button id="addIdea" class="btn-icon" title="Idee toevoegen" aria-label="Idee toevoegen"><i class="fas fa-plus"></i></button>
                                 </div>
                                 <div class="kanban-list" id="kanbanList"></div>
                             </div>
@@ -180,7 +178,7 @@
                             <div class="yt-subsection">
                                 <div class="yt-sub-head">
                                     <h3 class="yt-sub-title">Video Sources</h3>
-                                    <button id="addSource" class="btn-ghost btn-ghost-sm"><i class="fas fa-plus me-1"></i>Toevoegen</button>
+                                    <button id="addSource" class="btn-icon" title="Bron toevoegen" aria-label="Bron toevoegen"><i class="fas fa-plus"></i></button>
                                 </div>
                                 <div id="sourcesList"></div>
                             </div>
@@ -193,12 +191,8 @@
                     <div class="section-head">
                         <h2><span id="herIcon" class="me-2"><i class="fas fa-heart"></i></span><span id="herTitle">Tatjana</span></h2>
                         <div class="d-flex gap-2">
-                            <button id="herEditBtn" class="btn-ghost btn-ghost-sm" title="Bewerken" aria-label="Bewerken">
-                                <i class="fas fa-pen"></i>
-                            </button>
-                            <button id="addHerTimerBtn" class="btn-ghost btn-ghost-sm" title="Nieuwe teller">
-                                <i class="fas fa-plus me-1"></i>Nieuw
-                            </button>
+                            <button id="herEditBtn" class="btn-icon" title="Bewerken" aria-label="Bewerken"><i class="fas fa-pen"></i></button>
+                            <button id="addHerTimerBtn" class="btn-icon" title="Nieuwe teller" aria-label="Nieuwe teller"><i class="fas fa-plus"></i></button>
                         </div>
                     </div>
                     <div class="her-body">
@@ -235,9 +229,7 @@
             <section class="dash-section" id="todoSection">
                 <div class="section-head">
                     <h2><i class="fas fa-list-check me-2"></i>To-Do</h2>
-                    <button id="clearDoneTodos" class="btn-ghost btn-ghost-sm" title="Taken vernieuwen (synct met Notion)">
-                        <i class="fas fa-rotate me-1"></i>Vernieuwen
-                    </button>
+                    <button id="clearDoneTodos" class="btn-icon" title="Taken vernieuwen (synct met Notion)" aria-label="Taken vernieuwen"><i class="fas fa-rotate-right"></i></button>
                 </div>
                 <div id="todoList"></div>
                 <div class="todo-input-row">
@@ -537,7 +529,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
-    <script src="js/dashboard.js?v=33"></script>
+    <script src="js/dashboard.js?v=34"></script>
 </body>
 
 </html>
