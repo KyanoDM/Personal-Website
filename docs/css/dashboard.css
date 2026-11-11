@@ -2185,6 +2185,7 @@ html {
 }
 
 button.her-chip {
+    margin-left: auto;   /* bloementekst rechts onder (ook als hij op een eigen regel komt) */
     cursor: pointer;
     pointer-events: auto;
 }
