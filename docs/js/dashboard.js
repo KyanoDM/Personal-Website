@@ -1867,6 +1867,7 @@
     }
 
     // ─── VOOR HAAR: naam, foto's en eigen tellers (staat in Firestore: config/her en config/herPhotos) ───
+    var HER_BIRTHDAY = { year: 2005, month: 12, day: 16 };   // vast, niet aanpasbaar
     var FLOWERS_NUDGE_DAYS = 10;   // vanaf zoveel dagen na de laatste bloemen: "tijd voor nieuwe"
 
     // Zorgt dat er altijd een volledig object is (ook bij oude/ontbrekende velden)
@@ -1875,7 +1876,6 @@
         return {
             name: d.name || 'Tatjana',
             timers: d.timers || [],
-            birthday: /^\d\d-\d\d$/.test(d.birthday || '') ? d.birthday : '12-16',   // 'MM-DD'
             flowers: (d.flowers || []).slice()                                       // datums 'YYYY-MM-DD'
         };
     }
@@ -1908,7 +1908,7 @@
             renderHerPhotos();
             var moved = timers.filter(function (t) { return /tatjana/i.test(t.text || ''); }).slice(0, TIMER_MAX);
             if (!moved.length) return;
-            return db.collection('config').doc('her').set({ name: her.name, timers: moved, birthday: her.birthday, flowers: her.flowers }).then(function () {
+            return db.collection('config').doc('her').set({ name: her.name, timers: moved, flowers: her.flowers }).then(function () {
                 her.timers = moved;
                 var ids = moved.map(function (t) { return t.id; });
                 timers = timers.filter(function (t) { return ids.indexOf(t.id) === -1; });
@@ -1921,7 +1921,7 @@
 
     function saveHer() {
         saveDashCache('her', her);
-        return db.collection('config').doc('her').set({ name: her.name, timers: her.timers, birthday: her.birthday, flowers: her.flowers })
+        return db.collection('config').doc('her').set({ name: her.name, timers: her.timers, flowers: her.flowers })
             .catch(function (err) { alert('Opslaan mislukt: ' + err.message); throw err; });
     }
 
@@ -1952,20 +1952,18 @@
         if (!box) return;
         var today = todayMidnight();
 
-        var bm = parseInt(her.birthday.slice(0, 2), 10) - 1, bd = parseInt(her.birthday.slice(3), 10);
-        var next = new Date(today.getFullYear(), bm, bd);
-        if (next < today) next = new Date(today.getFullYear() + 1, bm, bd);
+        var next = new Date(today.getFullYear(), HER_BIRTHDAY.month - 1, HER_BIRTHDAY.day);
+        if (next < today) next = new Date(today.getFullYear() + 1, HER_BIRTHDAY.month - 1, HER_BIRTHDAY.day);
         var left = Math.round((next - today) / 86400000);
-        var birthday = '<button type="button" class="her-chip" id="herBirthday" style="--tc:244, 114, 182" title="Datum aanpassen">' +
-            '<span class="her-chip-emoji">\uD83C\uDF82</span>' +
+        var turning = next.getFullYear() - HER_BIRTHDAY.year;
+        var birthday = '<span class="her-chip"><span class="her-chip-emoji">\uD83C\uDF82</span>' +
             '<span>' + (left === 0 ? '<b>Vandaag jarig!</b>' : 'Jarig over <b>' + left + '</b> ' + (left === 1 ? 'dag' : 'dagen')) +
-            ' <span class="her-chip-dim">' + shortDate(next) + '</span></span></button>';
+            ' <span class="her-chip-dim">\u00B7 ' + shortDate(next) + ' \u00B7 wordt ' + turning + '</span></span></span>';
 
         var last = her.flowers.length ? her.flowers.slice().sort().pop() : null;
         var ago = last ? Math.round((today - parseDate(last)) / 86400000) : null;
         var nudge = ago === null || ago >= FLOWERS_NUDGE_DAYS;
-        var flowers = '<button type="button" class="her-chip' + (nudge ? ' is-nudge' : '') + '" id="herFlowers" style="--tc:' +
-            (nudge ? '251, 191, 36' : '52, 211, 153') + '" title="Bloemen invullen">' +
+        var flowers = '<button type="button" class="her-chip' + (nudge ? ' is-nudge' : '') + '" id="herFlowers" title="Bloemen invullen">' +
             '<span class="her-chip-emoji">\uD83D\uDC90</span>' +
             '<span>' + (ago === null ? 'Bloemen invullen' :
                 ago === 0 ? 'Vandaag bloemen gegeven' : '<b>' + ago + '</b> ' + (ago === 1 ? 'dag' : 'dagen') + ' geleden') +
@@ -2036,7 +2034,6 @@
     function openHerModal() {
         editHerPhotos = herPhotos.slice();
         document.getElementById('herNameInput').value = her.name || '';
-        document.getElementById('herBirthdayInput').value = '2000-' + her.birthday;
         document.getElementById('herPhotoMsg').textContent = '';
         renderHerThumbs();
         bootstrap.Modal.getOrCreateInstance(document.getElementById('herModal')).show();
@@ -2063,7 +2060,6 @@
 
     document.getElementById('herMini').addEventListener('click', function (e) {
         if (e.target.closest('#herFlowers')) openFlowersModal();
-        else if (e.target.closest('#herBirthday')) openHerModal();
     });
 
     document.getElementById('saveFlowers').addEventListener('click', function () {
@@ -2125,8 +2121,6 @@
     document.getElementById('saveHer').addEventListener('click', function () {
         var btn = this;
         her.name = document.getElementById('herNameInput').value.trim() || 'Tatjana';
-        var bday = document.getElementById('herBirthdayInput').value;
-        if (bday) her.birthday = bday.slice(5);
         btn.disabled = true;
         var saves = [saveHer()];
         if (JSON.stringify(editHerPhotos) !== JSON.stringify(herPhotos)) {
