@@ -1867,7 +1867,20 @@
     }
 
     // ─── VOOR HAAR: naam, foto's en eigen tellers (staat in Firestore: config/her en config/herPhotos) ───
-    var her = readDashCache('her') || { name: 'Tatjana', timers: [] };
+    var FLOWERS_NUDGE_DAYS = 10;   // vanaf zoveel dagen na de laatste bloemen: "tijd voor nieuwe"
+
+    // Zorgt dat er altijd een volledig object is (ook bij oude/ontbrekende velden)
+    function normHer(d) {
+        d = d || {};
+        return {
+            name: d.name || 'Tatjana',
+            timers: d.timers || [],
+            birthday: /^\d\d-\d\d$/.test(d.birthday || '') ? d.birthday : '12-16',   // 'MM-DD'
+            flowers: (d.flowers || []).slice()                                       // datums 'YYYY-MM-DD'
+        };
+    }
+
+    var her = normHer(readDashCache('her'));
     var herPhotos = [];
     var HER_MAX_PHOTOS = 5;
     var HER_PHOTO_BUDGET = 900000;  // tekens; een Firestore-document mag zo'n 1 MB groot zijn
@@ -1884,18 +1897,18 @@
             });
             if (r[0].exists) {
                 var d = r[0].data();
-                her = { name: d.name || 'Tatjana', timers: d.timers || [] };
+                her = normHer(d);
                 renderHer();
                 renderHerPhotos();
                 return;
             }
             // Eerste keer: de tellers die al bij "Tatjana" in je gewone lijst staan, nemen we over
-            her = { name: 'Tatjana', timers: [] };
+            her = normHer({});
             renderHer();
             renderHerPhotos();
             var moved = timers.filter(function (t) { return /tatjana/i.test(t.text || ''); }).slice(0, TIMER_MAX);
             if (!moved.length) return;
-            return db.collection('config').doc('her').set({ name: her.name, timers: moved }).then(function () {
+            return db.collection('config').doc('her').set({ name: her.name, timers: moved, birthday: her.birthday, flowers: her.flowers }).then(function () {
                 her.timers = moved;
                 var ids = moved.map(function (t) { return t.id; });
                 timers = timers.filter(function (t) { return ids.indexOf(t.id) === -1; });
@@ -1908,7 +1921,7 @@
 
     function saveHer() {
         saveDashCache('her', her);
-        return db.collection('config').doc('her').set({ name: her.name, timers: her.timers })
+        return db.collection('config').doc('her').set({ name: her.name, timers: her.timers, birthday: her.birthday, flowers: her.flowers })
             .catch(function (err) { alert('Opslaan mislukt: ' + err.message); throw err; });
     }
 
@@ -1919,6 +1932,7 @@
         document.getElementById('herTitle').textContent = her.name || 'Tatjana';
         document.getElementById('addHerTimerBtn').style.display = her.timers.length >= TIMER_MAX ? 'none' : '';
         saveDashCache('her', her);
+        renderHerMini();
         if (!her.timers.length) {
             grid.innerHTML = '<button type="button" class="timer-empty" id="herEmpty">' +
                 '<i class="fas fa-plus"></i>Voeg een teller toe</button>';
@@ -1926,6 +1940,45 @@
         }
         var today = todayMidnight();
         grid.innerHTML = her.timers.map(function (t, i) { return timerCardHtml(t, i + 1, today); }).join('');
+    }
+
+    function shortDate(d) {
+        return d.getDate() + ' ' + TIMER_MONTHS[d.getMonth()];
+    }
+
+    // Verjaardag (komende) en bloemen (laatste keer) als twee kleine tegels
+    function renderHerMini() {
+        var box = document.getElementById('herMini');
+        if (!box) return;
+        var today = todayMidnight();
+
+        var bm = parseInt(her.birthday.slice(0, 2), 10) - 1, bd = parseInt(her.birthday.slice(3), 10);
+        var next = new Date(today.getFullYear(), bm, bd);
+        if (next < today) next = new Date(today.getFullYear() + 1, bm, bd);
+        var left = Math.round((next - today) / 86400000);
+        var birthday = '<button type="button" class="timer-card" id="herBirthday" style="--tc:244, 114, 182" title="Datum aanpassen">' +
+            '<span class="timer-head">' +
+            (left === 0 ? '<span class="timer-number is-today">Vandaag jarig!</span>' : '<span class="timer-number">' + left + '</span>') +
+            '<span class="timer-emoji">\uD83C\uDF82</span></span>' +
+            '<span class="timer-text">Verjaardag</span>' +
+            '<span class="timer-meta">' + (left === 0 ? '' : '<span class="timer-unit">' + (left === 1 ? 'dag' : 'dagen') + ' te gaan</span> · ') +
+            shortDate(next) + '</span></button>';
+
+        var last = her.flowers.length ? her.flowers.slice().sort().pop() : null;
+        var ago = last ? Math.round((today - parseDate(last)) / 86400000) : null;
+        var nudge = ago === null || ago >= FLOWERS_NUDGE_DAYS;
+        var flowers = '<button type="button" class="timer-card' + (nudge ? ' is-nudge' : '') + '" id="herFlowers" style="--tc:' +
+            (nudge ? '251, 191, 36' : '52, 211, 153') + '" title="Bloemen invullen">' +
+            '<span class="timer-head">' +
+            (ago === null ? '<span class="timer-number is-today">Nog niet</span>' :
+                ago === 0 ? '<span class="timer-number is-today">Vandaag</span>' : '<span class="timer-number">' + ago + '</span>') +
+            '<span class="timer-emoji">\uD83D\uDC90</span></span>' +
+            '<span class="timer-text">Laatste bloemen</span>' +
+            '<span class="timer-meta">' + (ago === null ? 'Tik om in te vullen' :
+                (ago === 0 ? '' : '<span class="timer-unit">' + (ago === 1 ? 'dag' : 'dagen') + ' geleden</span> · ') + shortDate(parseDate(last))) + '</span>' +
+            (nudge ? '<span class="timer-nudge">Tijd voor nieuwe!</span>' : '') +
+            '</button>';
+        box.innerHTML = birthday + flowers;
     }
 
     function renderHerPhotos() {
@@ -1991,12 +2044,55 @@
     function openHerModal() {
         editHerPhotos = herPhotos.slice();
         document.getElementById('herNameInput').value = her.name || '';
+        document.getElementById('herBirthdayInput').value = '2000-' + her.birthday;
         document.getElementById('herPhotoMsg').textContent = '';
         renderHerThumbs();
         bootstrap.Modal.getOrCreateInstance(document.getElementById('herModal')).show();
     }
 
     document.getElementById('herEditBtn').addEventListener('click', openHerModal);
+
+    // Bloemen: datum invullen (standaard vandaag) en de laatste keren bekijken/verwijderen
+    function renderFlowersHistory() {
+        var list = her.flowers.slice().sort().reverse().slice(0, 5);
+        document.getElementById('flowersHistory').innerHTML = list.map(function (d) {
+            return '<div class="flower-row"><span>' + escapeHtml(shortDate(parseDate(d)) + ' ' + parseDate(d).getFullYear()) + '</span>' +
+                '<button type="button" class="her-thumb-del flower-del" data-date="' + escapeHtml(d) + '" title="Verwijder">&times;</button></div>';
+        }).join('');
+    }
+
+    function openFlowersModal() {
+        var input = document.getElementById('flowersDateInput');
+        input.max = formatDate(new Date());
+        input.value = input.max;
+        renderFlowersHistory();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('flowersModal')).show();
+    }
+
+    document.getElementById('herMini').addEventListener('click', function (e) {
+        if (e.target.closest('#herFlowers')) openFlowersModal();
+        else if (e.target.closest('#herBirthday')) openHerModal();
+    });
+
+    document.getElementById('saveFlowers').addEventListener('click', function () {
+        var date = document.getElementById('flowersDateInput').value;
+        if (!date) { document.getElementById('flowersDateInput').focus(); return; }
+        if (her.flowers.indexOf(date) === -1) her.flowers.push(date);
+        her.flowers.sort();
+        her.flowers = her.flowers.slice(-30);
+        renderHer();
+        saveHer().catch(function () { });
+        bootstrap.Modal.getInstance(document.getElementById('flowersModal')).hide();
+    });
+
+    document.getElementById('flowersHistory').addEventListener('click', function (e) {
+        var del = e.target.closest('.flower-del');
+        if (!del) return;
+        her.flowers = her.flowers.filter(function (d) { return d !== del.dataset.date; });
+        renderFlowersHistory();
+        renderHer();
+        saveHer().catch(function () { });
+    });
     document.getElementById('herPhotoBox').addEventListener('click', openHerModal);
     document.getElementById('herAddPhotoBtn').addEventListener('click', function () {
         document.getElementById('herFileInput').click();
@@ -2037,6 +2133,8 @@
     document.getElementById('saveHer').addEventListener('click', function () {
         var btn = this;
         her.name = document.getElementById('herNameInput').value.trim() || 'Tatjana';
+        var bday = document.getElementById('herBirthdayInput').value;
+        if (bday) her.birthday = bday.slice(5);
         btn.disabled = true;
         var saves = [saveHer()];
         if (JSON.stringify(editHerPhotos) !== JSON.stringify(herPhotos)) {

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/dashboard.css?v=21">
+    <link rel="stylesheet" href="css/dashboard.css?v=22">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="img/logo.png" type="image/png">
     <meta name="theme-color" content="#0a0b10">
@@ -204,6 +204,7 @@
                     <div class="her-body">
                         <div class="her-photo" id="herPhotoBox"><i class="fas fa-heart"></i></div>
                         <div class="timer-grid her-grid" id="herGrid"></div>
+                        <div class="timer-grid her-mini" id="herMini"></div>
                     </div>
                 </section>
             </div>
@@ -339,6 +340,8 @@
                     <h5 class="mb-3">Bewerken</h5>
                     <label class="timer-label" for="herNameInput">Naam</label>
                     <input type="text" id="herNameInput" class="form-control dash-input mb-3" maxlength="30" autocomplete="off">
+                    <label class="timer-label" for="herBirthdayInput">Verjaardag (het jaar maakt niet uit)</label>
+                    <input type="date" id="herBirthdayInput" class="form-control dash-input mb-3">
                     <label class="timer-label">Foto's (max 5)</label>
                     <div class="her-thumbs" id="herThumbs"></div>
                     <input type="file" id="herFileInput" accept="image/*" multiple hidden>
@@ -346,6 +349,25 @@
                     <div class="timer-hint mb-3" id="herPhotoMsg"></div>
                     <div class="d-flex gap-2">
                         <button id="saveHer" class="btn-accent flex-grow-1">Opslaan</button>
+                        <button class="btn-ghost" data-bs-dismiss="modal">Annuleer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bloemen Modal -->
+    <div class="modal fade" id="flowersModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content dash-modal">
+                <div class="modal-body p-4">
+                    <h5 class="mb-3">Bloemen gegeven</h5>
+                    <label class="timer-label" for="flowersDateInput">Datum</label>
+                    <input type="date" id="flowersDateInput" class="form-control dash-input mb-3">
+                    <label class="timer-label">Laatste keren</label>
+                    <div class="flower-history mb-3" id="flowersHistory"></div>
+                    <div class="d-flex gap-2">
+                        <button id="saveFlowers" class="btn-accent flex-grow-1">Opslaan</button>
                         <button class="btn-ghost" data-bs-dismiss="modal">Annuleer</button>
                     </div>
                 </div>
@@ -497,7 +519,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
-    <script src="js/dashboard.js?v=28"></script>
+    <script src="js/dashboard.js?v=29"></script>
 </body>
 
 </html>
