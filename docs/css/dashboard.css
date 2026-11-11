@@ -2047,6 +2047,22 @@ html {
         flex-shrink: 1;
         min-height: 0;
     }
+
+    /* Even hoog als YouTube; de foto vult de ruimte die overblijft */
+    .yt-row > .her-section {
+        align-self: stretch;
+    }
+
+    .her-body {
+        flex: 1;
+        min-height: 0;
+    }
+
+    .her-photo {
+        flex: 1;
+        height: auto;
+        min-height: 9.5rem;
+    }
 }
 
 /* ─── VOOR HAAR: foto('s) + tellers ─────────────────── */
@@ -2169,6 +2185,10 @@ html {
 }
 
 @media (max-width: 640px) {
+    .her-photo {
+        height: 19rem;
+    }
+
     .her-grid .timer-number {
         font-size: 1.4rem;
     }
