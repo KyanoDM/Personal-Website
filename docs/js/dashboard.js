@@ -1793,7 +1793,7 @@
 
     // ─── TELLERS (dagen sinds / tot een datum) ──────────────────────
     var timers = [];
-    var TIMER_MAX = 4;
+    var TIMER_MAX = 3;
     var TIMER_COLORS = ['129, 140, 248', '52, 211, 153', '251, 191, 36', '244, 114, 182'];
     var TIMER_MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
     var editingTimerId = null;
@@ -1836,6 +1836,61 @@
         return parts.join(' · ');
     }
 
+    // Eén tellerkaart; 'fixed' = vaste teller (geen knop, niet bewerkbaar)
+    function timerCardHtml(t, i, fixed, today) {
+        var target = parseDate(t.date);
+        var diff = Math.round((today - target) / 86400000);
+        var abs = Math.abs(diff);
+        var number = diff === 0
+            ? '<span class="timer-number is-today">Vandaag!</span>'
+            : '<span class="timer-number">' + abs + '</span>';
+        var emoji = t.emoji ? '<span class="timer-emoji">' + escapeHtml(t.emoji) + '</span>' : '';
+        var text = t.text ? '<span class="timer-text">' + escapeHtml(t.text) + '</span>' : '';
+        var dateLabel = target.getDate() + ' ' + TIMER_MONTHS[target.getMonth()] + ' ' + target.getFullYear();
+        var unit = diff === 0 ? '' :
+            '<span class="timer-unit">' + (abs === 1 ? 'dag' : 'dagen') + (diff > 0 ? ' sinds' : ' te gaan') + '</span> · ';
+        var breakdown = '';
+        if (abs > 30) {
+            var txt = diff > 0 ? timerBreakdown(target, today) : timerBreakdown(today, target);
+            breakdown = '<span class="timer-meta">' + escapeHtml(txt) + '</span>';
+        }
+        var tag = fixed ? 'div' : 'button type="button"';
+        return '<' + tag + ' class="timer-card' + (fixed ? ' is-fixed' : '') + '"' +
+            (fixed ? '' : ' data-id="' + escapeHtml(t.id) + '" title="Bewerken"') +
+            ' style="--tc:' + TIMER_COLORS[i % TIMER_COLORS.length] + '">' +
+            '<span class="timer-head">' + number + emoji + '</span>' +
+            text +
+            '<span class="timer-meta">' + unit + escapeHtml(dateLabel) + '</span>' +
+            breakdown +
+            '</' + (fixed ? 'div' : 'button') + '>';
+    }
+
+    // ─── VOOR HAAR: vaste tellers + foto (niet bewerkbaar, staat gewoon in de code) ───
+    // Pas hier de naam, foto en tellers aan. De foto zet je in docs/img/ (bv. img/her.jpg).
+    var HER_NAME = 'Voor haar';
+    var HER_PHOTO = 'img/her.jpg';
+    var HER_TIMERS = [
+        { emoji: '\u2764\uFE0F', text: 'Samen sinds', date: '2024-02-14' },
+        { emoji: '\uD83C\uDF82', text: 'Verjaardag', date: '2026-12-25' },
+        { emoji: '\u2708\uFE0F', text: 'Vakantie', date: '2027-07-01' }
+    ];
+    var _herRenderedDay = null;
+
+    function renderHer() {
+        var grid = document.getElementById('herGrid');
+        if (!grid) return;
+        _herRenderedDay = formatDate(new Date());
+        document.getElementById('herTitle').textContent = HER_NAME;
+        var photo = document.getElementById('herPhoto');
+        if (!photo.getAttribute('src')) {
+            photo.addEventListener('load', function () { photo.parentNode.classList.add('has-photo'); });
+            photo.addEventListener('error', function () { photo.parentNode.classList.remove('has-photo'); });
+            photo.src = HER_PHOTO;
+        }
+        var today = todayMidnight();
+        grid.innerHTML = HER_TIMERS.map(function (t, i) { return timerCardHtml(t, i + 1, true, today); }).join('');
+    }
+
     function renderTimers() {
         var grid = document.getElementById('timerGrid');
         if (!grid) return;
@@ -1851,31 +1906,7 @@
         }
 
         var today = todayMidnight();
-        grid.innerHTML = timers.map(function (t, i) {
-            var target = parseDate(t.date);
-            var diff = Math.round((today - target) / 86400000);
-            var abs = Math.abs(diff);
-            var number = diff === 0
-                ? '<span class="timer-number is-today">Vandaag!</span>'
-                : '<span class="timer-number">' + abs + '</span>';
-            var emoji = t.emoji ? '<span class="timer-emoji">' + escapeHtml(t.emoji) + '</span>' : '';
-            var text = t.text ? '<span class="timer-text">' + escapeHtml(t.text) + '</span>' : '';
-            var dateLabel = target.getDate() + ' ' + TIMER_MONTHS[target.getMonth()] + ' ' + target.getFullYear();
-            var unit = diff === 0 ? '' :
-                '<span class="timer-unit">' + (abs === 1 ? 'dag' : 'dagen') + (diff > 0 ? ' sinds' : ' te gaan') + '</span> · ';
-            var breakdown = '';
-            if (abs > 30) {
-                var txt = diff > 0 ? timerBreakdown(target, today) : timerBreakdown(today, target);
-                breakdown = '<span class="timer-meta">' + escapeHtml(txt) + '</span>';
-            }
-            return '<button type="button" class="timer-card" data-id="' + escapeHtml(t.id) + '" ' +
-                'style="--tc:' + TIMER_COLORS[i % TIMER_COLORS.length] + '" title="Bewerken">' +
-                '<span class="timer-head">' + number + emoji + '</span>' +
-                text +
-                '<span class="timer-meta">' + unit + escapeHtml(dateLabel) + '</span>' +
-                breakdown +
-                '</button>';
-        }).join('');
+        grid.innerHTML = timers.map(function (t, i) { return timerCardHtml(t, i, false, today); }).join('');
         rememberTimerHeight(grid);
     }
 
@@ -1936,7 +1967,10 @@
     // Dag-wissel: tellers verversen als het dashboard na middernacht open blijft staan
     setInterval(function () {
         if (_timerRenderedDay && _timerRenderedDay !== formatDate(new Date())) renderTimers();
+        if (_herRenderedDay && _herRenderedDay !== formatDate(new Date())) renderHer();
     }, 10 * 60 * 1000);
+
+    renderHer();
 
     // ─── TODO (gesynct met Notion via Cloudflare Worker) ────────────
     var TODO_BASE = 'https://notion-todo.kyanodemaertelaere.workers.dev';

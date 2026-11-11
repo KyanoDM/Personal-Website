@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/dashboard.css?v=15">
+    <link rel="stylesheet" href="css/dashboard.css?v=16">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="img/logo.png" type="image/png">
     <meta name="theme-color" content="#0a0b10">
@@ -132,6 +132,17 @@
                         </button>
                     </div>
                     <div class="timer-grid" id="timerGrid"></div>
+                </section>
+
+                <!-- Voor haar: vaste tellers + foto -->
+                <section class="dash-section her-section" id="herSection">
+                    <div class="section-head">
+                        <h2><i class="fas fa-heart me-2"></i><span id="herTitle">Voor haar</span></h2>
+                    </div>
+                    <div class="her-body">
+                        <div class="her-photo"><img id="herPhoto" alt=""><i class="fas fa-heart"></i></div>
+                        <div class="timer-grid her-grid" id="herGrid"></div>
+                    </div>
                 </section>
 
             </div>
@@ -394,12 +405,12 @@
                     return '<div class="today-habit sk-tile"><span class="today-check sk"></span><span class="today-name">' + line('70%') + '</span></div>';
                 }) + '</div>';
 
-            // Tellers: aantal van de vorige keer (eerste keer: 4)
+            // Tellers: aantal van de vorige keer (eerste keer: 3)
             var tints = ['129, 140, 248', '52, 211, 153', '251, 191, 36', '244, 114, 182'];
-            if (count('dash:timerCount', 4, 4) >= 4) el('addTimerBtn').style.display = 'none';
+            if (count('dash:timerCount', 3, 3) >= 3) el('addTimerBtn').style.display = 'none';
             var timerH = count('dash:timerH', 0, 600);
             if (timerH) { el('timerGrid').style.height = timerH + 'px'; el('timerGrid').style.overflow = 'hidden'; }
-            el('timerGrid').innerHTML = rep(count('dash:timerCount', 4, 4), function (i) {
+            el('timerGrid').innerHTML = rep(count('dash:timerCount', 3, 3), function (i) {
                 return '<div class="timer-card timer-skel" style="--tc:' + tints[i % 4] + '">' +
                     '<span class="timer-head"><span class="timer-number">' + line('46px') + '</span></span>' +
                     '<span class="timer-text">' + line('88%') + '<br>' + line('52%') + '</span>' +
@@ -453,7 +464,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
-    <script src="js/dashboard.js?v=25"></script>
+    <script src="js/dashboard.js?v=26"></script>
 </body>
 
 </html>
