@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/dashboard.css?v=17">
+    <link rel="stylesheet" href="css/dashboard.css?v=18">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="img/logo.png" type="image/png">
     <meta name="theme-color" content="#0a0b10">
@@ -134,6 +134,60 @@
                     <div class="timer-grid" id="timerGrid"></div>
                 </section>
 
+            </div>
+            <div class="dashboard-col">
+
+            <!-- YouTube en Tatjana naast elkaar (op brede schermen) -->
+            <div class="yt-row">
+                <!-- YouTube Section -->
+                <section class="dash-section" id="youtubeSection">
+                    <div class="section-head">
+                        <div class="channel-header">
+                            <img id="channelAvatar" class="channel-avatar" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+                            <div class="channel-header-info">
+                                <h2><a id="ytStudioLink" href="https://studio.youtube.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span class="sk sk-text" style="width:90px">&nbsp;</span></a></h2>
+                            </div>
+                        </div>
+                        <div class="channel-switcher">
+                            <select id="channelSelect" class="channel-select"></select>
+                            <button id="refreshYT" class="btn-icon" title="Vernieuwen"><i class="fas fa-rotate-right"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="yt-stats-bar" id="ytStats">
+                        <div class="yt-stat"><span class="stat-label">Abonnees</span><span class="stat-value"><span class="sk sk-text" style="width:48px">&nbsp;</span></span></div>
+                        <div class="yt-stat"><span class="stat-label">Totaal views</span><span class="stat-value"><span class="sk sk-text" style="width:56px">&nbsp;</span></span></div>
+                    </div>
+
+                    <div class="yt-subsection">
+                        <h3 class="yt-sub-title">Laatste video's</h3>
+                        <div id="ytVideos"><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:82%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:66%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:90%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:74%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:58%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div></div>
+                    </div>
+
+                    <div class="yt-collapsible">
+                        <button type="button" class="yt-collapsible-toggle" id="ytMoreToggle">
+                            <i class="fas fa-chevron-right yt-collapsible-chevron"></i>Meer
+                        </button>
+                        <div class="yt-collapsible-content" id="ytMoreContent" style="display:none">
+                            <div class="yt-subsection">
+                                <div class="yt-sub-head">
+                                    <h3 class="yt-sub-title">Channel Ideas</h3>
+                                    <button id="addIdea" class="btn-ghost btn-ghost-sm"><i class="fas fa-plus me-1"></i>Idee</button>
+                                </div>
+                                <div class="kanban-list" id="kanbanList"></div>
+                            </div>
+
+                            <div class="yt-subsection">
+                                <div class="yt-sub-head">
+                                    <h3 class="yt-sub-title">Video Sources</h3>
+                                    <button id="addSource" class="btn-ghost btn-ghost-sm"><i class="fas fa-plus me-1"></i>Toevoegen</button>
+                                </div>
+                                <div id="sourcesList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Voor haar: naam, foto's en tellers -->
                 <section class="dash-section her-section" id="herSection">
                     <div class="section-head">
@@ -152,58 +206,7 @@
                         <div class="timer-grid her-grid" id="herGrid"></div>
                     </div>
                 </section>
-
             </div>
-            <div class="dashboard-col">
-
-            <!-- YouTube Section -->
-            <section class="dash-section" id="youtubeSection">
-                <div class="section-head">
-                    <div class="channel-header">
-                        <img id="channelAvatar" class="channel-avatar" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
-                        <div class="channel-header-info">
-                            <h2><a id="ytStudioLink" href="https://studio.youtube.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span class="sk sk-text" style="width:90px">&nbsp;</span></a></h2>
-                        </div>
-                    </div>
-                    <div class="channel-switcher">
-                        <select id="channelSelect" class="channel-select"></select>
-                        <button id="refreshYT" class="btn-icon" title="Vernieuwen"><i class="fas fa-rotate-right"></i></button>
-                    </div>
-                </div>
-
-                <div class="yt-stats-bar" id="ytStats">
-                    <div class="yt-stat"><span class="stat-label">Abonnees</span><span class="stat-value"><span class="sk sk-text" style="width:48px">&nbsp;</span></span></div>
-                    <div class="yt-stat"><span class="stat-label">Totaal views</span><span class="stat-value"><span class="sk sk-text" style="width:56px">&nbsp;</span></span></div>
-                </div>
-
-                <div class="yt-subsection">
-                    <h3 class="yt-sub-title">Laatste video's</h3>
-                    <div id="ytVideos"><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:82%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:66%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:90%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:74%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:58%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div></div>
-                </div>
-
-                <div class="yt-collapsible">
-                    <button type="button" class="yt-collapsible-toggle" id="ytMoreToggle">
-                        <i class="fas fa-chevron-right yt-collapsible-chevron"></i>Meer
-                    </button>
-                    <div class="yt-collapsible-content" id="ytMoreContent" style="display:none">
-                        <div class="yt-subsection">
-                            <div class="yt-sub-head">
-                                <h3 class="yt-sub-title">Channel Ideas</h3>
-                                <button id="addIdea" class="btn-ghost btn-ghost-sm"><i class="fas fa-plus me-1"></i>Idee</button>
-                            </div>
-                            <div class="kanban-list" id="kanbanList"></div>
-                        </div>
-
-                        <div class="yt-subsection">
-                            <div class="yt-sub-head">
-                                <h3 class="yt-sub-title">Video Sources</h3>
-                                <button id="addSource" class="btn-ghost btn-ghost-sm"><i class="fas fa-plus me-1"></i>Toevoegen</button>
-                            </div>
-                            <div id="sourcesList"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
 
             <!-- Notepad (collapsed by default) -->
             <section class="dash-section" id="notepadSection">

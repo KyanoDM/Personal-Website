@@ -2027,6 +2027,28 @@ html {
     }
 }
 
+/* YouTube en Tatjana: onder elkaar, op brede schermen naast elkaar */
+.yt-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    flex-shrink: 0;
+    min-width: 0;
+}
+
+.yt-row > .her-section {
+    align-self: start;
+}
+
+@media (min-width: 1600px) {
+    .yt-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: minmax(0, 1fr);
+        flex-shrink: 1;
+        min-height: 0;
+    }
+}
+
 /* ─── VOOR HAAR: foto('s) + tellers ─────────────────── */
 
 .her-section {
