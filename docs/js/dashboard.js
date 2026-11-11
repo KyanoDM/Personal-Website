@@ -959,6 +959,8 @@
         if (btn) {
             btn.querySelector('i').className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
             btn.title = theme === 'light' ? 'Donkere modus' : 'Lichte modus';
+            var label = btn.querySelector('.menu-label');
+            if (label) label.textContent = btn.title;
         }
         if (weightChart) {
             var c = chartTheme(), o = weightChart.options;
