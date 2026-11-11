@@ -1961,10 +1961,9 @@
         var next = new Date(today.getFullYear(), HER_BIRTHDAY.month - 1, HER_BIRTHDAY.day);
         if (next < today) next = new Date(today.getFullYear() + 1, HER_BIRTHDAY.month - 1, HER_BIRTHDAY.day);
         var left = Math.round((next - today) / 86400000);
-        var turning = next.getFullYear() - HER_BIRTHDAY.year;
         var birthday = '<span class="her-chip"><span class="her-chip-emoji">\uD83C\uDF82</span>' +
             '<span>' + (left === 0 ? '<b>Vandaag jarig!</b>' : 'Jarig over <b>' + left + '</b> ' + (left === 1 ? 'dag' : 'dagen')) +
-            ' <span class="her-chip-dim">\u00B7 ' + shortDate(next) + ' \u00B7 wordt ' + turning + '</span></span></span>';
+            ' <span class="her-chip-dim">\u00B7 ' + shortDate(next) + '</span></span></span>';
 
         var last = her.flowers.length ? her.flowers.slice().sort().pop() : null;
         var ago = last ? Math.round((today - parseDate(last)) / 86400000) : null;
