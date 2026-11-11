@@ -11,6 +11,10 @@
  *   ALLOWED_EMAIL        →  kyanodemaertelaere@gmail.com
  *   ALLOWED_ORIGIN       →  https://kyanodm.github.io
  *
+ * Wekelijkse back-up (cron "0 3 * * 1", maandag 03:00 UTC): alle Firestore-collecties
+ * (behalve "authGuard") gaan als één JSON-bestand in de KV-namespace die als BACKUPS
+ * aan deze Worker hangt. De laatste 8 weken blijven bewaard (sleutels "backup-JJJJ-MM-DD").
+ *
  * Aanmeldpogingen worden geteld in Firestore (collectie "authGuard", enkel
  * toegankelijk voor de service account en de eigenaar): max. 5 per IP en
  * 20 in totaal per 15 minuten. De code wordt pas gecontroleerd nadat er een
@@ -170,9 +174,89 @@ async function bumpAttempts(projectId, accessToken, ids, delta) {
     return data.writeResults.map(w => parseInt(w.transformResults[0].integerValue, 10));
 }
 
+// ─── Wekelijkse back-up van Firestore naar KV ─────────────────────────────────
+
+const BACKUP_KEEP = 8;                // aantal back-ups dat bewaard blijft
+const BACKUP_SKIP = ['authGuard'];    // tellers voor de aanmeldlimiet: niet nodig in een back-up
+
+// Firestore geeft getypeerde waarden terug; dit maakt er gewone JSON van.
+function decodeValue(v) {
+    if ('stringValue' in v) return v.stringValue;
+    if ('integerValue' in v) return Number(v.integerValue);
+    if ('doubleValue' in v) return v.doubleValue;
+    if ('booleanValue' in v) return v.booleanValue;
+    if ('timestampValue' in v) return v.timestampValue;
+    if ('arrayValue' in v) return (v.arrayValue.values || []).map(decodeValue);
+    if ('mapValue' in v) return decodeFields(v.mapValue.fields || {});
+    if ('referenceValue' in v) return v.referenceValue;
+    if ('geoPointValue' in v) return v.geoPointValue;
+    if ('bytesValue' in v) return v.bytesValue;
+    return null;
+}
+
+function decodeFields(fields) {
+    const out = {};
+    for (const [k, v] of Object.entries(fields)) out[k] = decodeValue(v);
+    return out;
+}
+
+async function backupFirestore(env) {
+    if (!env.BACKUPS) throw new Error('KV-namespace BACKUPS is niet gekoppeld aan deze Worker');
+    const accessToken = await getAccessToken(env.SA_CLIENT_EMAIL, env.SA_PRIVATE_KEY);
+    const base = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents`;
+    const auth = { Authorization: `Bearer ${accessToken}` };
+
+    const idsResp = await fetch(`${base}:listCollectionIds`, {
+        method: 'POST',
+        headers: { ...auth, 'Content-Type': 'application/json' },
+        body: '{}',
+    });
+    if (!idsResp.ok) throw new Error('Collecties ophalen mislukt: ' + idsResp.status);
+    const collections = ((await idsResp.json()).collectionIds || []).filter(id => !BACKUP_SKIP.includes(id));
+
+    const data = {};
+    let docCount = 0;
+    for (const col of collections) {
+        data[col] = {};
+        let pageToken = '';
+        do {
+            const url = `${base}/${encodeURIComponent(col)}?pageSize=300` + (pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : '');
+            const resp = await fetch(url, { headers: auth });
+            if (!resp.ok) throw new Error(`Collectie ${col} lezen mislukt: ${resp.status}`);
+            const page = await resp.json();
+            for (const doc of page.documents || []) {
+                data[col][doc.name.split('/').pop()] = decodeFields(doc.fields || {});
+                docCount++;
+            }
+            pageToken = page.nextPageToken || '';
+        } while (pageToken);
+    }
+
+    const createdAt = new Date().toISOString();
+    const key = 'backup-' + createdAt.slice(0, 10);
+    const body = JSON.stringify({ createdAt, project: env.FIREBASE_PROJECT_ID, collections: data });
+    await env.BACKUPS.put(key, body);
+    await env.BACKUPS.put('last-run', JSON.stringify({ ok: true, key, createdAt, documents: docCount, bytes: body.length }));
+
+    // Oude back-ups opruimen: enkel de nieuwste BACKUP_KEEP blijven staan
+    const listed = await env.BACKUPS.list({ prefix: 'backup-' });
+    const keys = listed.keys.map(k => k.name).sort();
+    for (const old of keys.slice(0, Math.max(0, keys.length - BACKUP_KEEP))) await env.BACKUPS.delete(old);
+    return { key, documents: docCount, bytes: body.length };
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
 export default {
+    async scheduled(event, env, ctx) {
+        ctx.waitUntil(backupFirestore(env).catch(async err => {
+            console.error('Back-up mislukt:', err);
+            if (env.BACKUPS) {
+                await env.BACKUPS.put('last-run', JSON.stringify({ ok: false, createdAt: new Date().toISOString(), error: String(err.message || err) }));
+            }
+        }));
+    },
+
     async fetch(request, env) {
         const origin = request.headers.get('Origin') || '';
         const allowedOrigins = [

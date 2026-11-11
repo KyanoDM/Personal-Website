@@ -11,3 +11,14 @@ ALLOWED_ORIGIN      = "https://kyanodm.github.io"
 # Secrets instellen via CLI (zie README):
 #   wrangler secret put SA_CLIENT_EMAIL
 #   wrangler secret put SA_PRIVATE_KEY
+
+# Wekelijkse back-up (maandag 03:00 UTC). In het dashboard: Worker > Triggers > Cron.
+[triggers]
+crons = ["0 3 * * 1"]
+
+# KV-namespace voor de back-ups: maak er een aan (bv. "dashboard-backups") en koppel hem als BACKUPS.
+# In het dashboard: Worker > Settings > Bindings > KV namespace > variabele "BACKUPS".
+# Met wrangler: vul het id hieronder in en haal de # weg.
+# [[kv_namespaces]]
+# binding = "BACKUPS"
+# id      = "<namespace-id>"
