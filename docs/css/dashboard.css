@@ -2091,7 +2091,6 @@ html {
     gap: 0.4rem;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
     background:
         radial-gradient(120% 100% at 0% 0%, rgba(244, 114, 182, 0.35) 0%, rgba(244, 114, 182, 0) 70%),
         var(--bg-input);
@@ -2102,9 +2101,14 @@ html {
     color: rgba(244, 114, 182, 0.7);
 }
 
-.her-photo-hint {
-    font-size: 0.7rem;
-    color: var(--text-muted);
+/* Skelet: foto-vlak met shimmer tot de gegevens geladen zijn */
+.her-photo.sk {
+    position: absolute;
+    background: rgba(var(--ink), 0.06);
+}
+
+.her-photo.sk > i {
+    visibility: hidden;
 }
 
 .her-slide {
@@ -2174,6 +2178,10 @@ html {
     font: inherit;
     line-height: 1.4;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.her-overlay:empty {
+    display: none;
 }
 
 button.her-chip {

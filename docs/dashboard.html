@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/dashboard.css?v=24">
+    <link rel="stylesheet" href="css/dashboard.css?v=25">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="img/logo.png" type="image/png">
     <meta name="theme-color" content="#0a0b10">
@@ -191,10 +191,10 @@
                 <!-- Voor haar: naam, foto's en tellers -->
                 <section class="dash-section her-section" id="herSection">
                     <div class="section-head">
-                        <h2><i class="fas fa-heart me-2"></i><span id="herTitle">Tatjana</span></h2>
+                        <h2><span id="herIcon" class="me-2"><i class="fas fa-heart"></i></span><span id="herTitle">Tatjana</span></h2>
                         <div class="d-flex gap-2">
-                            <button id="herEditBtn" class="btn-ghost btn-ghost-sm" title="Naam en foto's bewerken">
-                                <i class="fas fa-pen me-1"></i>Bewerk
+                            <button id="herEditBtn" class="btn-ghost btn-ghost-sm" title="Bewerken" aria-label="Bewerken">
+                                <i class="fas fa-pen"></i>
                             </button>
                             <button id="addHerTimerBtn" class="btn-ghost btn-ghost-sm" title="Nieuwe teller">
                                 <i class="fas fa-plus me-1"></i>Nieuw
@@ -203,7 +203,7 @@
                     </div>
                     <div class="her-body">
                         <div class="her-photo-wrap">
-                            <div class="her-photo" id="herPhotoBox"><i class="fas fa-heart"></i></div>
+                            <div class="her-photo sk" id="herPhotoBox"><i class="fas fa-heart"></i></div>
                             <div class="her-overlay" id="herMini"></div>
                         </div>
                         <div class="timer-grid her-grid" id="herGrid"></div>
@@ -341,7 +341,11 @@
                 <div class="modal-body p-4">
                     <h5 class="mb-3">Bewerken</h5>
                     <label class="timer-label" for="herNameInput">Naam</label>
-                    <input type="text" id="herNameInput" class="form-control dash-input mb-3" maxlength="30" autocomplete="off">
+                    <div class="timer-emoji-row">
+                        <input type="text" id="herIconInput" class="form-control dash-input timer-emoji-input" maxlength="16" placeholder="❤️" aria-label="Icoon" autocomplete="off">
+                        <input type="text" id="herNameInput" class="form-control dash-input" maxlength="30" autocomplete="off">
+                    </div>
+                    <div class="timer-hint mb-3">Links: letter of emoji naast de naam (leeg = hartje)</div>
                     <label class="timer-label">Foto's (max 5)</label>
                     <div class="her-thumbs" id="herThumbs"></div>
                     <input type="file" id="herFileInput" accept="image/*" multiple hidden>
@@ -473,6 +477,20 @@
                     '<span class="timer-meta">' + line('52%') + '</span></div>';
             });
 
+            // Tatjana: aantal tellers van de vorige keer (eerste keer: 3); foto is een skelet tot alles geladen is
+            var herCache = null;
+            try { herCache = JSON.parse(get('dash:her')); } catch (e) { }
+            var herN = herCache && Array.isArray(herCache.timers) ? Math.min(herCache.timers.length, 3) : 3;
+            if (herCache && herCache.name) el('herTitle').textContent = herCache.name;
+            if (herN >= 3) el('addHerTimerBtn').style.display = 'none';
+            el('herGrid').innerHTML = rep(herN, function (i) {
+                return '<div class="timer-card timer-skel" style="--tc:' + tints[(i + 1) % 4] + '">' +
+                    '<span class="timer-head"><span class="timer-number">' + line('46px') + '</span></span>' +
+                    '<span class="timer-text">' + line('88%') + '</span>' +
+                    '<span class="timer-meta">' + line('64%') + '</span>' +
+                    '<span class="timer-meta">' + line('52%') + '</span></div>';
+            });
+
             // To-do: aantal van de vorige keer (dashboard.js toont de bewaarde lijst meteen)
             var todoN = 4;
             try { var cached = JSON.parse(get('dash:todos')); if (Array.isArray(cached)) todoN = Math.min(cached.length, 8); } catch (e) { }
@@ -519,7 +537,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
-    <script src="js/dashboard.js?v=31"></script>
+    <script src="js/dashboard.js?v=32"></script>
 </body>
 
 </html>

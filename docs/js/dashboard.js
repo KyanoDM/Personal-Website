@@ -1875,6 +1875,7 @@
         d = d || {};
         return {
             name: d.name || 'Tatjana',
+            icon: Array.from(d.icon || '').slice(0, 8).join(''),   // letter/emoji naast de naam; leeg = hartje
             timers: d.timers || [],
             flowers: (d.flowers || []).slice()                                       // datums 'YYYY-MM-DD'
         };
@@ -1908,7 +1909,7 @@
             renderHerPhotos();
             var moved = timers.filter(function (t) { return /tatjana/i.test(t.text || ''); }).slice(0, TIMER_MAX);
             if (!moved.length) return;
-            return db.collection('config').doc('her').set({ name: her.name, timers: moved, flowers: her.flowers }).then(function () {
+            return db.collection('config').doc('her').set({ name: her.name, icon: her.icon, timers: moved, flowers: her.flowers }).then(function () {
                 her.timers = moved;
                 var ids = moved.map(function (t) { return t.id; });
                 timers = timers.filter(function (t) { return ids.indexOf(t.id) === -1; });
@@ -1916,12 +1917,16 @@
                 renderTimers();
                 renderHer();
             });
-        }).catch(function (err) { console.log('Voor haar laden mislukt:', err); });
+        }).catch(function (err) {
+            console.log('Voor haar laden mislukt:', err);
+            renderHer();
+            renderHerPhotos();
+        });
     }
 
     function saveHer() {
         saveDashCache('her', her);
-        return db.collection('config').doc('her').set({ name: her.name, timers: her.timers, flowers: her.flowers })
+        return db.collection('config').doc('her').set({ name: her.name, icon: her.icon, timers: her.timers, flowers: her.flowers })
             .catch(function (err) { alert('Opslaan mislukt: ' + err.message); throw err; });
     }
 
@@ -1930,6 +1935,7 @@
         if (!grid) return;
         _herRenderedDay = formatDate(new Date());
         document.getElementById('herTitle').textContent = her.name || 'Tatjana';
+        document.getElementById('herIcon').innerHTML = her.icon ? escapeHtml(her.icon) : '<i class="fas fa-heart"></i>';
         document.getElementById('addHerTimerBtn').style.display = her.timers.length >= TIMER_MAX ? 'none' : '';
         saveDashCache('her', her);
         renderHerMini();
@@ -1977,7 +1983,7 @@
         clearInterval(_herSlideTimer);
         if (!herPhotos.length) {
             box.className = 'her-photo';
-            box.innerHTML = '<i class="fas fa-heart"></i><span class="her-photo-hint">Foto\'s toevoegen</span>';
+            box.innerHTML = '<i class="fas fa-heart"></i>';
             return;
         }
         box.className = 'her-photo has-photo';
@@ -2034,6 +2040,7 @@
     function openHerModal() {
         editHerPhotos = herPhotos.slice();
         document.getElementById('herNameInput').value = her.name || '';
+        document.getElementById('herIconInput').value = her.icon || '';
         document.getElementById('herPhotoMsg').textContent = '';
         renderHerThumbs();
         bootstrap.Modal.getOrCreateInstance(document.getElementById('herModal')).show();
@@ -2081,7 +2088,6 @@
         renderHer();
         saveHer().catch(function () { });
     });
-    document.getElementById('herPhotoBox').addEventListener('click', openHerModal);
     document.getElementById('herAddPhotoBtn').addEventListener('click', function () {
         document.getElementById('herFileInput').click();
     });
@@ -2121,6 +2127,7 @@
     document.getElementById('saveHer').addEventListener('click', function () {
         var btn = this;
         her.name = document.getElementById('herNameInput').value.trim() || 'Tatjana';
+        her.icon = Array.from(document.getElementById('herIconInput').value.trim()).slice(0, 8).join('');
         btn.disabled = true;
         var saves = [saveHer()];
         if (JSON.stringify(editHerPhotos) !== JSON.stringify(herPhotos)) {
@@ -2230,7 +2237,7 @@
         if (_herRenderedDay && _herRenderedDay !== formatDate(new Date())) renderHer();
     }, 10 * 60 * 1000);
 
-    renderHer();
+    if (readDashCache('her')) renderHer();   // zonder bewaarde gegevens blijft het skelet staan tot ze geladen zijn
 
     // ─── TODO (gesynct met Notion via Cloudflare Worker) ────────────
     var TODO_BASE = 'https://notion-todo.kyanodemaertelaere.workers.dev';
