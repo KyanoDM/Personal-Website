@@ -15,7 +15,7 @@
     <title>Onze wereld</title>
     <link rel="stylesheet" href="css/bootstrap.css">
     <link rel="stylesheet" href="css/dashboard.css?v=27">
-    <link rel="stylesheet" href="css/wereld.css?v=1">
+    <link rel="stylesheet" href="css/wereld.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="img/logo.png" type="image/png">
     <meta name="theme-color" content="#0a0b10">
@@ -40,7 +40,7 @@
         <header class="dashboard-header">
             <div class="header-left">
                 <a href="dashboard" class="btn-icon" title="Terug naar het dashboard" aria-label="Terug naar het dashboard"><i class="fas fa-arrow-left"></i></a>
-                <h1>Onze wereld</h1>
+                <h1><span class="world-title">Onze wereld</span> <span aria-hidden="true">🌍</span></h1>
             </div>
             <div class="header-right">
                 <button id="themeToggle" class="btn-icon" title="Lichte modus" aria-label="Thema wisselen"><i class="fas fa-sun"></i></button>
@@ -56,6 +56,11 @@
                     <button id="zoomOut" class="btn-icon" title="Uitzoomen" aria-label="Uitzoomen"><i class="fas fa-minus"></i></button>
                     <button id="zoomReset" class="btn-icon" title="Hele wereld" aria-label="Hele wereld"><i class="fas fa-expand"></i></button>
                 </div>
+                <div class="world-legend">
+                    <span><i class="dot dot-visited"></i>Bezocht</span>
+                    <span><i class="dot dot-planned"></i>Gepland</span>
+                    <span><i class="dot dot-none"></i>Nog niet</span>
+                </div>
                 <div id="worldTip" class="world-tip" hidden></div>
                 <div id="mapLoading" class="world-map-loading"><div class="spinner-border spinner-border-sm" role="status"></div></div>
             </section>
@@ -70,25 +75,24 @@
 
                 <div class="world-detail" id="worldDetail" hidden>
                     <div class="world-detail-head">
+                        <img id="detailFlag" class="world-flag lg" alt="">
                         <h2 id="detailName"></h2>
                         <button id="detailClose" class="btn-icon" title="Sluiten" aria-label="Sluiten"><i class="fas fa-xmark"></i></button>
                     </div>
-                    <label class="world-switch">
-                        <input type="checkbox" id="detailVisited">
-                        <span class="world-switch-track"></span>
-                        <span>Bezocht</span>
-                    </label>
+                    <div class="world-status" id="statusPick" role="group" aria-label="Status van dit land">
+                        <button type="button" data-status="none">Nog niet</button>
+                        <button type="button" data-status="planned">✈️ Gepland</button>
+                        <button type="button" data-status="visited">✅ Bezocht</button>
+                    </div>
                     <div class="world-date-row" id="detailDateRow" hidden>
-                        <label class="timer-label" for="detailDate">Wanneer (optioneel)</label>
+                        <label class="timer-label" id="detailDateLabel" for="detailDate">Wanneer (optioneel)</label>
                         <input type="date" id="detailDate" class="form-control dash-input">
                     </div>
-                    <div class="world-photos-head">
-                        <span class="timer-label">Foto's</span>
-                        <button id="addPhotos" class="btn-icon" title="Foto's toevoegen" aria-label="Foto's toevoegen"><i class="fas fa-plus"></i></button>
-                        <input type="file" id="photoInput" accept="image/*" multiple hidden>
-                    </div>
-                    <div class="world-collage" id="collage"></div>
-                    <div class="timer-hint" id="photoMsg"></div>
+                    <button type="button" class="world-gallery-card" id="openGallery">
+                        <img id="galleryCover" alt="" hidden>
+                        <span class="gc-text"><b id="gcTitle">Foto's</b><small id="gcSub"></small></span>
+                        <i class="fas fa-images" aria-hidden="true"></i>
+                    </button>
                 </div>
 
                 <div class="world-search">
@@ -96,6 +100,7 @@
                     <div class="world-chips" id="countryFilter">
                         <button type="button" class="range-btn active" data-filter="all">Alle</button>
                         <button type="button" class="range-btn" data-filter="yes">Bezocht</button>
+                        <button type="button" class="range-btn" data-filter="planned">Gepland</button>
                         <button type="button" class="range-btn" data-filter="no">Nog niet</button>
                     </div>
                 </div>
@@ -104,7 +109,25 @@
         </main>
     </div>
 
-    <!-- Foto groot bekijken -->
+    <!-- Fotogalerij (grote popup) -->
+    <div id="gallery" class="world-gallery" hidden>
+        <div class="gallery-card" id="galleryCard" role="dialog" aria-modal="true" aria-labelledby="galleryTitle">
+            <header class="gallery-head">
+                <img id="galleryFlag" class="world-flag xl" alt="">
+                <div class="gallery-titles">
+                    <h2 id="galleryTitle"></h2>
+                    <span id="gallerySub"></span>
+                </div>
+                <button id="galleryAdd" class="gallery-btn" title="Foto's toevoegen" aria-label="Foto's toevoegen"><i class="fas fa-plus"></i></button>
+                <button id="galleryClose" class="gallery-btn" title="Sluiten" aria-label="Sluiten"><i class="fas fa-xmark"></i></button>
+            </header>
+            <div class="gallery-body" id="galleryBody"></div>
+            <div class="gallery-msg" id="galleryMsg"></div>
+            <input type="file" id="photoInput" accept="image/*" multiple hidden>
+        </div>
+    </div>
+
+    <!-- Eén foto heel groot -->
     <div id="lightbox" class="world-lightbox" hidden>
         <img id="lightboxImg" alt="">
         <button id="lbPrev" class="btn-icon lb-btn lb-prev" aria-label="Vorige"><i class="fas fa-chevron-left"></i></button>
@@ -119,7 +142,7 @@
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
     <script src="js/wereld-data.js?v=1"></script>
-    <script src="js/wereld.js?v=1"></script>
+    <script src="js/wereld.js?v=2"></script>
 </body>
 
 </html>

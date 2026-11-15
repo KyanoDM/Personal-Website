@@ -1,8 +1,22 @@
-/* Onze wereld: kaart + landenlijst (bouwt voort op dashboard.css voor kleuren, kaarten en knoppen) */
+/* Onze wereld: kaart + landenlijst + fotogalerij (bouwt voort op dashboard.css voor kleuren, kaarten en knoppen) */
+
+:root {
+    --planned: #f59e0b;
+    --fun-1: #6366f1;
+    --fun-2: #ec4899;
+    --fun-3: #f59e0b;
+}
 
 .header-left .btn-icon {
     text-decoration: none;
     flex-shrink: 0;
+}
+
+.world-title {
+    background: linear-gradient(90deg, var(--fun-1), var(--fun-2) 60%, var(--fun-3));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 .world-layout {
@@ -21,6 +35,10 @@
     padding: 0;
     overflow: hidden;
     min-height: 18rem;
+    background:
+        radial-gradient(90% 70% at 15% 0%, rgba(99, 102, 241, 0.16), transparent 60%),
+        radial-gradient(80% 70% at 100% 100%, rgba(236, 72, 153, 0.10), transparent 60%),
+        var(--bg-card);
 }
 
 .world-map {
@@ -38,7 +56,7 @@
 }
 
 .world-sphere {
-    fill: rgba(var(--ink), 0.03);
+    fill: rgba(99, 102, 241, 0.07);
 }
 
 .world-map .country {
@@ -55,17 +73,24 @@
 }
 
 .world-map .country.visited {
-    fill: var(--green);
-    fill-opacity: 0.85;
+    fill: #22c55e;
+    fill-opacity: 0.92;
 }
 
-.world-map .country.visited:hover {
+.world-map .country.planned {
+    fill: var(--planned);
+    fill-opacity: 0.92;
+}
+
+.world-map .country.visited:hover,
+.world-map .country.planned:hover {
     fill-opacity: 1;
+    filter: brightness(1.12);
 }
 
 .world-map .country.selected {
-    stroke: var(--accent);
-    stroke-width: 2px;
+    stroke: var(--fun-1);
+    stroke-width: 2.2px;
 }
 
 .world-controls {
@@ -76,6 +101,35 @@
     flex-direction: column;
     gap: 0.35rem;
 }
+
+.world-legend {
+    position: absolute;
+    left: 0.9rem;
+    bottom: 0.7rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.9rem;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    pointer-events: none;
+}
+
+.world-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.dot {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot-visited { background: #22c55e; }
+.dot-planned { background: var(--planned); }
+.dot-none { background: rgba(var(--ink), 0.25); }
 
 .world-tip {
     position: absolute;
@@ -105,6 +159,30 @@
     display: none;
 }
 
+/* ─── Vlaggen ─── */
+
+.world-flag {
+    width: 1.35rem;
+    height: 0.95rem;
+    flex-shrink: 0;
+    object-fit: cover;
+    border-radius: 3px;
+    box-shadow: 0 0 0 1px rgba(var(--ink), 0.15);
+}
+
+.world-flag.lg {
+    width: 2rem;
+    height: 1.4rem;
+    border-radius: 4px;
+}
+
+.world-flag.xl {
+    width: 3rem;
+    height: 2.1rem;
+    border-radius: 6px;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
 /* ─── Zijbalk ─── */
 
 .world-side {
@@ -130,9 +208,9 @@
 }
 
 .world-bar {
-    height: 6px;
+    height: 8px;
     margin-top: 0.4rem;
-    border-radius: 3px;
+    border-radius: 4px;
     background: var(--bg-input);
     overflow: hidden;
 }
@@ -140,25 +218,26 @@
 .world-bar > div {
     height: 100%;
     width: 0;
-    border-radius: 3px;
-    background: var(--green);
-    transition: width 0.4s ease;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #22c55e, #14b8a6 50%, var(--fun-1));
+    transition: width 0.5s ease;
 }
 
 .world-extra {
-    margin-top: 0.3rem;
+    margin-top: 0.35rem;
     min-height: 1em;
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
+    white-space: pre-wrap;
 }
 
 /* Details van het gekozen land */
 .world-detail {
     flex-shrink: 0;
-    max-height: 52%;
+    max-height: 60%;
     overflow-y: auto;
     padding: 0.8rem;
-    border-radius: 12px;
+    border-radius: 14px;
     background: var(--bg-input);
     border: 1px solid var(--border);
     scrollbar-width: thin;
@@ -171,132 +250,146 @@
 .world-detail-head {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    margin-bottom: 0.6rem;
+    gap: 0.6rem;
+    margin-bottom: 0.7rem;
 }
 
 .world-detail-head h2 {
-    font-size: 1rem;
+    flex: 1;
+    font-size: 1.05rem;
     font-weight: 600;
     margin: 0;
     min-width: 0;
     overflow-wrap: anywhere;
 }
 
-/* Aan/uit-schakelaar */
-.world-switch {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    margin-bottom: 0.6rem;
-    font-size: 0.82rem;
-    cursor: pointer;
-}
-
-.world-switch input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.world-switch-track {
-    position: relative;
-    width: 2.2rem;
-    height: 1.25rem;
-    border-radius: 999px;
-    background: var(--bg-hover);
+/* Status: nog niet / gepland / bezocht */
+.world-status {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.3rem;
+    padding: 0.25rem;
+    margin-bottom: 0.7rem;
+    border-radius: 12px;
+    background: var(--bg-card);
     border: 1px solid var(--border);
-    transition: background 0.2s ease;
 }
 
-.world-switch-track::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: calc(1.25rem - 6px);
-    height: calc(1.25rem - 6px);
-    border-radius: 50%;
-    background: var(--text-dim);
-    transition: transform 0.2s ease, background 0.2s ease;
+.world-status button {
+    padding: 0.4rem 0.2rem;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--text-dim);
+    font: inherit;
+    font-size: 0.74rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
 
-.world-switch input:checked + .world-switch-track {
-    background: var(--green);
-    border-color: var(--green);
+.world-status button:hover:not(:disabled):not(.active) {
+    background: rgba(var(--ink), 0.06);
 }
 
-.world-switch input:checked + .world-switch-track::after {
-    transform: translateX(0.95rem);
-    background: #fff;
+.world-status button:disabled {
+    cursor: default;
+    opacity: 0.55;
 }
 
-.world-switch input:focus-visible + .world-switch-track {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+.world-status button.active {
+    color: #fff;
+    background: rgba(var(--ink), 0.35);
+    transform: scale(1.03);
+}
+
+.world-status[data-status="planned"] button.active {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+}
+
+.world-status[data-status="visited"] button.active {
+    background: linear-gradient(135deg, #22c55e, #14b8a6);
 }
 
 .world-date-row {
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.7rem;
 }
 
 .world-date-row[hidden] {
     display: none;
 }
 
-.world-photos-head {
+/* Kaartje dat de galerij opent: omslagfoto + aantal */
+.world-gallery-card {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 0.4rem;
+    gap: 0.6rem;
+    width: 100%;
+    min-height: 4.2rem;
+    padding: 0.7rem 0.9rem;
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    color: #fff;
+    text-align: left;
+    cursor: pointer;
+    background: linear-gradient(120deg, var(--fun-1), var(--fun-2) 65%, var(--fun-3));
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.world-photos-head .timer-label {
-    margin: 0;
+.world-gallery-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px -8px rgba(236, 72, 153, 0.55);
 }
 
-/* Fotocollage: eerste foto groot, de rest in wisselende formaten */
-.world-collage {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-auto-rows: 5.2rem;
-    grid-auto-flow: dense;
-    gap: 0.3rem;
-}
-
-.world-collage img {
+.world-gallery-card img {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 8px;
-    cursor: zoom-in;
-    display: block;
-    transition: filter 0.2s ease;
 }
 
-.world-collage img:hover {
-    filter: brightness(1.12);
+.world-gallery-card img[hidden] {
+    display: none;
 }
 
-.world-collage img:nth-child(1) {
-    grid-column: span 2;
-    grid-row: span 2;
+.world-gallery-card.has-cover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.15));
 }
 
-.world-collage img:nth-child(6n + 4) {
-    grid-row: span 2;
+.world-gallery-card .gc-text,
+.world-gallery-card > i {
+    position: relative;
+    z-index: 2;
 }
 
-.world-collage img:nth-child(6n + 6) {
-    grid-column: span 2;
+.gc-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
 }
 
-.world-collage-empty {
-    grid-column: 1 / -1;
-    padding: 0.6rem 0;
+.gc-text b {
+    font-size: 0.95rem;
+}
+
+.gc-text small {
     font-size: 0.72rem;
-    color: var(--text-muted);
+    opacity: 0.9;
+}
+
+.world-gallery-card > i {
+    font-size: 1.3rem;
+    opacity: 0.9;
 }
 
 /* Zoeken en lijst */
@@ -309,7 +402,8 @@
 
 .world-chips {
     display: flex;
-    gap: 0.35rem;
+    flex-wrap: wrap;
+    gap: 0.3rem;
 }
 
 .world-list {
@@ -356,8 +450,8 @@
 }
 
 .world-check:checked {
-    background: var(--green);
-    border-color: var(--green);
+    background: #22c55e;
+    border-color: #22c55e;
 }
 
 .world-check:checked::after {
@@ -390,22 +484,260 @@
     color: var(--text-muted);
 }
 
+.world-row-date.is-planned {
+    color: var(--planned);
+    font-weight: 600;
+}
+
 .world-empty {
     padding: 0.8rem 0.25rem;
     font-size: 0.78rem;
     color: var(--text-muted);
 }
 
-/* ─── Foto groot ─── */
+/* ─── Fotogalerij (grote popup) ─── */
 
-.world-lightbox {
+body.gallery-open {
+    overflow: hidden;
+}
+
+.world-gallery {
     position: fixed;
     inset: 0;
     z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.88);
+    padding: 1.5rem;
+    background: rgba(10, 12, 28, 0.7);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    animation: gallery-fade 0.2s ease;
+}
+
+.world-gallery[hidden] {
+    display: none;
+}
+
+@keyframes gallery-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes gallery-pop {
+    from { opacity: 0; transform: translateY(14px) scale(0.97); }
+    to { opacity: 1; transform: none; }
+}
+
+.gallery-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(1180px, 100%);
+    height: min(90vh, 900px);
+    border-radius: 24px;
+    overflow: hidden;
+    background: var(--bg-card);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+    animation: gallery-pop 0.28s ease;
+}
+
+.gallery-card.dragging::after {
+    content: 'Laat los om de foto\'s toe te voegen 📸';
+    position: absolute;
+    inset: 0.6rem;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px dashed var(--fun-2);
+    border-radius: 18px;
+    background: rgba(236, 72, 153, 0.16);
+    color: var(--text);
+    font-size: 1.2rem;
+    font-weight: 700;
+    pointer-events: none;
+}
+
+.gallery-head {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 1.1rem 1.3rem;
+    color: #fff;
+    background: linear-gradient(115deg, var(--fun-1), var(--fun-2) 60%, var(--fun-3));
+}
+
+.gallery-titles {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.gallery-titles h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+}
+
+.gallery-titles span {
+    margin-top: 0.15rem;
+    font-size: 0.8rem;
+    opacity: 0.92;
+    white-space: pre-wrap;
+}
+
+.gallery-btn {
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.gallery-btn:hover {
+    background: rgba(255, 255, 255, 0.38);
+    transform: scale(1.08);
+}
+
+.gallery-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 1.1rem;
+    scrollbar-width: thin;
+    background:
+        radial-gradient(70% 50% at 0% 0%, rgba(99, 102, 241, 0.10), transparent 70%),
+        radial-gradient(70% 50% at 100% 100%, rgba(236, 72, 153, 0.10), transparent 70%);
+}
+
+.gallery-msg {
+    padding: 0 1.3rem;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+}
+
+.gallery-msg:not(:empty) {
+    padding: 0.5rem 1.3rem 0.7rem;
+}
+
+.gallery-empty {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mozaïek: eerste foto groot, de rest in wisselende formaten */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    grid-auto-rows: 10rem;
+    grid-auto-flow: dense;
+    gap: 0.9rem;
+}
+
+.g-photo,
+.g-add {
+    position: relative;
+    padding: 0;
+    border-radius: 16px;
+    cursor: pointer;
+}
+
+.g-photo {
+    border: 4px solid #fff;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.g-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.g-photo:nth-child(7n + 1) { grid-column: span 2; grid-row: span 2; }
+.g-photo:nth-child(7n + 4) { grid-row: span 2; }
+.g-photo:nth-child(7n + 6) { grid-column: span 2; }
+
+.g-photo:nth-child(odd):hover { transform: scale(1.04) rotate(-1deg); }
+.g-photo:nth-child(even):hover { transform: scale(1.04) rotate(1deg); }
+
+.g-photo:hover {
+    z-index: 2;
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.4);
+}
+
+.g-add {
+    border: 2.5px dashed rgba(var(--ink), 0.25);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 1.6rem;
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.g-add:hover {
+    border-color: var(--fun-2);
+    color: var(--fun-2);
+    background: rgba(236, 72, 153, 0.08);
+}
+
+.gallery-drop {
+    width: 100%;
+    height: 100%;
+    min-height: 16rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 3px dashed rgba(var(--ink), 0.22);
+    border-radius: 20px;
+    background: transparent;
+    color: var(--text-dim);
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.gallery-drop:hover {
+    border-color: var(--fun-2);
+    background: rgba(236, 72, 153, 0.07);
+}
+
+.gallery-drop b {
+    font-size: 1.15rem;
+    color: var(--text);
+}
+
+.drop-emoji {
+    font-size: 3rem;
+    line-height: 1;
+}
+
+/* ─── Eén foto heel groot ─── */
+
+.world-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.9);
 }
 
 .world-lightbox[hidden] {
@@ -413,25 +745,25 @@
 }
 
 .world-lightbox img {
-    max-width: 92vw;
-    max-height: 86vh;
-    border-radius: 10px;
+    max-width: 94vw;
+    max-height: 90vh;
+    border-radius: 12px;
     object-fit: contain;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
 }
 
 .lb-btn {
     position: absolute;
-    width: 2.4rem;
-    height: 2.4rem;
-    font-size: 0.9rem;
-    background: rgba(255, 255, 255, 0.12);
+    width: 2.6rem;
+    height: 2.6rem;
+    font-size: 0.95rem;
+    background: rgba(255, 255, 255, 0.14);
     border-color: transparent;
     color: #fff;
 }
 
 .lb-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.28);
     border-color: transparent;
 }
 
@@ -467,5 +799,40 @@
     .world-list {
         flex: none;
         max-height: 26rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .world-gallery {
+        padding: 0;
+    }
+
+    .gallery-card {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+    }
+
+    .gallery-head {
+        padding: 0.9rem 1rem;
+    }
+
+    .gallery-titles h2 {
+        font-size: 1.25rem;
+    }
+
+    .world-flag.xl {
+        width: 2.4rem;
+        height: 1.7rem;
+    }
+
+    .gallery-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-rows: 8.5rem;
+        gap: 0.65rem;
+    }
+
+    .gallery-body {
+        padding: 0.8rem;
     }
 }
