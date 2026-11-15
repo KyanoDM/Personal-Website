@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <script>
+        // Adres zonder ".html" tonen (de pagina zelf blijft gewoon werken)
+        (function () {
+            var p = location.pathname;
+            if (/\.html$/.test(p)) history.replaceState(null, '', p.replace(/index\.html$/, '').replace(/\.html$/, '') + location.search + location.hash);
+        })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Onze wereld</title>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/dashboard.css?v=27">
+    <link rel="stylesheet" href="css/wereld.css?v=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="img/logo.png" type="image/png">
+    <meta name="theme-color" content="#0a0b10">
+    <script>
+        // Thema (donker = standaard) vóór het eerste beeld zetten, zoals op het dashboard
+        (function () {
+            var t = 'dark';
+            try { if (localStorage.getItem('theme') === 'light') t = 'light'; } catch (e) {}
+            document.documentElement.setAttribute('data-theme', t);
+            var m = document.querySelector('meta[name="theme-color"]');
+            if (m) m.setAttribute('content', t === 'light' ? '#f2f3f8' : '#0a0b10');
+        })();
+    </script>
+</head>
+
+<body class="dashboard-body">
+    <div id="loading" class="dashboard-loading">
+        <div class="spinner-border" role="status"></div>
+    </div>
+
+    <div id="world" class="dashboard-container" style="display: none;">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <a href="dashboard" class="btn-icon" title="Terug naar het dashboard" aria-label="Terug naar het dashboard"><i class="fas fa-arrow-left"></i></a>
+                <h1>Onze wereld</h1>
+            </div>
+            <div class="header-right">
+                <button id="themeToggle" class="btn-icon" title="Lichte modus" aria-label="Thema wisselen"><i class="fas fa-sun"></i></button>
+            </div>
+        </header>
+
+        <main class="world-layout">
+            <!-- Kaart -->
+            <section class="dash-section world-map-card" id="mapCard">
+                <svg id="worldMap" class="world-map" role="img" aria-label="Wereldkaart"></svg>
+                <div class="world-controls">
+                    <button id="zoomIn" class="btn-icon" title="Inzoomen" aria-label="Inzoomen"><i class="fas fa-plus"></i></button>
+                    <button id="zoomOut" class="btn-icon" title="Uitzoomen" aria-label="Uitzoomen"><i class="fas fa-minus"></i></button>
+                    <button id="zoomReset" class="btn-icon" title="Hele wereld" aria-label="Hele wereld"><i class="fas fa-expand"></i></button>
+                </div>
+                <div id="worldTip" class="world-tip" hidden></div>
+                <div id="mapLoading" class="world-map-loading"><div class="spinner-border spinner-border-sm" role="status"></div></div>
+            </section>
+
+            <!-- Zijbalk: teller, details van het gekozen land, lijst -->
+            <aside class="dash-section world-side">
+                <div class="world-stats">
+                    <div class="world-count"><b id="statCount">0</b><span> van <span id="statTotal">195</span> landen bezocht</span></div>
+                    <div class="world-bar"><div id="statBar"></div></div>
+                    <div class="world-extra" id="statExtra"></div>
+                </div>
+
+                <div class="world-detail" id="worldDetail" hidden>
+                    <div class="world-detail-head">
+                        <h2 id="detailName"></h2>
+                        <button id="detailClose" class="btn-icon" title="Sluiten" aria-label="Sluiten"><i class="fas fa-xmark"></i></button>
+                    </div>
+                    <label class="world-switch">
+                        <input type="checkbox" id="detailVisited">
+                        <span class="world-switch-track"></span>
+                        <span>Bezocht</span>
+                    </label>
+                    <div class="world-date-row" id="detailDateRow" hidden>
+                        <label class="timer-label" for="detailDate">Wanneer (optioneel)</label>
+                        <input type="date" id="detailDate" class="form-control dash-input">
+                    </div>
+                    <div class="world-photos-head">
+                        <span class="timer-label">Foto's</span>
+                        <button id="addPhotos" class="btn-icon" title="Foto's toevoegen" aria-label="Foto's toevoegen"><i class="fas fa-plus"></i></button>
+                        <input type="file" id="photoInput" accept="image/*" multiple hidden>
+                    </div>
+                    <div class="world-collage" id="collage"></div>
+                    <div class="timer-hint" id="photoMsg"></div>
+                </div>
+
+                <div class="world-search">
+                    <input type="search" id="countrySearch" class="form-control dash-input" placeholder="Zoek een land..." autocomplete="off">
+                    <div class="world-chips" id="countryFilter">
+                        <button type="button" class="range-btn active" data-filter="all">Alle</button>
+                        <button type="button" class="range-btn" data-filter="yes">Bezocht</button>
+                        <button type="button" class="range-btn" data-filter="no">Nog niet</button>
+                    </div>
+                </div>
+                <div class="world-list" id="countryList"></div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Foto groot bekijken -->
+    <div id="lightbox" class="world-lightbox" hidden>
+        <img id="lightboxImg" alt="">
+        <button id="lbPrev" class="btn-icon lb-btn lb-prev" aria-label="Vorige"><i class="fas fa-chevron-left"></i></button>
+        <button id="lbNext" class="btn-icon lb-btn lb-next" aria-label="Volgende"><i class="fas fa-chevron-right"></i></button>
+        <button id="lbDelete" class="btn-icon lb-btn lb-delete" title="Foto verwijderen" aria-label="Foto verwijderen"><i class="fas fa-trash"></i></button>
+        <button id="lbClose" class="btn-icon lb-btn lb-close" aria-label="Sluiten"><i class="fas fa-xmark"></i></button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+    <script src="js/wereld-data.js?v=1"></script>
+    <script src="js/wereld.js?v=1"></script>
+</body>
+
+</html>

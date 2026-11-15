@@ -1,0 +1,471 @@
+/* Onze wereld: kaart + landenlijst (bouwt voort op dashboard.css voor kleuren, kaarten en knoppen) */
+
+.header-left .btn-icon {
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.world-layout {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 21rem;
+    gap: 1rem;
+}
+
+/* ─── Kaart ─── */
+
+.world-map-card {
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+    min-height: 18rem;
+}
+
+.world-map {
+    width: 100%;
+    height: 100%;
+    display: block;
+    touch-action: none;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.world-map:active {
+    cursor: grabbing;
+}
+
+.world-sphere {
+    fill: rgba(var(--ink), 0.03);
+}
+
+.world-map .country {
+    fill: rgba(var(--ink), 0.13);
+    stroke: var(--bg-card);
+    stroke-width: 0.6px;
+    vector-effect: non-scaling-stroke;
+    cursor: pointer;
+    transition: fill 0.15s ease;
+}
+
+.world-map .country:hover {
+    fill: rgba(var(--ink), 0.28);
+}
+
+.world-map .country.visited {
+    fill: var(--green);
+    fill-opacity: 0.85;
+}
+
+.world-map .country.visited:hover {
+    fill-opacity: 1;
+}
+
+.world-map .country.selected {
+    stroke: var(--accent);
+    stroke-width: 2px;
+}
+
+.world-controls {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.world-tip {
+    position: absolute;
+    z-index: 5;
+    padding: 0.25rem 0.55rem;
+    border-radius: 7px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+    color: var(--text);
+    font-size: 0.75rem;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.world-map-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.world-map-loading.done {
+    display: none;
+}
+
+/* ─── Zijbalk ─── */
+
+.world-side {
+    gap: 0.85rem;
+    overflow: hidden;
+}
+
+.world-stats {
+    flex-shrink: 0;
+}
+
+.world-count {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+}
+
+.world-count b {
+    font-size: 1.9rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    margin-right: 0.25rem;
+}
+
+.world-bar {
+    height: 6px;
+    margin-top: 0.4rem;
+    border-radius: 3px;
+    background: var(--bg-input);
+    overflow: hidden;
+}
+
+.world-bar > div {
+    height: 100%;
+    width: 0;
+    border-radius: 3px;
+    background: var(--green);
+    transition: width 0.4s ease;
+}
+
+.world-extra {
+    margin-top: 0.3rem;
+    min-height: 1em;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+}
+
+/* Details van het gekozen land */
+.world-detail {
+    flex-shrink: 0;
+    max-height: 52%;
+    overflow-y: auto;
+    padding: 0.8rem;
+    border-radius: 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    scrollbar-width: thin;
+}
+
+.world-detail[hidden] {
+    display: none;
+}
+
+.world-detail-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.world-detail-head h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+/* Aan/uit-schakelaar */
+.world-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 0.6rem;
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+
+.world-switch input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.world-switch-track {
+    position: relative;
+    width: 2.2rem;
+    height: 1.25rem;
+    border-radius: 999px;
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    transition: background 0.2s ease;
+}
+
+.world-switch-track::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: calc(1.25rem - 6px);
+    height: calc(1.25rem - 6px);
+    border-radius: 50%;
+    background: var(--text-dim);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.world-switch input:checked + .world-switch-track {
+    background: var(--green);
+    border-color: var(--green);
+}
+
+.world-switch input:checked + .world-switch-track::after {
+    transform: translateX(0.95rem);
+    background: #fff;
+}
+
+.world-switch input:focus-visible + .world-switch-track {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.world-date-row {
+    margin-bottom: 0.6rem;
+}
+
+.world-date-row[hidden] {
+    display: none;
+}
+
+.world-photos-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.4rem;
+}
+
+.world-photos-head .timer-label {
+    margin: 0;
+}
+
+/* Fotocollage: eerste foto groot, de rest in wisselende formaten */
+.world-collage {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: 5.2rem;
+    grid-auto-flow: dense;
+    gap: 0.3rem;
+}
+
+.world-collage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: zoom-in;
+    display: block;
+    transition: filter 0.2s ease;
+}
+
+.world-collage img:hover {
+    filter: brightness(1.12);
+}
+
+.world-collage img:nth-child(1) {
+    grid-column: span 2;
+    grid-row: span 2;
+}
+
+.world-collage img:nth-child(6n + 4) {
+    grid-row: span 2;
+}
+
+.world-collage img:nth-child(6n + 6) {
+    grid-column: span 2;
+}
+
+.world-collage-empty {
+    grid-column: 1 / -1;
+    padding: 0.6rem 0;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+/* Zoeken en lijst */
+.world-search {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.world-chips {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.world-list {
+    position: relative;
+    flex: 1;
+    min-height: 8rem;
+    overflow-y: auto;
+    margin: 0 -0.4rem;
+    padding: 0 0.4rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--ink), 0.1) transparent;
+}
+
+.world-row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.2rem 0.25rem;
+    border-radius: 8px;
+}
+
+.world-row:hover {
+    background: var(--bg-input);
+}
+
+.world-row.selected {
+    background: var(--accent-glow);
+}
+
+.world-check {
+    appearance: none;
+    -webkit-appearance: none;
+    flex-shrink: 0;
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0;
+    border-radius: 5px;
+    border: 1.5px solid rgba(var(--ink), 0.25);
+    background: transparent;
+    cursor: pointer;
+    display: grid;
+    place-content: center;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.world-check:checked {
+    background: var(--green);
+    border-color: var(--green);
+}
+
+.world-check:checked::after {
+    content: '\2713';
+    color: #fff;
+    font-size: 0.7rem;
+    line-height: 1;
+}
+
+.world-row-name {
+    flex: 1;
+    min-width: 0;
+    padding: 0.2rem 0;
+    border: none;
+    background: none;
+    color: var(--text);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.world-row-date {
+    flex-shrink: 0;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}
+
+.world-empty {
+    padding: 0.8rem 0.25rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+/* ─── Foto groot ─── */
+
+.world-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.88);
+}
+
+.world-lightbox[hidden] {
+    display: none;
+}
+
+.world-lightbox img {
+    max-width: 92vw;
+    max-height: 86vh;
+    border-radius: 10px;
+    object-fit: contain;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.lb-btn {
+    position: absolute;
+    width: 2.4rem;
+    height: 2.4rem;
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.12);
+    border-color: transparent;
+    color: #fff;
+}
+
+.lb-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: transparent;
+}
+
+.lb-prev { left: 1rem; top: 50%; transform: translateY(-50%); }
+.lb-next { right: 1rem; top: 50%; transform: translateY(-50%); }
+.lb-close { top: 1rem; right: 1rem; }
+.lb-delete { top: 1rem; left: 1rem; }
+
+.lb-delete:hover {
+    background: #ef4444;
+}
+
+/* ─── Mobiel: kaart bovenaan, zijbalk eronder ─── */
+
+@media (max-width: 980px) {
+    .world-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .world-map-card {
+        height: 58vw;
+        min-height: 16rem;
+    }
+
+    .world-side {
+        overflow: visible;
+    }
+
+    .world-detail {
+        max-height: none;
+    }
+
+    .world-list {
+        flex: none;
+        max-height: 26rem;
+    }
+}

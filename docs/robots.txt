@@ -2,6 +2,8 @@ User-agent: *
 Allow: /
 Disallow: /dashboard
 Disallow: /dashboard.html
+Disallow: /wereld
+Disallow: /wereld.html
 Disallow: /qr-auth.html
 
 Sitemap: https://kyanodm.be/sitemap.xml
