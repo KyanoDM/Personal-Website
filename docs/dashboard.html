@@ -13,7 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/dashboard.css?v=27">
+    <link rel="stylesheet" href="css/dashboard.css?v=28">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="img/logo.png" type="image/png">
     <meta name="theme-color" content="#0a0b10">
@@ -170,28 +170,6 @@
                         <div id="ytVideos"><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:82%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:66%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:90%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:74%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div><div class="yt-video-row"><span class="yt-thumb sk"></span><div class="yt-video-info"><div class="yt-video-title"><span class="sk sk-text" style="width:58%">&nbsp;</span></div><div class="yt-video-stats"><span><span class="sk sk-text" style="width:38px">&nbsp;</span></span><span><span class="sk sk-text" style="width:30px">&nbsp;</span></span><span><span class="sk sk-text" style="width:26px">&nbsp;</span></span></div></div></div></div>
                     </div>
 
-                    <div class="yt-collapsible">
-                        <button type="button" class="yt-collapsible-toggle" id="ytMoreToggle">
-                            <i class="fas fa-chevron-right yt-collapsible-chevron"></i>Meer
-                        </button>
-                        <div class="yt-collapsible-content" id="ytMoreContent" style="display:none">
-                            <div class="yt-subsection">
-                                <div class="yt-sub-head">
-                                    <h3 class="yt-sub-title">Channel Ideas</h3>
-                                    <button id="addIdea" class="btn-icon" title="Idee toevoegen" aria-label="Idee toevoegen"><i class="fas fa-plus"></i></button>
-                                </div>
-                                <div class="kanban-list" id="kanbanList"></div>
-                            </div>
-
-                            <div class="yt-subsection">
-                                <div class="yt-sub-head">
-                                    <h3 class="yt-sub-title">Video Sources</h3>
-                                    <button id="addSource" class="btn-icon" title="Bron toevoegen" aria-label="Bron toevoegen"><i class="fas fa-plus"></i></button>
-                                </div>
-                                <div id="sourcesList"></div>
-                            </div>
-                        </div>
-                    </div>
                 </section>
 
                 <!-- Voor haar: naam, foto's en tellers -->
@@ -379,38 +357,6 @@
         </div>
     </div>
 
-    <!-- Add Idea Modal -->
-    <div class="modal fade" id="addIdeaModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content dash-modal">
-                <div class="modal-body p-4">
-                    <h5 class="mb-3">Nieuw idee</h5>
-                    <input type="text" id="ideaTitleInput" class="form-control dash-input mb-3" placeholder="Video titel of idee">
-                    <div class="d-flex gap-2">
-                        <button id="confirmAddIdea" class="btn-accent flex-grow-1">Toevoegen</button>
-                        <button class="btn-ghost" data-bs-dismiss="modal">Annuleer</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Source Modal -->
-    <div class="modal fade" id="addSourceModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content dash-modal">
-                <div class="modal-body p-4">
-                    <h5 class="mb-3">Nieuwe video source</h5>
-                    <input type="text" id="sourceTextInput" class="form-control dash-input mb-3" placeholder="URL, account, idee...">
-                    <div class="d-flex gap-2">
-                        <button id="confirmAddSource" class="btn-accent flex-grow-1">Toevoegen</button>
-                        <button class="btn-ghost" data-bs-dismiss="modal">Annuleer</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
         // Laad-skeletons: draait al tijdens het parsen (voor de grote scripts binnen zijn), zodat
         // de pagina vanaf het eerste beeld de juiste vorm heeft en er niets meer verspringt.
@@ -537,7 +483,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
-    <script src="js/dashboard.js?v=35"></script>
+    <script src="js/dashboard.js?v=36"></script>
 </body>
 
 </html>

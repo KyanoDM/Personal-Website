@@ -107,78 +107,6 @@
         } catch (e) { }
     }
 
-    function extractUrl(text) {
-        if (!text) return null;
-        var m = String(text).match(/https?:\/\/[^\s]+/i);
-        return m ? m[0].replace(/[),.;]+$/, '') : null;
-    }
-
-    function extractYoutubeId(url) {
-        var m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
-        return m ? m[1] : null;
-    }
-
-    function getDomain(url) {
-        try { return new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return ''; }
-    }
-
-    function buildEmbed(url) {
-        var ytId = extractYoutubeId(url);
-        if (ytId) {
-            return '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener" class="embed-thumb-link" title="' + escapeHtml(url) + '">' +
-                '<img src="https://i.ytimg.com/vi/' + ytId + '/mqdefault.jpg" class="embed-thumb" alt=""></a>';
-        }
-        var dom = getDomain(url);
-        return '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener" class="embed-link" title="' + escapeHtml(url) + '">' +
-            '<img src="https://www.google.com/s2/favicons?domain=' + encodeURIComponent(dom) + '&sz=32" alt="">' +
-            '<span>' + escapeHtml(dom || url) + '</span></a>';
-    }
-
-    function extractYoutubeChannel(url) {
-        var m = url.match(/youtube\.com\/(?:@[\w.-]+|channel\/[\w-]+|c\/[\w-]+|user\/[\w-]+)/);
-        return m ? m[0] : null;
-    }
-
-    function fetchYouTubeTitle(url, element) {
-        var ytId = extractYoutubeId(url);
-        if (ytId) {
-            fetch('https://noembed.com/embed?url=' + encodeURIComponent(url))
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data.title) element.textContent = data.title;
-                })
-                .catch(function () { });
-            return;
-        }
-        var handle = url.match(/youtube\.com\/@([\w.-]+)/);
-        if (handle) {
-            fetch(YT_BASE + 'channels?part=snippet&forHandle=' + handle[1] + '&key=' + YT_API_KEY)
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data.items && data.items.length) {
-                        element.textContent = data.items[0].snippet.title;
-                    }
-                })
-                .catch(function () { });
-            return;
-        }
-        var chanId = url.match(/youtube\.com\/channel\/([\w-]+)/);
-        if (chanId) {
-            fetch(YT_BASE + 'channels?part=snippet&id=' + chanId[1] + '&key=' + YT_API_KEY)
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data.items && data.items.length) {
-                        element.textContent = data.items[0].snippet.title;
-                    }
-                })
-                .catch(function () { });
-        }
-    }
-
-    function isYouTubeUrl(url) {
-        return /youtube\.com|youtu\.be/.test(url);
-    }
-
     // Auth
     auth.onAuthStateChanged(function (user) {
         document.getElementById('loading').style.display = 'none';
@@ -188,8 +116,6 @@
             loadWeight();
             loadTimers().then(loadHer);
             loadChannels();
-            loadKanban();
-            loadSources();
             loadNotepad();
             loadBirthday();
             loadWeather();
@@ -1300,128 +1226,6 @@
         loadYouTubeStats();
     });
 
-    // ─── KANBAN ─────────────────────────────────────
-
-    var kanbanIdeas = [];
-
-    function loadKanban() {
-        db.collection('ytIdeas').orderBy('createdAt', 'asc').onSnapshot(function (snapshot) {
-            kanbanIdeas = [];
-            snapshot.forEach(function (doc) {
-                kanbanIdeas.push(Object.assign({ id: doc.id }, doc.data()));
-            });
-            renderKanban();
-        });
-    }
-
-    function renderKanban() {
-        var list = document.getElementById('kanbanList');
-        list.innerHTML = '';
-        var statusOrder = { idee: 0, opname: 1, gepubliceerd: 2 };
-        var sorted = kanbanIdeas.slice().sort(function (a, b) {
-            return (statusOrder[a.status] || 0) - (statusOrder[b.status] || 0);
-        });
-
-        sorted.forEach(function (idea) {
-            var card = document.createElement('div');
-            card.className = 'kanban-card' + (idea.status === 'gepubliceerd' ? ' is-published' : '');
-
-            var url = extractUrl(idea.title);
-            var displayTitle = idea.title;
-            var needsFetch = false;
-            if (url) {
-                displayTitle = idea.title.replace(url, '').trim();
-                if (!displayTitle) {
-                    displayTitle = getDomain(url) || url;
-                    if (isYouTubeUrl(url)) needsFetch = true;
-                }
-            }
-            var embedHtml = url ? buildEmbed(url) : '';
-
-            card.innerHTML =
-                '<div class="kanban-card-body">' +
-                embedHtml +
-                '<div class="kanban-card-title">' + escapeHtml(displayTitle) + '</div>' +
-                '</div>' +
-                '<div class="kanban-card-actions">' +
-                '<button class="kanban-btn delete" data-id="' + idea.id + '" data-action="delete" title="Verwijder"><i class="fas fa-trash"></i></button>' +
-                '</div>';
-            list.appendChild(card);
-
-            if (needsFetch) {
-                fetchYouTubeTitle(url, card.querySelector('.kanban-card-title'));
-            }
-        });
-
-        document.querySelectorAll('.kanban-btn').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var id = this.dataset.id;
-                db.collection('ytIdeas').doc(id).delete();
-            });
-        });
-    }
-
-    document.getElementById('addIdea').addEventListener('click', function () {
-        document.getElementById('ideaTitleInput').value = '';
-        new bootstrap.Modal(document.getElementById('addIdeaModal')).show();
-    });
-
-    document.getElementById('confirmAddIdea').addEventListener('click', function () {
-        var title = document.getElementById('ideaTitleInput').value.trim();
-        if (!title) return;
-        db.collection('ytIdeas').add({ title: title, status: 'idee', createdAt: firebase.firestore.FieldValue.serverTimestamp() })
-            .then(function () { bootstrap.Modal.getInstance(document.getElementById('addIdeaModal')).hide(); });
-    });
-
-    // ─── SOURCES ────────────────────────────────────
-
-    function loadSources() {
-        db.collection('ytSources').orderBy('createdAt', 'desc').onSnapshot(function (snapshot) {
-            var sources = [];
-            snapshot.forEach(function (doc) { sources.push(Object.assign({ id: doc.id }, doc.data())); });
-            var html = sources.map(function (s, idx) {
-                var url = extractUrl(s.text);
-                var displayText = s.text;
-                var needsFetch = false;
-                if (url) {
-                    displayText = s.text.replace(url, '').trim();
-                    if (!displayText) {
-                        displayText = getDomain(url) || url;
-                        if (isYouTubeUrl(url)) needsFetch = true;
-                    }
-                }
-                var embedHtml = url ? buildEmbed(url) : '';
-                return '<div class="source-item" data-fetch="' + (needsFetch ? url : '') + '">' +
-                    '<div class="source-body">' +
-                    embedHtml +
-                    '<span class="source-text">' + escapeHtml(displayText) + '</span>' +
-                    '</div>' +
-                    '<button class="source-delete" data-id="' + s.id + '"><i class="fas fa-xmark"></i></button>' +
-                    '</div>';
-            }).join('');
-            document.getElementById('sourcesList').innerHTML = html;
-            document.querySelectorAll('.source-item[data-fetch]').forEach(function (el) {
-                var fetchUrl = el.dataset.fetch;
-                if (fetchUrl) fetchYouTubeTitle(fetchUrl, el.querySelector('.source-text'));
-            });
-            document.querySelectorAll('.source-delete').forEach(function (btn) {
-                btn.addEventListener('click', function () { db.collection('ytSources').doc(this.dataset.id).delete(); });
-            });
-        });
-    }
-
-    document.getElementById('addSource').addEventListener('click', function () {
-        document.getElementById('sourceTextInput').value = '';
-        new bootstrap.Modal(document.getElementById('addSourceModal')).show();
-    });
-
-    document.getElementById('confirmAddSource').addEventListener('click', function () {
-        var text = document.getElementById('sourceTextInput').value.trim();
-        if (!text) return;
-        db.collection('ytSources').add({ text: text, createdAt: firebase.firestore.FieldValue.serverTimestamp() })
-            .then(function () { bootstrap.Modal.getInstance(document.getElementById('addSourceModal')).hide(); });
-    });
-
     // ─── NOTEPAD ────────────────────────────────────
 
     var notepadTimer = null;
@@ -1446,15 +1250,6 @@
     document.getElementById('notepadArea').addEventListener('input', function () {
         clearTimeout(notepadTimer);
         notepadTimer = setTimeout(saveNotepad, 800);
-    });
-
-    // ─── YT MORE TOGGLE ─────────────────────────────
-
-    document.getElementById('ytMoreToggle').addEventListener('click', function () {
-        var wrapper = this.closest('.yt-collapsible');
-        var content = document.getElementById('ytMoreContent');
-        var isOpen = wrapper.classList.toggle('open');
-        content.style.display = isOpen ? '' : 'none';
     });
 
     // ─── SETTINGS SIDEBAR ───────────────────────────
