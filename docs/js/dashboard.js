@@ -780,11 +780,11 @@
             return;
         }
 
-        if (weightRange === '6m') {
-            var sixMonthsAgo = new Date();
-            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-            sixMonthsAgo.setHours(0, 0, 0, 0);
-            var cutoff = formatDate(sixMonthsAgo);
+        if (weightRange === '6m' || weightRange === '1y') {
+            var cutoffDate = new Date();
+            cutoffDate.setMonth(cutoffDate.getMonth() - (weightRange === '1y' ? 12 : 6));
+            cutoffDate.setHours(0, 0, 0, 0);
+            var cutoff = formatDate(cutoffDate);
             entries = entries.filter(function (e) { return e.date >= cutoff; });
         }
 
@@ -993,7 +993,7 @@
         });
     }
 
-    // Range toggle (6m / All)
+    // Range toggle (6m / 1y / All)
     document.getElementById('weightRange').addEventListener('click', function (e) {
         var btn = e.target.closest('.range-btn');
         if (!btn) return;
