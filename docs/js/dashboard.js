@@ -2166,12 +2166,22 @@
     function renderGoals(goals) {
         currentGoals = goals;
         var done = goals.filter(function (g) { return goalStatusOf(g) === 'Gehaald'; }).length;
-        var pct = goals.length ? Math.round(done / goals.length * 100) : 0;
+        // Balk: een doel met subdoelen telt voor het deel dat af is (1 van 4 = 25% van dat doel)
+        var progress = goals.reduce(function (sum, g) {
+            if (g.subgoals && g.subgoals.length) {
+                return sum + g.subgoals.filter(function (x) { return x.checked; }).length / g.subgoals.length;
+            }
+            return sum + (g.status === 'Gehaald' ? 1 : 0);
+        }, 0);
+        var pct = goals.length ? Math.round(progress / goals.length * 100) : 0;
+        // Doelen met subdoelen onderaan (zet 'concat' om voor bovenaan)
+        var ordered = goals.filter(function (g) { return !(g.subgoals && g.subgoals.length); })
+            .concat(goals.filter(function (g) { return g.subgoals && g.subgoals.length; }));
         document.getElementById('goalsTitle').textContent = 'Doelen ' + GOALS_YEAR;
         document.getElementById('goalsCount').textContent = done + ' van ' + goals.length;
         document.getElementById('goalsBarFill').style.width = pct + '%';
         document.getElementById('goalsBar').setAttribute('aria-valuenow', pct);
-        document.getElementById('goalsList').innerHTML = goals.map(function (g) {
+        document.getElementById('goalsList').innerHTML = ordered.map(function (g) {
             var st = goalStatusOf(g);
             var html = '<div class="goal-item' + (st === 'Gehaald' ? ' is-done' : '') + '">';
             if (g.subgoals && g.subgoals.length) {
