@@ -2157,3 +2157,15 @@ button.her-chip:hover {
         color: var(--text);
     }
 }
+
+/* ─── Doelen ─── */
+.goals-bar { height: 10px; border-radius: 999px; background: var(--bg-input); overflow: hidden; margin-bottom: 0.9rem; }
+.goals-bar-fill { height: 100%; width: 0; background: var(--green); border-radius: 999px; transition: width 0.6s ease; }
+.goal-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0; color: var(--text-dim); }
+.goal-item + .goal-item { border-top: 1px solid var(--border); }
+.goal-icon { color: var(--text-muted); }
+.goal-name { flex: 1; color: var(--text); }
+.goal-status { font-size: 0.72rem; color: var(--text-muted); }
+.goal-item.is-doing .goal-icon { color: var(--accent); }
+.goal-item.is-done .goal-icon { color: var(--green); }
+.goal-item.is-done .goal-name { color: var(--text-dim); text-decoration: line-through; }

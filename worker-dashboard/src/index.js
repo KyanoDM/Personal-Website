@@ -7,6 +7,7 @@
 //   NOTION_TOKEN        (secret)  - Notion internal integration token
 //   NOTION_DATABASE_ID  (text)    - c470d3695903414abe1be813355a0b6a
 //   CALENDAR_ICS_URL    (secret)  - Google Agenda "Geheim adres in iCal-indeling"
+//   NOTION_GOALS_DATABASE_ID (text) - database 'Doelen 2027' (deel ze met de integration)
 
 const FIREBASE_PROJECT_ID = 'kyanodm-be';
 const ALLOWED_EMAIL = 'kyanodemaertelaere@gmail.com';
@@ -316,6 +317,35 @@ async function handleCalendar(env) {
     });
 }
 
+// ── Route handler: jaardoelen (Notion database "Doelen 2027") ──────────
+// Verwacht properties: Naam (title), Status (status: Niet gestart / Bezig / Gehaald),
+// Uitleg (rich text) en Jaar (number).
+async function handleGetGoals(env, url) {
+    if (!env.NOTION_GOALS_DATABASE_ID) return json({ error: 'NOTION_GOALS_DATABASE_ID ontbreekt' }, 503);
+    const year = parseInt(url.searchParams.get('year') || '', 10);
+
+    const body = { page_size: 100, sorts: [{ timestamp: 'created_time', direction: 'ascending' }] };
+    if (year) body.filter = { property: 'Jaar', number: { equals: year } };
+
+    const r = await notionFetch('/databases/' + env.NOTION_GOALS_DATABASE_ID + '/query', env, {
+        method: 'POST',
+        body: JSON.stringify(body),
+    });
+    if (!r.ok) return json({ error: 'Doelen ophalen mislukt', detail: await r.text() }, r.status);
+
+    const data = await r.json();
+    const goals = (data.results || []).map((page) => {
+        const st = page.properties.Status;
+        return {
+            id: page.id,
+            title: readTitle(page, 'Naam'),
+            status: (st && (st.status?.name || st.select?.name)) || 'Niet gestart',
+            note: (page.properties.Uitleg?.rich_text || []).map((t) => t.plain_text).join(''),
+        };
+    });
+    return json({ goals });
+}
+
 // ── Entry point ─────────────────────────────────────────────────────────
 export default {
     async fetch(request, env) {
@@ -334,6 +364,9 @@ export default {
         try {
             if (request.method === 'GET' && url.pathname === '/calendar') {
                 return await handleCalendar(env);
+            }
+            if (request.method === 'GET' && url.pathname === '/goals') {
+                return await handleGetGoals(env, url);
             }
             if (request.method === 'GET' && url.pathname === '/todos') {
                 return await handleGetTodos(env);

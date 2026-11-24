@@ -5,6 +5,7 @@ account_id         = "5f4adc8777b3037e3299d7d7e1f1a728"
 
 [vars]
 NOTION_DATABASE_ID = "c470d3695903414abe1be813355a0b6a"
+NOTION_GOALS_DATABASE_ID = "422a6c0e04758146aa83dc8a32e27bcd"
 
 # Secrets instellen via CLI (nooit in deze file):
 #   wrangler secret put NOTION_TOKEN

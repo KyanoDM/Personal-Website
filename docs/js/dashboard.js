@@ -122,6 +122,7 @@
             initCalendar();
             initNotepadToggle();
             loadTodos();
+            loadGoals();
             loadGymProgress();
             refreshPcStatus();
         } else {
@@ -2144,6 +2145,46 @@
     document.getElementById('clearDoneTodos').addEventListener('click', function () {
         loadTodos();
     });
+
+    // ─── DOELEN (Notion database "Doelen 2027" via de worker) ────────
+    var GOALS_YEAR = 2027;
+
+    function renderGoals(goals) {
+        var done = goals.filter(function (g) { return g.status === 'Gehaald'; }).length;
+        var pct = goals.length ? Math.round(done / goals.length * 100) : 0;
+        document.getElementById('goalsTitle').textContent = 'Doelen ' + GOALS_YEAR;
+        document.getElementById('goalsCount').textContent = done + ' van ' + goals.length;
+        document.getElementById('goalsBarFill').style.width = pct + '%';
+        document.getElementById('goalsBar').setAttribute('aria-valuenow', pct);
+        document.getElementById('goalsList').innerHTML = goals.map(function (g) {
+            var cls = g.status === 'Gehaald' ? ' is-done' : (g.status === 'Bezig' ? ' is-doing' : '');
+            var icon = g.status === 'Gehaald' ? 'fa-circle-check' : (g.status === 'Bezig' ? 'fa-circle-half-stroke' : 'fa-circle');
+            return '<div class="goal-item' + cls + '" title="' + escapeHtml(g.note || '') + '">' +
+                '<i class="fas ' + icon + ' goal-icon"></i>' +
+                '<span class="goal-name">' + escapeHtml(g.title) + '</span>' +
+                '<span class="goal-status">' + escapeHtml(g.status) + '</span></div>';
+        }).join('');
+    }
+
+    function loadGoals() {
+        pcToken()
+            .then(function (t) {
+                return fetch(TODO_BASE + '/goals?year=' + GOALS_YEAR, { headers: { Authorization: 'Bearer ' + t } });
+            })
+            .then(function (r) {
+                if (!r.ok) throw new Error('goals ' + r.status);
+                return r.json();
+            })
+            .then(function (data) {
+                var goals = data.goals || [];
+                saveDashCache('goals', goals);
+                renderGoals(goals);
+            })
+            .catch(function (err) { console.log('Doelen laden mislukt:', err); });
+    }
+
+    var cachedGoals = readDashCache('goals');
+    if (Array.isArray(cachedGoals)) renderGoals(cachedGoals);
 
     var cachedTodos = readDashCache('todos');
     if (Array.isArray(cachedTodos)) renderTodos(cachedTodos);
