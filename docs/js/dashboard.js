@@ -1236,8 +1236,17 @@
             if (doc.exists && doc.data().text != null) {
                 document.getElementById('notepadArea').value = doc.data().text;
             }
+            autosizeNotepad();
         });
     }
+
+    // Het kladblok is altijd open en is precies zo hoog als de tekst
+    function autosizeNotepad() {
+        var ta = document.getElementById('notepadArea');
+        ta.style.height = 'auto';
+        ta.style.height = ta.scrollHeight + 2 + 'px';
+    }
+    window.addEventListener('resize', autosizeNotepad);
 
     function saveNotepad() {
         var text = document.getElementById('notepadArea').value;
@@ -1249,6 +1258,7 @@
     }
 
     document.getElementById('notepadArea').addEventListener('input', function () {
+        autosizeNotepad();
         clearTimeout(notepadTimer);
         notepadTimer = setTimeout(saveNotepad, 800);
     });
@@ -1581,12 +1591,8 @@
     // ─── NOTEPAD TOGGLE ──────────────────────────────────────────────
 
     function initNotepadToggle() {
-        document.getElementById('notepadToggle').addEventListener('click', function () {
-            var content = document.getElementById('notepadContent');
-            var section = document.getElementById('notepadSection');
-            var isOpen = section.classList.toggle('notepad-open');
-            content.style.display = isOpen ? '' : 'none';
-        });
+        // Niet meer in- en uitklapbaar; alleen de hoogte bijwerken nu het dashboard zichtbaar is
+        autosizeNotepad();
     }
 
     // ─── TELLERS (dagen sinds / tot een datum) ──────────────────────

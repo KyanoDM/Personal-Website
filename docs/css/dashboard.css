@@ -834,7 +834,10 @@ input::placeholder,
 .notepad-area {
     width: 100%;
     flex: 1;
-    min-height: 120px;
+    min-height: 48px;
+    max-height: 60vh;
+    overflow-y: auto;
+    display: block;
     background: var(--bg-input);
     border: 1px solid var(--border);
     border-radius: 8px;

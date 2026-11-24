@@ -13,7 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/dashboard.css?v=30">
+    <link rel="stylesheet" href="css/dashboard.css?v=31">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="img/logo.png" type="image/png">
     <meta name="theme-color" content="#0a0b10">
@@ -202,14 +202,14 @@
                 </section>
             </div>
 
-            <!-- Notepad (collapsed by default) -->
-            <section class="dash-section" id="notepadSection">
-                <div class="section-head notepad-toggle" id="notepadToggle" style="cursor:pointer">
-                    <h2><i class="fas fa-chevron-right notepad-chevron me-2"></i>Kladblok</h2>
+            <!-- Notepad (altijd open, groeit mee met de tekst) -->
+            <section class="dash-section notepad-open" id="notepadSection">
+                <div class="section-head" id="notepadToggle">
+                    <h2><i class="fas fa-note-sticky me-2"></i>Kladblok</h2>
                     <span id="notepadStatus" class="text-dim" style="font-size:0.7rem"></span>
                 </div>
-                <div id="notepadContent" style="display:none">
-                    <textarea id="notepadArea" class="notepad-area" placeholder="Schrijf hier notities..."></textarea>
+                <div id="notepadContent">
+                    <textarea id="notepadArea" class="notepad-area" rows="1" placeholder="Schrijf hier notities..."></textarea>
                 </div>
             </section>
 
@@ -494,7 +494,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
-    <script src="js/dashboard.js?v=40"></script>
+    <script src="js/dashboard.js?v=41"></script>
 </body>
 
 </html>
