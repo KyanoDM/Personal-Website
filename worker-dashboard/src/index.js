@@ -334,16 +334,64 @@ async function handleGetGoals(env, url) {
     if (!r.ok) return json({ error: 'Doelen ophalen mislukt', detail: await r.text() }, r.status);
 
     const data = await r.json();
-    const goals = (data.results || []).map((page) => {
+    const goals = await Promise.all((data.results || []).map(async (page) => {
         const st = page.properties.Status;
         return {
             id: page.id,
             title: readTitle(page, 'Naam'),
             status: (st && (st.status?.name || st.select?.name)) || 'Niet gestart',
             note: (page.properties.Uitleg?.rich_text || []).map((t) => t.plain_text).join(''),
+            subgoals: await getSubgoals(env, page.id),
         };
-    });
+    }));
     return json({ goals });
+}
+
+// Subdoelen zijn to-do blokken in de pagina van het doel
+async function getSubgoals(env, pageId) {
+    const r = await notionFetch('/blocks/' + pageId + '/children?page_size=100', env);
+    if (!r.ok) return [];
+    const data = await r.json();
+    return (data.results || [])
+        .filter((b) => b.type === 'to_do')
+        .map((b) => ({
+            id: b.id,
+            text: (b.to_do.rich_text || []).map((t) => t.plain_text).join(''),
+            checked: !!b.to_do.checked,
+        }));
+}
+
+function setGoalStatus(env, pageId, status) {
+    return notionFetch('/pages/' + pageId, env, {
+        method: 'PATCH',
+        body: JSON.stringify({ properties: { Status: { status: { name: status } } } }),
+    });
+}
+
+// Doel zonder subdoelen afvinken of terugzetten
+async function handleSetGoalStatus(request, env, pageId) {
+    const body = await request.json();
+    const status = body.done ? 'Gehaald' : 'Niet gestart';
+    const r = await setGoalStatus(env, pageId, status);
+    if (!r.ok) return json({ error: 'Status bijwerken mislukt', detail: await r.text() }, r.status);
+    return json({ ok: true, status });
+}
+
+// Subdoel afvinken: doel wordt Gehaald (alles af), Bezig (deels) of Niet gestart
+async function handleSetSubgoal(request, env, pageId, blockId) {
+    const body = await request.json();
+    const r = await notionFetch('/blocks/' + blockId, env, {
+        method: 'PATCH',
+        body: JSON.stringify({ to_do: { checked: !!body.checked } }),
+    });
+    if (!r.ok) return json({ error: 'Subdoel bijwerken mislukt', detail: await r.text() }, r.status);
+
+    const subs = await getSubgoals(env, pageId);
+    const done = subs.filter((s) => s.checked).length;
+    const status = subs.length && done === subs.length ? 'Gehaald' : done > 0 ? 'Bezig' : 'Niet gestart';
+    const r2 = await setGoalStatus(env, pageId, status);
+    if (!r2.ok) return json({ error: 'Status bijwerken mislukt', detail: await r2.text() }, r2.status);
+    return json({ ok: true, status });
 }
 
 // ── Entry point ─────────────────────────────────────────────────────────
@@ -367,6 +415,14 @@ export default {
             }
             if (request.method === 'GET' && url.pathname === '/goals') {
                 return await handleGetGoals(env, url);
+            }
+            const goalStatus = url.pathname.match(/^\/goals\/([^/]+)\/status$/);
+            if (request.method === 'POST' && goalStatus) {
+                return await handleSetGoalStatus(request, env, goalStatus[1]);
+            }
+            const goalSub = url.pathname.match(/^\/goals\/([^/]+)\/subgoals\/([^/]+)$/);
+            if (request.method === 'POST' && goalSub) {
+                return await handleSetSubgoal(request, env, goalSub[1], goalSub[2]);
             }
             if (request.method === 'GET' && url.pathname === '/todos') {
                 return await handleGetTodos(env);

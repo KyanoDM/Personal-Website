@@ -2148,22 +2148,81 @@
 
     // ─── DOELEN (Notion database "Doelen 2027" via de worker) ────────
     var GOALS_YEAR = 2027;
+    var currentGoals = [];
+
+    function goalStatusOf(g) {
+        if (g.subgoals && g.subgoals.length) {
+            var d = g.subgoals.filter(function (x) { return x.checked; }).length;
+            return d === g.subgoals.length ? 'Gehaald' : (d > 0 ? 'Bezig' : 'Niet gestart');
+        }
+        return g.status;
+    }
+
+    function goalCheckHtml(checked, goalId, subId) {
+        return '<div class="todo-check goal-check' + (checked ? ' is-checked' : '') + '" data-goal="' + goalId + '"' +
+            (subId ? ' data-sub="' + subId + '"' : '') + '>' + (checked ? '<i class="fas fa-check"></i>' : '') + '</div>';
+    }
 
     function renderGoals(goals) {
-        var done = goals.filter(function (g) { return g.status === 'Gehaald'; }).length;
+        currentGoals = goals;
+        var done = goals.filter(function (g) { return goalStatusOf(g) === 'Gehaald'; }).length;
         var pct = goals.length ? Math.round(done / goals.length * 100) : 0;
         document.getElementById('goalsTitle').textContent = 'Doelen ' + GOALS_YEAR;
         document.getElementById('goalsCount').textContent = done + ' van ' + goals.length;
         document.getElementById('goalsBarFill').style.width = pct + '%';
         document.getElementById('goalsBar').setAttribute('aria-valuenow', pct);
         document.getElementById('goalsList').innerHTML = goals.map(function (g) {
-            var cls = g.status === 'Gehaald' ? ' is-done' : (g.status === 'Bezig' ? ' is-doing' : '');
-            var icon = g.status === 'Gehaald' ? 'fa-circle-check' : (g.status === 'Bezig' ? 'fa-circle-half-stroke' : 'fa-circle');
-            return '<div class="goal-item' + cls + '" title="' + escapeHtml(g.note || '') + '">' +
-                '<i class="fas ' + icon + ' goal-icon"></i>' +
-                '<span class="goal-name">' + escapeHtml(g.title) + '</span>' +
-                '<span class="goal-status">' + escapeHtml(g.status) + '</span></div>';
+            var st = goalStatusOf(g);
+            var html = '<div class="goal-item' + (st === 'Gehaald' ? ' is-done' : '') + '">';
+            if (g.subgoals && g.subgoals.length) {
+                var d = g.subgoals.filter(function (x) { return x.checked; }).length;
+                html += '<div class="goal-row"><span class="goal-name">' + escapeHtml(g.note || g.title) + '</span>' +
+                    '<span class="goal-count">' + d + '/' + g.subgoals.length + '</span></div>' +
+                    '<div class="goal-subs">' + g.subgoals.map(function (sg) {
+                        return '<div class="goal-sub' + (sg.checked ? ' is-done' : '') + '">' +
+                            goalCheckHtml(sg.checked, g.id, sg.id) +
+                            '<span class="goal-name">' + escapeHtml(sg.text) + '</span></div>';
+                    }).join('') + '</div>';
+            } else {
+                html += '<div class="goal-row">' + goalCheckHtml(st === 'Gehaald', g.id) +
+                    '<span class="goal-name">' + escapeHtml(g.note || g.title) + '</span></div>';
+            }
+            return html + '</div>';
         }).join('');
+        document.querySelectorAll('#goalsList .goal-check').forEach(function (el) {
+            el.addEventListener('click', function () { toggleGoal(this.dataset.goal, this.dataset.sub); });
+        });
+    }
+
+    // Optimistisch: meteen aanpassen, daarna naar Notion schrijven
+    function toggleGoal(goalId, subId) {
+        var goals = JSON.parse(JSON.stringify(currentGoals));
+        var g = goals.filter(function (x) { return x.id === goalId; })[0];
+        if (!g) return;
+        var path, payload;
+        if (subId) {
+            var sg = g.subgoals.filter(function (x) { return x.id === subId; })[0];
+            sg.checked = !sg.checked;
+            path = '/goals/' + goalId + '/subgoals/' + subId;
+            payload = { checked: sg.checked };
+        } else {
+            var nowDone = g.status !== 'Gehaald';
+            g.status = nowDone ? 'Gehaald' : 'Niet gestart';
+            path = '/goals/' + goalId + '/status';
+            payload = { done: nowDone };
+        }
+        saveDashCache('goals', goals);
+        renderGoals(goals);
+        pcToken()
+            .then(function (t) {
+                return fetch(TODO_BASE + path, {
+                    method: 'POST',
+                    headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            })
+            .then(function (r) { if (!r.ok) throw new Error('goal ' + r.status); })
+            .catch(function (err) { console.log('Doel opslaan mislukt:', err); loadGoals(); });
     }
 
     function loadGoals() {

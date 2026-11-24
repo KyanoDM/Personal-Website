@@ -13,7 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/dashboard.css?v=29">
+    <link rel="stylesheet" href="css/dashboard.css?v=30">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="img/logo.png" type="image/png">
     <meta name="theme-color" content="#0a0b10">
@@ -141,6 +141,16 @@
                     <div class="timer-grid" id="timerGrid"></div>
                 </section>
 
+                <!-- Doelen (jaarbalk, Notion) -->
+                <section class="dash-section" id="goalsSection">
+                    <div class="section-head">
+                        <h2><i class="fas fa-bullseye me-2"></i><span id="goalsTitle">Doelen</span></h2>
+                        <span id="goalsCount" class="text-dim" style="font-size:0.8rem"></span>
+                    </div>
+                    <div class="goals-bar" id="goalsBar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="goals-bar-fill" id="goalsBarFill"></div></div>
+                    <div id="goalsList"></div>
+                </section>
+
             </div>
             <div class="dashboard-col">
 
@@ -210,16 +220,6 @@
                     <a href="https://gym.kyanodm.be" target="_blank" rel="noopener" class="btn-icon" title="Gym App openen"><i class="fas fa-plus"></i></a>
                 </div>
                 <div id="gymProgressContent"><div class="gym-layout"><div class="gym-cover sk"></div><div class="gym-progress-info"><div class="gym-progress-title"><span class="sk sk-text" style="width:130px">&nbsp;</span></div><div class="gym-progress-stats"><span class="gym-stat"><span class="sk sk-text" style="width:56px">&nbsp;</span></span><span class="gym-stat"><span class="sk sk-text" style="width:76px">&nbsp;</span></span><span class="gym-stat"><span class="sk sk-text" style="width:60px">&nbsp;</span></span></div><div class="gym-progress-desc"><span class="sk sk-text" style="width:92%">&nbsp;</span><br><span class="sk sk-text" style="width:70%">&nbsp;</span></div></div></div></div>
-            </section>
-
-            <!-- Doelen -->
-            <section class="dash-section" id="goalsSection">
-                <div class="section-head">
-                    <h2><i class="fas fa-bullseye me-2"></i><span id="goalsTitle">Doelen</span></h2>
-                    <span id="goalsCount" class="text-dim" style="font-size:0.8rem"></span>
-                </div>
-                <div class="goals-bar" id="goalsBar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="goals-bar-fill" id="goalsBarFill"></div></div>
-                <div id="goalsList"></div>
             </section>
 
             <!-- Todo List -->
@@ -494,7 +494,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
-    <script src="js/dashboard.js?v=38"></script>
+    <script src="js/dashboard.js?v=39"></script>
 </body>
 
 </html>

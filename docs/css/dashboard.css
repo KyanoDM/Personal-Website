@@ -2161,11 +2161,14 @@ button.her-chip:hover {
 /* ─── Doelen ─── */
 .goals-bar { height: 10px; border-radius: 999px; background: var(--bg-input); overflow: hidden; margin-bottom: 0.9rem; }
 .goals-bar-fill { height: 100%; width: 0; background: var(--green); border-radius: 999px; transition: width 0.6s ease; }
-.goal-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0; color: var(--text-dim); }
+.goal-item { padding: 0.55rem 0; }
 .goal-item + .goal-item { border-top: 1px solid var(--border); }
-.goal-icon { color: var(--text-muted); }
-.goal-name { flex: 1; color: var(--text); }
-.goal-status { font-size: 0.72rem; color: var(--text-muted); }
-.goal-item.is-doing .goal-icon { color: var(--accent); }
-.goal-item.is-done .goal-icon { color: var(--green); }
-.goal-item.is-done .goal-name { color: var(--text-dim); text-decoration: line-through; }
+.goal-row { display: flex; align-items: center; gap: 0.6rem; }
+.goal-name { flex: 1; color: var(--text); line-height: 1.35; }
+.goal-count { font-size: 0.75rem; color: var(--text-muted); }
+.goal-subs { margin: 0.4rem 0 0 0.2rem; padding-left: 0.9rem; border-left: 2px solid var(--border); }
+.goal-sub { display: flex; align-items: center; gap: 0.6rem; padding: 0.3rem 0; }
+.goal-check { cursor: pointer; flex-shrink: 0; }
+.goal-check.is-checked { background: var(--green); border-color: var(--green); color: #fff; }
+.goal-item.is-done > .goal-row .goal-name,
+.goal-sub.is-done .goal-name { color: var(--text-muted); text-decoration: line-through; }
