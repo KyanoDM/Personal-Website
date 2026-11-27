@@ -9,6 +9,10 @@
             var p = location.pathname;
             if (/\.html$/.test(p)) history.replaceState(null, '', p.replace(/index\.html$/, '').replace(/\.html$/, '') + location.search + location.hash);
             document.documentElement.classList.add('js');
+            // Vangnet: laadt het script niet (of is het verouderd), toon dan gewoon alles
+            setTimeout(function () {
+                if (!window.__nieuwJs) document.documentElement.classList.remove('js');
+            }, 1500);
         })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,7 +51,7 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Inter:wght@400;500;600&display=swap">
     <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/nieuw.css">
+    <link rel="stylesheet" href="css/nieuw.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="img/logo.png" type="image/png">
 </head>
@@ -630,7 +634,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <script src="js/script-nieuw.js"></script>
+    <script src="js/script-nieuw.js?v=2"></script>
     <script src="js/konami.js"></script>
 </body>
 

@@ -2,6 +2,7 @@
 // Verschillen: geen layout-metingen bij elk scrollevent, geen "transition: all",
 // respecteert "beperkte beweging", ankerlinks werken native (URL klopt, terugknop werkt).
 
+window.__nieuwJs = true;   // meldt aan de pagina dat dit (nieuwe) script geladen is
 document.addEventListener('DOMContentLoaded', initialize);
 
 function initialize() {
