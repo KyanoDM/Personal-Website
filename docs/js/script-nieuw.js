@@ -24,15 +24,6 @@ function initialize() {
     const year = document.querySelector('#year');
     if (year) year.textContent = new Date().getFullYear();
 
-    // Burrow: heel de kaart opent de video (de knop erin doet dat al zelf via Bootstrap)
-    const burrowCard = document.querySelector('#burrowCard');
-    if (burrowCard) {
-        burrowCard.addEventListener('click', function (e) {
-            if (e.target.closest('button, a')) return;
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('burrowModal')).show();
-        });
-    }
-
     // Contactformulier via Web3Forms (geen backend, geen herladen)
     const contactForm = document.querySelector('.contact-form');
     if (contactForm) {
@@ -101,25 +92,30 @@ function initialize() {
         update();
     }
 
-    // Projectkaarten laten verschijnen bij het scrollen (niet bij beperkte beweging)
-    if (!reduceMotion) {
+    // Elementen laten verschijnen bij het scrollen (CSS regelt de animatie en schakelt ze uit bij beperkte beweging)
+    const revealEls = document.querySelectorAll('.reveal');
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+        revealEls.forEach(el => el.classList.add('is-in'));
+    } else {
         const revealObserver = new IntersectionObserver(function (entries) {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
+                    entry.target.classList.add('is-in');
                     revealObserver.unobserve(entry.target);
                 }
             });
-        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-
-        document.querySelectorAll('.project-card').forEach((card, index) => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(30px)';
-            card.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
-            revealObserver.observe(card);
-        });
+        }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+        revealEls.forEach(el => revealObserver.observe(el));
     }
+
+    // Spotlight dat de muis volgt op kaarten en tegels
+    document.querySelectorAll('.spot').forEach(el => {
+        el.addEventListener('pointermove', function (e) {
+            const r = el.getBoundingClientRect();
+            el.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+            el.style.setProperty('--my', (e.clientY - r.top) + 'px');
+        }, { passive: true });
+    });
 
     // Actieve menulink: IntersectionObserver in plaats van offsetTop bij elk scrollevent
     const navLinks = document.querySelectorAll('.nav-link');
