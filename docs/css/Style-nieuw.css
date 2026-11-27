@@ -1,0 +1,72 @@
+/* Aanvullingen voor index-nieuw.html (laadt na Style.css, die blijft ongewijzigd) */
+
+/* "transition: all" vervangen door een expliciete lijst */
+:root {
+    --transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease,
+        box-shadow 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Soepel scrollen naar ankers, alleen voor wie geen beperkte beweging wil */
+@media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+}
+
+/* Vaste navbar mag de kop van een sectie niet bedekken */
+section[id] { scroll-margin-top: 72px; }
+
+/* Navbar na het scrollen (was inline style in script.js) */
+#mainNav.scrolled {
+    background: rgb(44, 62, 80);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Zichtbare focus voor toetsenbordgebruikers */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+.project-card:focus-visible {
+    outline: 3px solid #3498db;
+    outline-offset: 3px;
+}
+.contact-section a:focus-visible,
+.contact-section button:focus-visible,
+.hero-section a:focus-visible,
+.navbar a:focus-visible,
+.navbar button:focus-visible {
+    outline-color: #fff;
+}
+
+/* Skip-link: pas zichtbaar bij focus */
+.skip-link {
+    position: fixed;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 2000;
+    padding: 0.6rem 1rem;
+    background: #fff;
+    color: #2c3e50;
+    border-radius: 6px;
+    font-weight: 600;
+    transform: translateY(-200%);
+}
+.skip-link:focus { transform: translateY(0); }
+
+/* Koppen netjes afbreken, geen losse laatste woorden */
+h1, h2, h3, .section-title { text-wrap: balance; }
+
+/* Aanraken: geen vertraging door dubbeltik-zoom */
+a, button, .project-card { touch-action: manipulation; }
+
+/* Lange woorden en e-mailadressen breken in plaats van uit het scherm te lopen */
+.contact-item p, .skills-list-item p, .project-description { overflow-wrap: anywhere; }
+
+/* Beperkte beweging: animaties en overgangen praktisch uit */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
