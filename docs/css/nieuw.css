@@ -12,8 +12,8 @@
     --line-strong: rgba(255, 255, 255, 0.18);
     --text: #f3f1ec;
     --muted: #a1a1ab;
-    --accent: #d4ff3a;
-    --accent-ink: #0b0d02;
+    --accent: #ff6b4a;
+    --accent-ink: #1a0803;
     --violet: #7c5cff;
     --radius: 22px;
     --font-display: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
@@ -48,7 +48,7 @@ body::before {
     z-index: -1;
     background:
         radial-gradient(60rem 40rem at 85% -10%, rgba(124, 92, 255, 0.16), transparent 60%),
-        radial-gradient(50rem 36rem at -10% 30%, rgba(212, 255, 58, 0.07), transparent 60%);
+        radial-gradient(50rem 36rem at -10% 30%, rgba(255, 107, 74, 0.07), transparent 60%);
     pointer-events: none;
 }
 
@@ -138,7 +138,7 @@ a, button { touch-action: manipulation; }
 }
 .btn-x:hover { transform: translateY(-3px); }
 .btn-x-primary { background: var(--accent); color: var(--accent-ink); }
-.btn-x-primary:hover { box-shadow: 0 12px 34px rgba(212, 255, 58, 0.3); color: var(--accent-ink); }
+.btn-x-primary:hover { box-shadow: 0 12px 34px rgba(255, 107, 74, 0.3); color: var(--accent-ink); }
 .btn-x-ghost { background: transparent; color: var(--text); border-color: var(--line-strong); }
 .btn-x-ghost:hover { border-color: var(--text); color: var(--text); }
 .btn-x:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
@@ -149,7 +149,7 @@ a, button { touch-action: manipulation; }
 .status-pill {
     display: inline-flex; align-items: center; gap: 0.6rem; margin-bottom: 1.6rem;
     padding: 0.5rem 1.05rem; border-radius: 999px;
-    background: rgba(212, 255, 58, 0.09); border: 1px solid rgba(212, 255, 58, 0.35);
+    background: rgba(255, 107, 74, 0.09); border: 1px solid rgba(255, 107, 74, 0.35);
     color: var(--accent); font-size: 0.9rem; font-weight: 500;
 }
 .status-pill .dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--accent); position: relative; }
@@ -237,7 +237,7 @@ a, button { touch-action: manipulation; }
 .credential-badge i { font-size: 1.5rem; color: var(--accent); width: 1.8rem; text-align: center; }
 .credential-badge strong { display: block; font-weight: 600; line-height: 1.3; }
 .credential-badge span { display: block; color: var(--muted); font-size: 0.92rem; }
-.credential-badge-available { background: rgba(212, 255, 58, 0.08); border-color: rgba(212, 255, 58, 0.35); }
+.credential-badge-available { background: rgba(255, 107, 74, 0.08); border-color: rgba(255, 107, 74, 0.35); }
 
 @media (max-width: 860px) { .about-grid { grid-template-columns: 1fr; } }
 
@@ -255,7 +255,7 @@ a, button { touch-action: manipulation; }
     background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
     transition: transform 0.4s var(--ease), border-color 0.3s ease;
 }
-.skills-list-item:hover { transform: translateY(-4px); border-color: rgba(212, 255, 58, 0.45); }
+.skills-list-item:hover { transform: translateY(-4px); border-color: rgba(255, 107, 74, 0.45); }
 .skills-list-item > i {
     flex-shrink: 0; width: 2.7rem; height: 2.7rem; display: grid; place-items: center;
     border-radius: 12px; background: var(--card-2); color: var(--accent); font-size: 1.15rem;
@@ -266,14 +266,14 @@ a, button { touch-action: manipulation; }
 /* Spotlight dat de muis volgt (kaarten en tegels) */
 .spot::after {
     content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 0.35s ease;
-    background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(212, 255, 58, 0.12), transparent 70%);
+    background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 107, 74, 0.12), transparent 70%);
 }
 .spot:hover::after { opacity: 1; }
 
 /* ---------- Cittel ---------- */
 .cittel-grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: clamp(2rem, 6vw, 5rem); align-items: start; }
 .internship-intro { font-size: 1.12rem; color: var(--muted); position: sticky; top: 7rem; }
-.internship-intro a { color: var(--accent); border-bottom: 1px solid rgba(212, 255, 58, 0.4); }
+.internship-intro a { color: var(--accent); border-bottom: 1px solid rgba(255, 107, 74, 0.4); }
 .internship-intro a:hover { border-bottom-color: var(--accent); }
 
 .internship-highlights { counter-reset: item; border-top: 1px solid var(--line-strong); }
@@ -291,7 +291,7 @@ a, button { touch-action: manipulation; }
 .internship-highlights a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .highlight-demo-link {
     display: inline-flex; align-items: center; margin-left: 0.4rem; margin-top: 0.4rem;
-    padding: 0.25rem 0.8rem; border-radius: 999px; border: 1px solid rgba(212, 255, 58, 0.45);
+    padding: 0.25rem 0.8rem; border-radius: 999px; border: 1px solid rgba(255, 107, 74, 0.45);
     font-size: 0.88rem; font-weight: 600;
 }
 .highlight-demo-link:hover { background: var(--accent); color: var(--accent-ink) !important; text-decoration: none !important; }
@@ -311,7 +311,7 @@ a, button { touch-action: manipulation; }
     transition: transform 0.5s var(--ease), border-color 0.3s ease;
 }
 .project-card:nth-child(1) { grid-column: span 4; }
-.project-card:hover { transform: translateY(-6px); border-color: rgba(212, 255, 58, 0.5); }
+.project-card:hover { transform: translateY(-6px); border-color: rgba(255, 107, 74, 0.5); }
 .project-image-wrapper { overflow: hidden; background: var(--card-2); }
 .project-image {
     width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top;
@@ -349,20 +349,20 @@ a, button { touch-action: manipulation; }
 
 /* ---------- Contact ---------- */
 .contact-section { background: var(--accent); color: var(--accent-ink); border-radius: clamp(28px, 4vw, 56px) clamp(28px, 4vw, 56px) 0 0; }
-.contact-section .section-index { color: var(--accent-ink); border-color: rgba(11, 13, 2, 0.35); }
+.contact-section .section-index { color: var(--accent-ink); border-color: rgba(26, 8, 3, 0.35); }
 .contact-section .section-title { font-size: clamp(3.2rem, 10vw, 8.5rem); letter-spacing: -0.06em; line-height: 0.9; }
-.contact-section .section-subtitle { color: rgba(11, 13, 2, 0.7); font-size: 1.3rem; }
+.contact-section .section-subtitle { color: rgba(26, 8, 3, 0.7); font-size: 1.3rem; }
 .contact-grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: clamp(2rem, 5vw, 4.5rem); align-items: start; }
 
 .contact-info { display: grid; gap: 0.8rem; }
 .contact-item {
     display: flex; align-items: center; gap: 1.1rem; padding: 1.1rem 1.3rem;
-    border-radius: 18px; background: rgba(11, 13, 2, 0.07); border: 1px solid rgba(11, 13, 2, 0.14);
+    border-radius: 18px; background: rgba(26, 8, 3, 0.07); border: 1px solid rgba(26, 8, 3, 0.14);
 }
 .contact-item > i { font-size: 1.3rem; width: 1.6rem; text-align: center; }
 .contact-item h4 { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.65; margin-bottom: 0.15rem; font-family: var(--font-body); }
 .contact-item p { margin: 0; font-weight: 600; font-size: 1.05rem; overflow-wrap: anywhere; }
-.contact-item a { border-bottom: 1.5px solid rgba(11, 13, 2, 0.35); }
+.contact-item a { border-bottom: 1.5px solid rgba(26, 8, 3, 0.35); }
 .contact-item a:hover { border-bottom-color: var(--accent-ink); }
 .contact-section a:focus-visible, .contact-section button:focus-visible,
 .contact-section input:focus-visible, .contact-section textarea:focus-visible { outline-color: var(--accent-ink); }
@@ -387,7 +387,7 @@ a, button { touch-action: manipulation; }
 @media (max-width: 860px) { .contact-grid { grid-template-columns: 1fr; } }
 
 /* ---------- Footer ---------- */
-.footer { background: var(--accent); color: var(--accent-ink); padding: 1.6rem 0 2rem; text-align: center; border-top: 1px solid rgba(11, 13, 2, 0.15); }
+.footer { background: var(--accent); color: var(--accent-ink); padding: 1.6rem 0 2rem; text-align: center; border-top: 1px solid rgba(26, 8, 3, 0.15); }
 .footer p { margin: 0; font-size: 0.92rem; font-weight: 500; }
 
 /* ---------- Modals (Burrow en geheime login) ---------- */
